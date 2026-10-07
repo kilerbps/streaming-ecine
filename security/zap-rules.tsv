@@ -1,0 +1,6 @@
+# Exceptions ZAP justifiées (docs/06-SECURITY.md §7) : identifiant	action (IGNORE|WARN|FAIL)	justification et date
+# Exemple :
+# 10049	IGNORE	(Non-storable content) Réponses privées volontairement no-store — 2026-10-02
+10049	IGNORE	Contenu non stockable en cache : réponses privées volontairement « no-store » — 2026-10-02
+10202	IGNORE	Absence de jeton anti-CSRF dans les <form method="post"> : ces formulaires ne modifient rien en natif (POST sur la page elle-même, sans effet) ; toutes les écritures passent par des Server Actions (contrôle Origin/Host de Next.js) puis par l API (OriginGuard, cookies limités au domaine du site) — ADR-0005 §5 — 2026-10-02
+10031	IGNORE	Paramètre « retour » reflété uniquement après validation (chemin interne, safeInternalPath) et échappé par React — 2026-10-02

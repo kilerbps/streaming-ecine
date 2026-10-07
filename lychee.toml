@@ -1,0 +1,12 @@
+# Vérification des liens (docs/07 §A17). Les liens externes de la documentation sont vérifiés
+# séparément (11-LIENS-DOCS.md, revue mensuelle) pour ne pas bloquer la CI sur un site tiers lent.
+max_concurrency = 8
+timeout = 20
+accept = ["200..=204", "301", "302", "308", "429"]
+exclude = [
+  "^https?://localhost",
+  "^https?://127\\.0\\.0\\.1",
+  "e-cine\\.example",
+  "^mailto:",
+]
+exclude_path = ["node_modules", "docs-constrution"]

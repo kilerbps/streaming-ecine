@@ -1,0 +1,137 @@
+# Intégration continue E-Ciné (docs/02-ARCHITECTURE.md §9, docs/06-SECURITY.md §7, docs/07 §D).
+# lint → types → tests → build → contrôles design → dépendances → secrets.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+
+jobs:
+  qualite:
+    name: Qualité (lint, types, tests, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ecine
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: ecine
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ecine -d ecine" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:8-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      # Valeurs de CI uniquement (aucun secret réel) : l'API refuse de démarrer sans configuration valide.
+      DATABASE_URL: postgresql://ecine:ci-only-password@localhost:5432/ecine
+      REDIS_URL: redis://localhost:6379
+      APP_URL: http://localhost:3000
+      API_PUBLIC_URL: http://localhost:4000
+      MEDIA_PUBLIC_URL: http://localhost:4000/media
+      JWT_ACCESS_SECRET: ci-jwt-secret-ci-jwt-secret-ci-jwt-secret
+      PLAYBACK_TOKEN_SECRET: ci-playback-secret-ci-playback-secret-xx
+      MEDIA_KEY_SECRET: Y2ktb25seS1tYXN0ZXIta2V5LTMyLWJ5dGVzLXh4eHg=
+      IP_HASH_SALT: ci-ip-salt-ci-ip-salt-ci-ip-salt-ci-ip-salt
+      SERVICE_API_KEY: ci-service-key-ci-service-key-ci-service-key
+      REVALIDATE_SECRET: ci-revalidate-secret-ci-revalidate-secret
+      API_INTERNAL_URL: http://localhost:4000
+      SITE_URL: http://localhost:3000
+      COOKIE_SECURE: 'false'
+      ADMIN_MFA_REQUIRED: 'false'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Contrôles du design system
+        run: |
+          pnpm check:gradient
+          pnpm check:contrast
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Migrations sur base vierge + absence de dérive du schéma
+        working-directory: apps/api
+        run: |
+          pnpm exec prisma migrate deploy
+          pnpm exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+      - name: Tests d'intégration de sécurité (base ecine_test réelle)
+        run: |
+          PGPASSWORD=ci-only-password psql -h localhost -U ecine -d ecine -c 'CREATE DATABASE ecine_test'
+          pnpm --filter @ecine/contracts build
+          pnpm --filter @ecine/api test:e2e
+      - run: pnpm build
+      - name: Liens internes (site construit et documentation)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --config lychee.toml --offline 'docs/**/*.md' README.md
+          fail: true
+
+  securite:
+    name: Sécurité (dépendances, secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Audit des dépendances (élevé et critique bloquants)
+        run: pnpm audit --audit-level high
+      - name: Recherche de secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Scan passif ZAP sur la prévisualisation Vercel (jamais de scan actif contre la production).
+  zap-baseline:
+    name: OWASP ZAP baseline (prévisualisation)
+    if: github.event_name == 'pull_request' && vars.PREVIEW_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: ${{ vars.PREVIEW_URL }}
+          rules_file_name: security/zap-rules.tsv
+          fail_action: true
+          allow_issue_writing: false
+
+  lighthouse:
+    name: Lighthouse CI (budgets mobile)
+    if: github.event_name == 'pull_request' && vars.PREVIEW_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npx --yes @lhci/cli@0.15.x autorun --config=lighthouserc.json --collect.url=${{ vars.PREVIEW_URL }}/fr

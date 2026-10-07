@@ -1,0 +1,26 @@
+# Veille des dépendances (docs/06 §11) : mises à jour regroupées chaque semaine ; les majeures sont proposées, jamais fusionnées automatiquement.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      correctifs:
+        update-types: [patch, minor]
+    ignore:
+      # Prisma 8 / « Prisma Next » : pas de migration sans validation du propriétaire (docs/11 §1).
+      - dependency-name: prisma
+        update-types: [version-update:semver-major]
+      - dependency-name: '@prisma/*'
+        update-types: [version-update:semver-major]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /apps/api
+    schedule:
+      interval: weekly
