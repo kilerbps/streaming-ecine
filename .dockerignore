@@ -1,0 +1,29 @@
+# Contexte de build Docker (racine du dépôt) : jamais de secrets, de médias ni d'artefacts locaux.
+.git
+.github
+.turbo
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/*.tsbuildinfo
+**/*.log
+
+# Secrets et environnements locaux
+**/.env
+**/.env.*
+!**/.env.example
+
+# Médias (sources privées, HLS, images) : volume à part, jamais dans une image
+storage
+**/storage
+
+# Code généré (régénéré dans l'image par prisma generate)
+apps/api/src/generated
+
+# Documentation et front (seul le manifeste du front est utile au lockfile pnpm)
+docs
+docs-constrution
+apps/web/*
+!apps/web/package.json

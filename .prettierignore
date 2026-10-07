@@ -1,0 +1,17 @@
+node_modules
+dist
+.next
+.turbo
+coverage
+pnpm-lock.yaml
+apps/api/src/generated
+apps/api/prisma/migrations
+docs-constrution
+docs
+lychee.toml
+*.tsv
+storage
+playwright-report
+test-results
+apps/web/.next
+apps/web/next-env.d.ts

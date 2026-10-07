@@ -1,0 +1,20 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Paquets autorisés à exécuter un script d'installation (binaire natif ou moteur).
+# Toute nouvelle entrée doit être validée par le propriétaire (docs/09-AGENTS.md, docs/adr/0002).
+allowBuilds:
+  '@parcel/watcher': true
+  '@prisma/engines': true
+  '@scarf/scarf': false # télémétrie de swagger-ui : refusée
+  '@swc/core': true
+  argon2: true
+  msgpackr-extract: false # accélérateur natif optionnel de BullMQ : non nécessaire
+  prisma: true
+  unrs-resolver: true
+
+# Versions publiées depuis moins longtemps que le délai de sécurité de pnpm, épinglées volontairement.
+minimumReleaseAgeExclude:
+  - '@types/node@24.19.1'
+  - nestjs-pino@5.3.0

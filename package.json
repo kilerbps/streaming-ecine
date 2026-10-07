@@ -1,0 +1,31 @@
+{
+  "name": "e-cine",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.21.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "pnpm --filter @ecine/web test:e2e",
+    "db:migrate": "pnpm --filter @ecine/api db:migrate",
+    "db:seed": "pnpm --filter @ecine/api db:seed",
+    "infra:up": "docker compose -f infra/docker-compose.dev.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.dev.yml down",
+    "check:gradient": "node scripts/check-gradient.mjs",
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "check:links": "lychee --config lychee.toml \"apps/web/.next/server/app/**/*.html\" \"docs/**/*.md\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "3.9.9",
+    "turbo": "2.11.6",
+    "typescript": "6.0.3"
+  }
+}
