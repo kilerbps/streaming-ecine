@@ -52,7 +52,8 @@ describe('illustrations de démonstration', () => {
       expect(meta.width).toBe(c.w);
       expect(meta.height).toBe(c.h);
     }
-  });
+    // Quatre grands rendus SVG → PNG (polices comprises) : plus de 5 s sur une machine chargée (CI).
+  }, 20_000);
 
   it('pages légales : structure seulement, avec le marqueur de validation juridique', () => {
     for (const page of DEMO_PAGES) expect(pageBody(page)).toMatch(/\[À COMPLÉTER/);

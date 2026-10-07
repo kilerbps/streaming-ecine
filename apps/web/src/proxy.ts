@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { DEFAULT_LOCALE, LOCALES } from '@ecine/contracts';
-import { authCookieNames, PREF_COOKIES } from './server/cookie-names';
+import { authCookieNames, cookieSecure, PREF_COOKIES } from './server/cookie-names';
 import { parseSetCookie } from './server/set-cookie';
 
 /**
@@ -15,7 +15,7 @@ const env = {
   mediaPublic: process.env.MEDIA_PUBLIC_URL ?? 'http://localhost:4000/media',
   serviceKey: process.env.SERVICE_API_KEY ?? '',
   canonicalHost: process.env.CANONICAL_HOST ?? '',
-  secure: process.env.COOKIE_SECURE === 'true',
+  secure: cookieSecure(process.env.COOKIE_SECURE, process.env.NODE_ENV),
   dev: process.env.NODE_ENV !== 'production',
 };
 

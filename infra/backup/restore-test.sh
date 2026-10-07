@@ -1,12 +1,13 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Test de restauration MENSUEL (obligatoire, docs/01-PRD.md §7) : restaure la dernière sauvegarde
 # dans une base jetable et vérifie qu'elle contient des données. Ne touche jamais à la base de production.
 #
 # Usage : AGE_IDENTITY=/chemin/cle-privee.txt ./restore-test.sh
 # La clé privée age n'est PAS stockée sur le VPS : lancer ce test depuis un poste d'administration.
-set -eu
+set -euo pipefail
 
-. /etc/ecine/backup.env
+# Sur le poste d’administration : BACKUP_ENV=./backup.env (RCLONE_REMOTE) ; sur le VPS : /etc/ecine/backup.env.
+. "${BACKUP_ENV:-/etc/ecine/backup.env}"
 WORK=$(mktemp -d)
 trap 'docker rm -f ecine-restore-test >/dev/null 2>&1 || true; rm -rf "$WORK"' EXIT
 

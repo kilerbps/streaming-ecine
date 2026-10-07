@@ -80,6 +80,34 @@ export const envSchema = z
     if (env.COOKIE_SECURE === false) {
       ctx.addIssue({ code: 'custom', path: ['COOKIE_SECURE'], message: 'Interdit en production' });
     }
+    if (env.MAIL_DRIVER === 'log') {
+      // Le pilote « log » écrit le contenu des e-mails, donc les liens de réinitialisation, dans les journaux.
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MAIL_DRIVER'],
+        message: 'Le pilote « log » est interdit en production (MAIL_DRIVER=resend)',
+      });
+    }
+    if (env.MAIL_FROM.includes('e-cine.example')) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MAIL_FROM'],
+        message: 'Adresse d’expédition factice : utiliser le domaine vérifié chez Resend',
+      });
+    }
+    if (!env.REVALIDATE_URL) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['REVALIDATE_URL'],
+        message: 'Requis en production (mise à jour du site après publication)',
+      });
+    }
+    for (const key of ['APP_URL', 'API_PUBLIC_URL', 'MEDIA_PUBLIC_URL', 'REVALIDATE_URL'] as const) {
+      const value = env[key];
+      if (value && !value.startsWith('https://')) {
+        ctx.addIssue({ code: 'custom', path: [key], message: 'HTTPS obligatoire en production' });
+      }
+    }
   });
 
 export type Env = z.infer<typeof envSchema> & { COOKIE_SECURE: boolean; SWAGGER_ENABLED: boolean };

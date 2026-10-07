@@ -1,9 +1,6 @@
 import type { VideoAsset } from '../generated/prisma/client.js';
 import type { PrismaService } from '../prisma/prisma.service.js';
 
-/** `Media.bytes` est un entier 32 bits : au-delà (sources > 2 Gio), la taille exacte reste dans `Upload.bytes`. */
-const MEDIA_BYTES_MAX = 2_147_483_647;
-
 export type VideoContainer = 'iso-bmff' | 'matroska';
 
 /** Conteneur attendu pour chaque type déclaré (MP4/MOV : ISO BMFF ; MKV/WebM : EBML). */
@@ -49,7 +46,7 @@ export function registerVideoSource(
         kind: 'VIDEO_SOURCE',
         storageKey: input.storageKey,
         mime: input.mime,
-        bytes: Math.min(input.bytes, MEDIA_BYTES_MAX),
+        bytes: BigInt(input.bytes),
       },
     });
     return tx.videoAsset.create({

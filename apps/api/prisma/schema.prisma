@@ -331,7 +331,7 @@ model Media {
   kind       MediaKind
   storageKey String    @unique
   mime       String
-  bytes      Int
+  bytes      BigInt
   width      Int?
   height     Int?
   /// Obligatoire pour une image publiée, sauf si `decorative`.

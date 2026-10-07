@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Sauvegarde quotidienne chiffrée (docs/02-ARCHITECTURE.md §9, docs/06-SECURITY.md §8).
 # - pg_dump au format custom, chiffré avec age (clé publique uniquement sur le VPS),
 # - copie hors du VPS vers un stockage objet compatible S3 (rclone, remote « ecine-backup »),
@@ -6,7 +6,8 @@
 #
 # Cron (root) : 15 2 * * * /opt/ecine/infra/backup/backup.sh >> /var/log/ecine-backup.log 2>&1
 # Prérequis : docker, age, rclone ; /etc/ecine/backup.env (AGE_RECIPIENT, RCLONE_REMOTE).
-set -eu
+# pipefail : un échec de pg_dump fait échouer la sauvegarde (sinon age chiffre un flux vide sans erreur).
+set -euo pipefail
 
 . /etc/ecine/backup.env
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
