@@ -90,7 +90,7 @@ export async function ogCard({
         >
           {/* eslint-disable-next-line @next/next/no-img-element -- rendu d'image Open Graph, pas une page */}
           <img src={mark} width={72} height={72} alt="" />
-          E-Ciné · le cinéma des talents de l’INA
+          E-Ciné · le cinéma congolais, en streaming
         </div>
       </div>
     </div>,

@@ -231,7 +231,7 @@ export function ArticleEditor({
               <TextField
                 label="Lieu"
                 optional
-                placeholder="Ex. : Cour de l’INA, Kinshasa"
+                placeholder="Ex. : Salle de projection, Kinshasa"
                 error={errors.eventPlace?.message}
                 {...register('eventPlace')}
               />

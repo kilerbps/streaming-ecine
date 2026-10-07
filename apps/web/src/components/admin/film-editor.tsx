@@ -285,7 +285,7 @@ export function FilmEditor({
         >
           <TextAreaField
             label="Preuve d’autorisation"
-            help="Ex. : contrat signé le 12/09/2026 avec la réalisatrice, conservé au secrétariat de l’INA (réf. 2026-031)."
+            help="Ex. : contrat signé le 12/09/2026 avec la réalisatrice, conservé au secrétariat d’E-Ciné (réf. 2026-031)."
             rows={3}
             error={errors.rightsNote?.message}
             {...register('rightsNote')}

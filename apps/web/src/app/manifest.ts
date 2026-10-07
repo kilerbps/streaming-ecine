@@ -3,10 +3,9 @@ import type { MetadataRoute } from 'next';
 /** Manifeste PWA : installable, plein écran autonome, couleurs alignées sur le thème sombre (--bg). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'E-Ciné — le cinéma des talents de l’INA',
+    name: 'E-Ciné — le cinéma congolais, en streaming',
     short_name: 'E-Ciné',
-    description:
-      'Films, courts-métrages et actualités des talents de l’Institut National des Arts.',
+    description: 'Films, courts-métrages et actualités du cinéma congolais.',
     lang: 'fr',
     start_url: '/fr',
     scope: '/',

@@ -7,7 +7,7 @@
 
 | # | Question | Défaut appliqué |
 |---|---|---|
-| Q1 | Logo et couleurs | Logo fourni (PNG) → palette dérivée, badge en aplat (ADR-0003). **Fournir le SVG officiel + logo INA.** |
+| Q1 | Logo et couleurs | Logo fourni (PNG) → palette dérivée, badge en aplat (ADR-0003). **Fournir le SVG officiel.** (Le 7 octobre 2026 : plus aucun lien avec l'INA.) |
 | Q2 | Qui publie ? | L'équipe E-Ciné seule (rôles SUPER_ADMIN, ADMIN, EDITOR, MODERATOR) ; rôle `CREATOR` prévu dans le schéma, non utilisé en V1 |
 | Q3 | Stockage vidéo / VPS | Stockage local du VPS (volume Docker), segments servis par l'API ; CDN après mesure (ADR-0006) |
 | Q4 | Visionnage sans compte | Oui ; compte seulement pour agir (j'aime, liste, reprise synchronisée) |

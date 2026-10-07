@@ -197,7 +197,7 @@ describe('Entrées et anti-spam', () => {
     name: 'Kabongo',
     email: 'k@example.cd',
     subject: 'Projection',
-    message: 'Bonjour, je souhaite organiser une projection à l’INA.',
+    message: 'Bonjour, je souhaite organiser une projection à Kinshasa.',
   };
 
   it('refuse un formulaire envoyé trop vite', async () => {

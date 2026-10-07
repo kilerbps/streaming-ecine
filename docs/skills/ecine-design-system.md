@@ -30,7 +30,7 @@ Service `sound.ts` unique ; sprite ≤ 100 Ko ; démarrage après geste ; régla
 Barre d'onglets en bas, bottom sheets, `100dvh`, `safe-area`, cibles ≥ 44 px, gestes simples, retours sonores/haptiques, transitions de vue. Tablette : rail latéral. PC : navigation latérale + raccourcis clavier.
 
 ## Motifs
-3–5 motifs géométriques SVG en aplat, **validés avec l'INA** ; usage parcimonieux (séparateurs, 404, états vides, démarrage PWA).
+3–5 motifs géométriques SVG en aplat, **validés par le propriétaire** ; usage parcimonieux (séparateurs, 404, états vides, démarrage PWA).
 
 ## Checklist visuelle
 - [ ] Un seul CTA principal

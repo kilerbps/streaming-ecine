@@ -120,7 +120,7 @@ Menu **Contenu → Films**, puis **Nouveau film**.
 3. **Année**, **Durée (minutes)**, **Classification d’âge** : facultatifs.
 4. **Résumé (synopsis)** : obligatoire, en français.
 5. **Bande-annonce (URL)** : facultatif, adresse complète commençant par `https://`.
-6. **Preuve d’autorisation** : obligatoire. Décrivez précisément le document qui autorise la diffusion (ex. : « contrat signé le 12/09/2026 avec la réalisatrice, conservé au secrétariat de l’INA, réf. 2026-031 »).
+6. **Preuve d’autorisation** : obligatoire. Décrivez précisément le document qui autorise la diffusion (ex. : « contrat signé le 12/09/2026 avec la réalisatrice, conservé au secrétariat d’E-Ciné, réf. 2026-031 »).
 7. Cliquez sur **Créer le brouillon**. La fiche s’ouvre : le film est en **Brouillon**, invisible sur le site.
 
 [Capture à ajouter : formulaire « Nouveau film », section Informations]

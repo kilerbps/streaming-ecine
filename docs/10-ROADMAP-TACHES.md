@@ -72,7 +72,7 @@ Principe : **une phase à la fois**. L'IA ne passe à la suivante qu'après vali
 
 - [ ] PWA (manifeste, service worker, installation, hors-ligne propre, mise à jour)
 - [ ] Navigation mobile en barre d'onglets, gestes, `safe-area`, transitions
-- [ ] Motifs artistiques validés avec l'INA, réglages (sons, thème, économie de données)
+- [ ] Motifs artistiques validés par le propriétaire, réglages (sons, thème, économie de données)
 - [ ] Optimisation des performances sur Android d'entrée de gamme
 
 **Sortie** : installation sur l'écran d'accueil, sensation d'application validée par 5 testeurs réels.

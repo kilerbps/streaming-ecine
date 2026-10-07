@@ -10,14 +10,14 @@ import {
 
 describe('registerInputSchema', () => {
   const valid = {
-    email: '  Etudiant@INA.cd ',
+    email: '  Spectateur@Exemple.cd ',
     password: 'une-phrase-de-passe-longue',
     displayName: 'Ama',
     acceptTerms: true,
   };
 
   it('normalise l’e-mail', () => {
-    expect(registerInputSchema.parse(valid).email).toBe('etudiant@ina.cd');
+    expect(registerInputSchema.parse(valid).email).toBe('spectateur@exemple.cd');
   });
 
   it('refuse un mot de passe de moins de 12 caractères', () => {
@@ -55,7 +55,7 @@ describe('contactInputSchema', () => {
     name: 'Kabongo',
     email: 'k@example.cd',
     subject: 'Projection',
-    message: 'Bonjour, je souhaite organiser une projection à l’INA.',
+    message: 'Bonjour, je souhaite organiser une projection à Kinshasa.',
     renderedAt: Date.now(),
   };
   it('accepte un message valide', () => {

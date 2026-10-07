@@ -1,8 +1,8 @@
 {
   "meta": {
     "siteName": "E-Ciné",
-    "defaultTitle": "E-Ciné — le cinéma des talents de l'INA",
-    "defaultDescription": "Films, courts-métrages et actualités des étudiants et diplômés de l'Institut National des Arts de Kinshasa. Regardez en streaming, découvrez les talents.",
+    "defaultTitle": "E-Ciné — le cinéma congolais, en streaming",
+    "defaultDescription": "Films, courts-métrages et actualités du cinéma congolais. Regardez en streaming, découvrez les talents.",
     "titleTemplate": "%s · E-Ciné"
   },
   "nav": {
@@ -71,7 +71,7 @@
   },
   "feed": {
     "title": "À découvrir",
-    "intro": "Films, courts-métrages et nouvelles de l'INA, mélangés pour vous.",
+    "intro": "Films, courts-métrages et nouvelles du cinéma congolais, mélangés pour vous.",
     "surprise": "Surprise",
     "surpriseHint": "Un choix hors de vos habitudes",
     "pinned": "À la une",
@@ -97,7 +97,7 @@
     "originalTitle": "Titre original",
     "ageRating": "Public",
     "listTitle": "Films",
-    "listIntro": "Longs-métrages, documentaires et fictions des talents de l'INA.",
+    "listIntro": "Longs-métrages, documentaires et fictions du cinéma congolais.",
     "shortsTitle": "Courts-métrages",
     "shortsIntro": "Des histoires courtes, souvent des premiers films.",
     "allCategories": "Toutes",
@@ -127,7 +127,15 @@
     "endedBody": "Ce film vous a plu ? Gardez-le dans votre liste ou découvrez un autre talent.",
     "moreFilms": "Découvrir d'autres films",
     "close": "Fermer le lecteur",
-    "shortcuts": "Raccourcis : Espace lecture/pause, flèches ±10 s, F plein écran, M son"
+    "shortcuts": "Raccourcis : Espace lecture/pause, flèches ±10 s, F plein écran, M son",
+    "autoWith": "Auto ({height}p)",
+    "dataHint": "Consommation maximale par heure",
+    "buffered": "chargé jusqu'à {time}",
+    "buffering": "Chargement de la vidéo…",
+    "slowNetwork": "Connexion lente. La qualité s'adapte automatiquement.",
+    "slowNetworkManual": "Connexion trop lente pour la qualité choisie.",
+    "switchToAuto": "Passer en qualité automatique",
+    "offline": "Pas de connexion. La lecture reprendra toute seule au retour du réseau."
   },
   "actions": {
     "like": "J'aime",
@@ -152,7 +160,7 @@
     "seeFilmography": "Voir la filmographie",
     "born": "Né·e en {year}",
     "listTitle": "Talents",
-    "listIntro": "Acteurs, réalisateurs et techniciens formés à l'INA.",
+    "listIntro": "Acteurs, réalisateurs et techniciens du cinéma congolais.",
     "socials": "Réseaux",
     "empty": "Les fiches des talents arrivent bientôt."
   },
@@ -279,7 +287,7 @@
     "manage": "Gérer les cookies"
   },
   "footer": {
-    "tagline": "Le cinéma des talents de l'Institut National des Arts.",
+    "tagline": "Le cinéma congolais, en streaming.",
     "legal": "Mentions légales",
     "privacy": "Confidentialité",
     "terms": "Conditions générales",

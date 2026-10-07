@@ -1,6 +1,6 @@
 # E-Ciné — Dossier de conception (à donner à l'IA)
 
-> Plateforme congolaise de streaming et de culture cinéma pour les étudiants de l'**INA** (Institut National des Arts).
+> Plateforme congolaise de streaming et de culture cinéma, privée et indépendante (« Le cinéma congolais, en streaming. »).
 > Dossier généré le **2 octobre 2026**. Les versions et liens ont été vérifiés à cette date (voir `11-LIENS-DOCS.md`).
 
 ## 1. Contenu du dossier
@@ -52,7 +52,7 @@
 
 | # | Question | Défaut que l'IA appliquera si tu ne réponds pas |
 |---|---|---|
-| Q1 | Peux-tu fournir le **logo E-Ciné** (SVG/PNG) et celui de l'INA ? Quelles sont leurs couleurs ? | Palette provisoire de `05` (terre cuite + encre) |
+| Q1 | Peux-tu fournir le **logo E-Ciné** (SVG/PNG) ? Quelles sont leurs couleurs ? | Palette provisoire de `05` (terre cuite + encre) |
 | Q2 | **Qui publie ?** Seulement l'équipe E-Ciné, ou aussi des étudiants (créateurs vérifiés, avec modération) ? | Équipe seule en V1 ; rôle `CREATOR` prévu en V2 |
 | Q3 | **Où stocker les vidéos ?** Caractéristiques du VPS (CPU, RAM, disque, **bande passante mensuelle**, localisation) ? | VPS en Europe + CDN devant les segments dès que possible |
 | Q4 | Le visionnage est-il **libre sans compte** ? | Oui ; compte requis seulement pour les actions |

@@ -77,7 +77,7 @@ Responsable du traitement (identité, contact, **DPO/délégué** si désigné) 
 Objet · accès libre et comptes · règles de conduite · **propriété intellectuelle** et usage des films (streaming personnel, interdiction de téléchargement/reproduction/redistribution) · contenus des créateurs et licence accordée à E-Ciné (V2) · signalement et **procédure de retrait** · responsabilité · suspension de compte · publicités (futur) · droit applicable et juridiction · contact · date de version.
 
 ### C3. Mentions légales
-Éditeur (INA / E-Ciné, adresse, contact), directeur de publication, hébergeurs (Vercel + hébergeur du VPS), crédits.
+Éditeur (E-Ciné, adresse, contact), directeur de publication, hébergeurs (Vercel + hébergeur du VPS), crédits.
 
 ### C4. Politique cookies et bannière
 Catégories : **Nécessaires** (toujours actifs : session, sécurité, préférences de thème/son/langue) · **Mesure d'audience** · **Publicité** (V2). Tout est **refusé par défaut** sauf nécessaires. Boutons « Tout refuser » et « Tout accepter » **de même importance visuelle**, plus « Personnaliser ». Choix mémorisé (6 à 12 mois), modifiable via un lien permanent dans le pied de page. Aucun script non essentiel chargé avant consentement. Preuve du consentement : `ConsentRecord`.

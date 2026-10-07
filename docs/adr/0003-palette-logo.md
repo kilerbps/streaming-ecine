@@ -26,6 +26,6 @@ Vérification automatique : `pnpm check:contrast` (40 paires, sombre et clair) �
 
 ## À valider / fournir
 
-- Le SVG **officiel** du logo (et celui de l'INA) pour remplacer le tracé reconstitué.
+- Le SVG **officiel** du logo pour remplacer le tracé reconstitué.
 - L'aplat rouge du badge (choix de la teinte `#D7262B`).
-- Les 3 motifs géométriques (`losanges`, `chevrons`, `damier`) : **provisoires**, à faire valider par des étudiants/enseignants de l'INA (05 §9).
+- Les 3 motifs géométriques (`losanges`, `chevrons`, `damier`) : **provisoires**, à faire valider par le propriétaire (05 §9).

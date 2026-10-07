@@ -1,16 +1,16 @@
 # 01 — PRD : E-Ciné
 
-Version 1.0 · 2 octobre 2026 · Statut : à valider par le propriétaire du produit
+Version 1.0 · 2 octobre 2026 · Statut : à valider par le propriétaire du produit · Mise à jour du 7 octobre 2026 : plateforme privée et indépendante, sans lien avec l'INA ; gratuite et ouverte à tous
 
 ## 1. Résumé
 
-E-Ciné est une plateforme web (installable comme une application mobile) de **diffusion de films et courts-métrages en streaming**, de **valorisation des talents** (acteurs, réalisateurs, producteurs) et de **publication d'actualités**, destinée d'abord aux étudiants et diplômés de l'**Institut National des Arts (INA)** de la RDC, puis au grand public.
+E-Ciné est une plateforme web (installable comme une application mobile) de **diffusion de films et courts-métrages en streaming**, de **valorisation des talents** (acteurs, réalisateurs, producteurs) et de **publication d'actualités**, consacrée au **cinéma congolais**. C'est une plateforme **privée et indépendante**, **gratuite et ouverte à tous** ; slogan : « Le cinéma congolais, en streaming. »
 
 Elle se vit comme un **flux de découverte** (films, courts-métrages, publications photo + texte, actualités) sans ressembler à un réseau social ni à Netflix : l'utilisateur doit être **surpris**, pas piégé.
 
 ## 2. Problème et opportunité
 
-- Les œuvres des étudiants de l'INA manquent de visibilité et d'une vitrine professionnelle.
+- Les œuvres des jeunes créateurs congolais manquent de visibilité et d'une vitrine professionnelle.
 - Les acteurs et réalisateurs congolais ont peu de pages référencées sur Google.
 - Les connexions mobiles sont variables : la vidéo doit s'adapter au débit.
 - Les contenus doivent être protégés contre le téléchargement simple.
@@ -30,8 +30,8 @@ Elle se vit comme un **flux de découverte** (films, courts-métrages, publicati
 
 | Persona | Besoin | Appareil |
 |---|---|---|
-| **Spectateur** (public, étudiants) | Découvrir et regarder vite, sans compte | Mobile (majorité), débit variable |
-| **Créateur INA** (V2) | Montrer ses œuvres, avoir sa fiche | Mobile + PC |
+| **Spectateur** (grand public, étudiants, diaspora) | Découvrir et regarder vite, sans compte | Mobile (majorité), débit variable |
+| **Créateur** (V2) | Montrer ses œuvres, avoir sa fiche | Mobile + PC |
 | **Éditeur / Admin E-Ciné** | Publier, modérer, suivre les stats | PC + tablette |
 | **Annonceur** (futur) | Placer une publicité propre et mesurée | — |
 

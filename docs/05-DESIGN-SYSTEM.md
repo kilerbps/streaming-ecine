@@ -195,7 +195,7 @@ Règles :
 
 ## 9. Motifs artistiques
 
-- Famille de **3 à 5 motifs géométriques** en SVG (aplat, 1 couleur : `--border` ou `--highlight`), inspirés de la tradition textile d'Afrique centrale — **à faire valider avec des étudiants/enseignants de l'INA** pour éviter toute appropriation ou contresens.
+- Famille de **3 à 5 motifs géométriques** en SVG (aplat, 1 couleur : `--border` ou `--highlight`), inspirés de la tradition textile d'Afrique centrale — **à faire valider par le propriétaire** pour éviter toute appropriation ou contresens.
 - Usage : séparateurs de section, page 404, états vides, écran de démarrage PWA, fond de la bannière cookies. **Jamais** derrière du texte long. Jamais en dégradé ni en transparence qui nuit au contraste.
 - Photographie : portraits d'acteurs sur fond uni, fotogrammes de films ; recadrages francs ; pas de filtre uniformisant.
 

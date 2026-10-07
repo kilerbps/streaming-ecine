@@ -5,7 +5,7 @@
 
 ## 0. Contexte en 5 lignes
 
-E-Ciné : plateforme congolaise de streaming (films, courts-métrages, publications photo + texte, actualités) pour les étudiants de l'INA. Frontend **Next.js 16.3** sur Vercel ; API **NestJS 12** sur VPS ; **Prisma 7** + PostgreSQL ; Redis. Mobile d'abord, sombre + clair, style Carbon artistique, sans dégradé, sans « look IA ». Propriétaire du produit : l'utilisateur humain. **Tu ne décides pas seul des choix qui engagent le produit.**
+E-Ciné : plateforme congolaise de streaming (films, courts-métrages, publications photo + texte, actualités), privée et indépendante, gratuite et ouverte à tous (aucun lien avec l'INA). Frontend **Next.js 16.3** sur Vercel ; API **NestJS 12** sur VPS ; **Prisma 7** + PostgreSQL ; Redis. Mobile d'abord, sombre + clair, style Carbon artistique, sans dégradé, sans « look IA ». Propriétaire du produit : l'utilisateur humain. **Tu ne décides pas seul des choix qui engagent le produit.**
 
 ## 1. Ordre de lecture
 

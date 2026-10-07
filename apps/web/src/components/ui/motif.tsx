@@ -1,6 +1,6 @@
 /**
  * Motifs géométriques en aplat, inspirés des textiles d'Afrique centrale (velours du Kasaï, nattes).
- * PROVISOIRES : à faire valider avec des étudiants/enseignants de l'INA (docs/05 §9).
+ * PROVISOIRES : à faire valider par le propriétaire (docs/05 §9).
  * Une seule couleur (token), jamais derrière un texte long, jamais en dégradé.
  */
 export type MotifName = 'losanges' | 'chevrons' | 'damier';
