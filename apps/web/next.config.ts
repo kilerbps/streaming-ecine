@@ -1,0 +1,38 @@
+import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
+/** En-têtes de sécurité statiques. La CSP (avec nonce) est posée par src/proxy.ts. */
+const securityHeaders = [
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()',
+  },
+];
+
+const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
+  images: {
+    // Images déjà compressées par l'API (sharp) en largeurs fixes : pas de réoptimisation par Vercel.
+    loader: 'custom',
+    loaderFile: './src/lib/image-loader.ts',
+  },
+  experimental: {
+    serverActions: {
+      // Morceaux d'envoi vidéo (3 Mio) et images de l'administration : sous la limite Vercel de 4,5 Mo.
+      bodySizeLimit: '4mb',
+    },
+  },
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }];
+  },
+};
+
+export default withNextIntl(nextConfig);
