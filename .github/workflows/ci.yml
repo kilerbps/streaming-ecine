@@ -117,7 +117,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      - uses: zaproxy/action-baseline@v0.14.0
+      - uses: zaproxy/action-baseline@v0.15.0
         with:
           target: ${{ vars.PREVIEW_URL }}
           rules_file_name: security/zap-rules.tsv
