@@ -1,0 +1,103 @@
+/*
+ * E-Ciné — design tokens (source unique).
+ * Thème choisi par l'attribut data-theme="dark|light" sur <html>, lu côté serveur (pas de flash).
+ * Accents dérivés du logo (bleu #1E76BC, rouge du badge) — voir docs/adr/0003-palette-logo.md.
+ * Règles : aplats uniquement, aucun dégradé ; contrastes vérifiés par `pnpm check:contrast`.
+ */
+
+/* Sombre « Encre » (par défaut) */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #121110;
+  --surface-1: #1b1917;
+  --surface-2: #25221f;
+  --border: #3a3531;
+  --border-strong: #857a70;
+  --text: #f2ede6;
+  --text-muted: #b3aa9f;
+  --accent: #5aa3e6;
+  --accent-text: #121110;
+  --highlight: #ff5a5f;
+  --success: #4caf7a;
+  --danger: #f0675b;
+  --focus: #ffffff;
+  --overlay: #000000;
+}
+
+/* Clair « Papier » */
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #f6f1ea;
+  --surface-1: #ffffff;
+  --surface-2: #ede6dc;
+  --border: #cfc6b9;
+  --border-strong: #857b70;
+  --text: #1a1714;
+  --text-muted: #5e564e;
+  --accent: #17629e;
+  --accent-text: #ffffff;
+  --highlight: #c41e24;
+  --success: #1e6b45;
+  --danger: #b3261e;
+  --focus: #1a1714;
+  --overlay: #1a1714;
+}
+
+:root {
+  /* Couleurs de marque exactes : logo uniquement, jamais pour du texte courant */
+  --brand-blue: #1e76bc;
+  --brand-red: #d7262b;
+  --brand-on-red: #ffffff;
+
+  /* Lecteur vidéo : fond noir et commandes blanches, identiques dans les deux thèmes (contraste 21:1). */
+  --player-bg: #000000;
+  --player-fg: #ffffff;
+
+  /* Typographie (familles injectées par next/font) */
+  --font-serif: var(--font-plex-serif, 'IBM Plex Serif'), Georgia, serif;
+  --font-sans: var(--font-plex-sans, 'IBM Plex Sans'), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono, 'IBM Plex Mono'), ui-monospace, monospace;
+  --text-12: 0.75rem;
+  --text-14: 0.875rem;
+  --text-16: 1rem;
+  --text-20: 1.25rem;
+  --text-24: 1.5rem;
+  --text-32: 2rem;
+  --text-44: 2.75rem;
+  --text-64: 4rem;
+  --leading-body: 1.5;
+  --leading-tight: 1.15;
+
+  /* Espacement : unité 8 px (mini-unité 4 px) */
+  --space-4: 0.25rem;
+  --space-8: 0.5rem;
+  --space-12: 0.75rem;
+  --space-16: 1rem;
+  --space-24: 1.5rem;
+  --space-32: 2rem;
+  --space-48: 3rem;
+  --space-64: 4rem;
+  --space-96: 6rem;
+
+  /* Rayons et traits : angles droits */
+  --radius-0: 0;
+  --radius-field: 2px;
+  --stroke: 1px;
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  /* Mouvement (productif, Carbon) */
+  --ease: cubic-bezier(0.2, 0, 0.38, 0.9);
+  --duration-fast: 70ms;
+  --duration-moderate: 150ms;
+  --duration-slow: 240ms;
+
+  /* Ergonomie mobile */
+  --touch-target: 44px;
+  --tabbar-height: 56px;
+  --header-height: 56px;
+
+  /* Points de rupture (référence ; utilisés dans les media queries) : sm 320 · md 672 · lg 1056 · xlg 1312 · max 1584 */
+  --container-max: 1584px;
+}

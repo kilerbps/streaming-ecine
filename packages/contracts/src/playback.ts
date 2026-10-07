@@ -1,0 +1,21 @@
+import { z } from 'zod';
+
+/** Session de lecture : jeton ≤ 5 min, renouvelé par le lecteur (docs/06-SECURITY.md §6). */
+export const PLAYBACK_TOKEN_TTL_SEC = 300;
+
+export const playbackSessionSchema = z.object({
+  sessionId: z.string(),
+  manifestUrl: z.string(),
+  token: z.string(),
+  expiresAt: z.string(),
+});
+export type PlaybackSession = z.infer<typeof playbackSessionSchema>;
+
+export const playbackRefreshSchema = z.object({
+  token: z.string(),
+  expiresAt: z.string(),
+});
+export type PlaybackRefresh = z.infer<typeof playbackRefreshSchema>;
+
+/** Nom du paramètre de requête qui porte le jeton sur les URLs média (jamais dans l'URL de page). */
+export const PLAYBACK_TOKEN_PARAM = 't';

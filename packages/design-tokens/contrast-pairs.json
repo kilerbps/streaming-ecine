@@ -1,0 +1,25 @@
+{
+  "$comment": "Paires de tokens à vérifier dans chaque thème. min 4.5 = texte, 3 = composants/focus (WCAG 2.2 AA).",
+  "pairs": [
+    { "fg": "--text", "bg": "--bg", "min": 4.5 },
+    { "fg": "--text", "bg": "--surface-1", "min": 4.5 },
+    { "fg": "--text", "bg": "--surface-2", "min": 4.5 },
+    { "fg": "--text-muted", "bg": "--bg", "min": 4.5 },
+    { "fg": "--text-muted", "bg": "--surface-1", "min": 4.5 },
+    { "fg": "--text-muted", "bg": "--surface-2", "min": 4.5 },
+    { "fg": "--accent", "bg": "--bg", "min": 4.5 },
+    { "fg": "--accent", "bg": "--surface-1", "min": 4.5 },
+    { "fg": "--accent-text", "bg": "--accent", "min": 4.5 },
+    { "fg": "--highlight", "bg": "--bg", "min": 4.5 },
+    { "fg": "--highlight", "bg": "--surface-1", "min": 4.5 },
+    { "fg": "--success", "bg": "--bg", "min": 4.5 },
+    { "fg": "--success", "bg": "--surface-1", "min": 4.5 },
+    { "fg": "--danger", "bg": "--bg", "min": 4.5 },
+    { "fg": "--danger", "bg": "--surface-1", "min": 4.5 },
+    { "fg": "--border-strong", "bg": "--bg", "min": 3 },
+    { "fg": "--border-strong", "bg": "--surface-1", "min": 3 },
+    { "fg": "--focus", "bg": "--bg", "min": 3 },
+    { "fg": "--focus", "bg": "--surface-1", "min": 3 },
+    { "fg": "--accent", "bg": "--surface-2", "min": 3 }
+  ]
+}
