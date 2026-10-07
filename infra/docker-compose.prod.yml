@@ -1,0 +1,142 @@
+# Production / staging sur le VPS (docs/02-ARCHITECTURE.md §9).
+# Seul Caddy est exposé (80/443). PostgreSQL et Redis restent sur le réseau interne, sans port public.
+# Secrets : /etc/ecine/*.env (droits 600, propriétaire root), jamais dans le dépôt.
+#
+#   docker compose -f infra/docker-compose.prod.yml --env-file /etc/ecine/compose.env up -d
+#   docker compose -f infra/docker-compose.prod.yml run --rm migrate      # avant chaque nouvelle version
+name: ecine
+
+x-hardening: &hardening
+  restart: unless-stopped
+  security_opt: ['no-new-privileges:true']
+  cap_drop: [ALL]
+  init: true
+  logging:
+    driver: json-file
+    options: { max-size: '10m', max-file: '5' }
+
+services:
+  caddy:
+    <<: *hardening
+    image: caddy:2-alpine
+    cap_add: [NET_BIND_SERVICE]
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      API_DOMAIN: ${API_DOMAIN}
+      MEDIA_DOMAIN: ${MEDIA_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - storage:/data/storage:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [edge, app]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    <<: *hardening
+    image: ${REGISTRY:-ghcr.io/e-cine}/ecine-api:${TAG:-latest}
+    env_file: /etc/ecine/api.env
+    environment:
+      STORAGE_DIR: /data/storage
+    read_only: true
+    tmpfs: ['/tmp']
+    volumes:
+      - storage:/data/storage
+    networks: [app, data]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    <<: *hardening
+    image: ${REGISTRY:-ghcr.io/e-cine}/ecine-worker:${TAG:-latest}
+    env_file: /etc/ecine/api.env
+    environment:
+      STORAGE_DIR: /data/storage
+    read_only: true
+    tmpfs: ['/tmp']
+    volumes:
+      - storage:/data/storage
+    networks: [app, data]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  migrate:
+    image: ${REGISTRY:-ghcr.io/e-cine}/ecine-migrate:${TAG:-latest}
+    env_file: /etc/ecine/api.env
+    networks: [data]
+    profiles: [tools]
+
+  postgres:
+    <<: *hardening
+    image: postgres:18-alpine
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    environment:
+      POSTGRES_USER: ecine
+      POSTGRES_DB: ecine
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks: [data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ecine -d ecine']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    <<: *hardening
+    image: redis:8-alpine
+    cap_add: [SETGID, SETUID]
+    # Mot de passe lu depuis un fichier secret ; noeviction : les files BullMQ ne doivent pas être évincées.
+    command:
+      [
+        'sh',
+        '-c',
+        'exec redis-server --requirepass "$$(cat /run/secrets/redis_password)" --maxmemory 256mb --maxmemory-policy noeviction --appendonly yes',
+      ]
+    secrets: [redis_password]
+    volumes:
+      - redisdata:/data
+    networks: [data]
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'redis-cli -a "$$(cat /run/secrets/redis_password)" --no-auth-warning ping | grep PONG',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+secrets:
+  postgres_password:
+    file: /etc/ecine/secrets/postgres_password
+  redis_password:
+    file: /etc/ecine/secrets/redis_password
+
+volumes:
+  pgdata:
+  redisdata:
+  storage:
+  caddy-data:
+  caddy-config:
+
+networks:
+  # edge : Internet ↔ Caddy. app : Caddy ↔ API/worker (sortie autorisée : e-mails, Turnstile, revalidation).
+  edge:
+  app:
+  # data : base et Redis, sans aucun accès extérieur.
+  data:
+    internal: true
