@@ -1,0 +1,626 @@
+// E-Ciné — schéma PostgreSQL (Prisma 7). Règles : docs/03-DATA-MODEL.md.
+// Une donnée = une table. Les compteurs (likes, vues) sont calculés, jamais stockés.
+
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
+  importFileExtension    = "js"
+  generatedFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EDITOR
+  MODERATOR
+  CREATOR
+  MEMBER
+}
+
+enum PublishState {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum FilmKind {
+  FEATURE
+  SHORT
+  DOCUMENTARY
+  SERIES_EPISODE
+}
+
+enum CreditRole {
+  ACTOR
+  DIRECTOR
+  PRODUCER
+  WRITER
+  CINEMATOGRAPHER
+  EDITOR
+  COMPOSER
+  OTHER
+}
+
+enum ArticleKind {
+  NEWS
+  ANNOUNCEMENT
+  EVENT
+}
+
+enum PostKind {
+  PHOTO_TEXT
+}
+
+enum MediaKind {
+  IMAGE
+  VIDEO_SOURCE
+  SUBTITLE
+}
+
+enum TranscodeState {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum LikeTarget {
+  FILM
+  POST
+  ARTICLE
+}
+
+enum EmailTokenKind {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+enum ReportState {
+  OPEN
+  RESOLVED
+  REJECTED
+}
+
+// ——— Comptes et sessions ———
+
+model User {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  emailVerified       DateTime?
+  passwordHash        String?
+  displayName         String
+  role                Role      @default(MEMBER)
+  locale              String    @default("fr")
+  /// Secret TOTP chiffré (AES-256-GCM), jamais renvoyé.
+  twoFactorSecretEnc  String?
+  twoFactorEnabledAt  DateTime?
+  disabledAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  sessions     Session[]
+  emailTokens  EmailToken[]
+  likes        Like[]
+  bookmarks    Bookmark[]
+  progress     WatchProgress[]
+  articles     Article[]
+  posts        Post[]
+  reports      Report[]
+  auditEntries AuditLog[]
+  uploads      Upload[]
+
+  @@map("users")
+}
+
+/// Jeton de rafraîchissement tournant (stocké haché). `family` permet la détection de rejeu.
+model Session {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  family     String
+  /// Vrai si la connexion de cette famille a validé le second facteur (TOTP).
+  mfa        Boolean   @default(false)
+  userAgent  String?
+  ipHash     String?
+  expiresAt  DateTime
+  /// Renseigné quand ce jeton a été remplacé par rotation (fenêtre de grâce anti-concurrence).
+  rotatedAt  DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([family])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model EmailToken {
+  id        String         @id @default(cuid())
+  userId    String
+  kind      EmailTokenKind
+  tokenHash String         @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime       @default(now())
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+  @@map("email_tokens")
+}
+
+// ——— Catalogue ———
+
+model Film {
+  id            String       @id @default(cuid())
+  slug          String       @unique
+  kind          FilmKind
+  state         PublishState @default(DRAFT)
+  publishAt     DateTime?
+  year          Int?
+  runtimeSec    Int?
+  originalTitle String?
+  /// Obligatoire : preuve d'autorisation de diffusion.
+  rightsNote    String
+  /// Publication impossible tant que false.
+  rightsOk      Boolean      @default(false)
+  posterId      String?
+  trailerUrl    String?
+  ageRating     String?
+  seoNoIndex    Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  translations FilmTranslation[]
+  credits      Credit[]
+  categories   FilmCategory[]
+  videos       VideoAsset[]
+  poster       Media?            @relation("FilmPoster", fields: [posterId], references: [id], onDelete: SetNull)
+  bookmarks    Bookmark[]
+  progress     WatchProgress[]
+  featuredIn   Article[]         @relation("ArticleFeaturedFilm")
+  uploads      Upload[]
+
+  @@index([state, publishAt])
+  @@index([kind, state, publishAt])
+  @@map("films")
+}
+
+model FilmTranslation {
+  filmId         String
+  locale         String
+  title          String
+  synopsis       String
+  seoTitle       String?
+  seoDescription String?
+  /// Colonne générée par PostgreSQL (titre A + résumé B, configuration française) — voir la migration search.
+  searchVector   Unsupported("tsvector")? @default(dbgenerated()) @map("search_vector")
+  film           Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@id([filmId, locale])
+  @@index([searchVector], type: Gin)
+  @@map("film_translations")
+}
+
+model Person {
+  id        String       @id @default(cuid())
+  slug      String       @unique
+  state     PublishState @default(DRAFT)
+  photoId   String?
+  birthYear Int?
+  /// { instagram, facebook, x, youtube… } validé par Zod (contracts/socialsSchema).
+  socials   Json?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+
+  translations PersonTranslation[]
+  credits      Credit[]
+  photo        Media?              @relation("PersonPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+
+  @@index([state])
+  @@map("people")
+}
+
+model PersonTranslation {
+  personId String
+  locale   String
+  name     String
+  bio      String
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([personId, locale])
+  @@map("person_translations")
+}
+
+/// La filmographie = ces lignes (aucune copie ailleurs).
+model Credit {
+  id        String     @id @default(cuid())
+  filmId    String
+  personId  String
+  role      CreditRole
+  character String?
+  position  Int        @default(0)
+  film      Film       @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  person    Person     @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([filmId, personId, role, character])
+  @@index([personId])
+  @@map("credits")
+}
+
+model Category {
+  id           String                @id @default(cuid())
+  slug         String                @unique
+  createdAt    DateTime              @default(now())
+  translations CategoryTranslation[]
+  films        FilmCategory[]
+
+  @@map("categories")
+}
+
+model CategoryTranslation {
+  categoryId String
+  locale     String
+  name       String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([categoryId, locale])
+  @@map("category_translations")
+}
+
+model FilmCategory {
+  filmId     String
+  categoryId String
+  film       Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([filmId, categoryId])
+  @@index([categoryId])
+  @@map("film_categories")
+}
+
+// ——— Vidéo et médias ———
+
+model VideoAsset {
+  id            String         @id @default(cuid())
+  filmId        String
+  /// Fichier source privé (jamais servi).
+  sourceMediaId String
+  state         TranscodeState @default(PENDING)
+  progress      Int?
+  durationSec   Int?
+  /// Chemin interne relatif à la racine HLS, jamais exposé tel quel.
+  hlsBasePath   String?
+  /// Hauteurs disponibles (ex. [240, 360, 480, 720]).
+  renditions    Int[]
+  keyId         String?
+  error         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  film          Film           @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  sourceMedia   Media          @relation("VideoSource", fields: [sourceMediaId], references: [id])
+  key           ContentKey?    @relation(fields: [keyId], references: [id])
+
+  @@index([filmId, state])
+  @@map("video_assets")
+}
+
+/// Clé AES-128 d'une vidéo, chiffrée au repos (AES-256-GCM avec la clé maîtresse MEDIA_KEY_SECRET).
+model ContentKey {
+  id        String       @id @default(cuid())
+  keyEnc    String
+  createdAt DateTime     @default(now())
+  revokedAt DateTime?
+  videos    VideoAsset[]
+
+  @@map("content_keys")
+}
+
+/// Images et fichiers. `storageKey` est une clé de stockage, jamais une URL.
+model Media {
+  id         String    @id @default(cuid())
+  kind       MediaKind
+  storageKey String    @unique
+  mime       String
+  bytes      Int
+  width      Int?
+  height     Int?
+  /// Obligatoire pour une image publiée, sauf si `decorative`.
+  alt        String?
+  decorative Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+
+  filmPosters   Film[]       @relation("FilmPoster")
+  personPhotos  Person[]     @relation("PersonPhoto")
+  articleCovers Article[]    @relation("ArticleCover")
+  postImages    PostImage[]
+  teamPhotos    TeamMember[] @relation("TeamPhoto")
+  videoSources  VideoAsset[] @relation("VideoSource")
+
+  @@index([kind])
+  @@map("media")
+}
+
+/// Envoi vidéo reprenable (par morceaux).
+model Upload {
+  id            String    @id @default(cuid())
+  filmId        String
+  createdById   String
+  fileName      String
+  mime          String
+  bytes         BigInt
+  receivedBytes BigInt    @default(0)
+  storageKey    String    @unique
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  film          Film      @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  createdBy     User      @relation(fields: [createdById], references: [id])
+
+  @@map("uploads")
+}
+
+// ——— Éditorial ———
+
+model Article {
+  id             String       @id @default(cuid())
+  slug           String       @unique
+  kind           ArticleKind
+  state          PublishState @default(DRAFT)
+  publishAt      DateTime?
+  coverId        String?
+  authorId       String
+  eventStart     DateTime?
+  eventPlace     String?
+  featuredFilmId String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  translations ArticleTranslation[]
+  cover        Media?               @relation("ArticleCover", fields: [coverId], references: [id], onDelete: SetNull)
+  author       User                 @relation(fields: [authorId], references: [id])
+  featuredFilm Film?                @relation("ArticleFeaturedFilm", fields: [featuredFilmId], references: [id], onDelete: SetNull)
+
+  @@index([state, publishAt])
+  @@index([kind, state, publishAt])
+  @@map("articles")
+}
+
+model ArticleTranslation {
+  articleId      String
+  locale         String
+  title          String
+  excerpt        String
+  body           String
+  seoTitle       String?
+  seoDescription String?
+  /// Colonne générée par PostgreSQL (titre A + chapeau B + texte C) — voir la migration search.
+  searchVector   Unsupported("tsvector")? @default(dbgenerated()) @map("search_vector")
+  article        Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, locale])
+  @@index([searchVector], type: Gin)
+  @@map("article_translations")
+}
+
+/// Publication photo + texte du feed.
+model Post {
+  id          String       @id @default(cuid())
+  kind        PostKind     @default(PHOTO_TEXT)
+  state       PublishState @default(DRAFT)
+  publishAt   DateTime?
+  authorId    String
+  caption     String
+  locale      String       @default("fr")
+  /// Épinglage éditorial dans le feed jusqu'à cette date.
+  pinnedUntil DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  images PostImage[]
+  author User        @relation(fields: [authorId], references: [id])
+
+  @@index([state, publishAt])
+  @@map("posts")
+}
+
+model PostImage {
+  postId   String
+  mediaId  String
+  position Int
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media    Media  @relation(fields: [mediaId], references: [id])
+
+  @@id([postId, mediaId])
+  @@map("post_images")
+}
+
+// ——— Interactions ———
+
+/// Cible polymorphe limitée à FILM, POST, ARTICLE ; existence vérifiée par le service.
+model Like {
+  userId     String
+  targetType LikeTarget
+  targetId   String
+  createdAt  DateTime   @default(now())
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@map("likes")
+}
+
+model Bookmark {
+  userId    String
+  filmId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film      Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@id([userId, filmId])
+  @@index([userId, createdAt])
+  @@map("bookmarks")
+}
+
+model WatchProgress {
+  userId      String
+  filmId      String
+  positionSec Int
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film        Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@id([userId, filmId])
+  @@index([userId, updatedAt])
+  @@map("watch_progress")
+}
+
+// ——— Site ———
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  name      String
+  title     String
+  bio       String?
+  photoId   String?
+  position  Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  photo     Media?   @relation("TeamPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+
+  @@map("team_members")
+}
+
+model StaticPage {
+  id           String                  @id @default(cuid())
+  slug         String                  @unique
+  state        PublishState            @default(DRAFT)
+  version      Int                     @default(1)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  translations StaticPageTranslation[]
+
+  @@map("static_pages")
+}
+
+model StaticPageTranslation {
+  pageId String
+  locale String
+  title  String
+  body   String
+  page   StaticPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@id([pageId, locale])
+  @@map("static_page_translations")
+}
+
+/// Ligne unique (id = 1).
+model SiteSettings {
+  id           Int      @id @default(1)
+  contactEmail String
+  phone        String?
+  socials      Json     @default("{}")
+  adsEnabled   Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model Redirect {
+  id        String   @id @default(cuid())
+  fromPath  String   @unique
+  toPath    String
+  status    Int      @default(301)
+  createdAt DateTime @default(now())
+
+  @@map("redirects")
+}
+
+model ContactMessage {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  body      String
+  ipHash    String?
+  handledAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([createdAt])
+  @@map("contact_messages")
+}
+
+model Report {
+  id         String      @id @default(cuid())
+  targetType String
+  targetId   String
+  reason     String
+  details    String?
+  reporterId String?
+  state      ReportState @default(OPEN)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  reporter   User?       @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([state, createdAt])
+  @@map("reports")
+}
+
+model ConsentRecord {
+  id         String   @id @default(cuid())
+  anonId     String
+  userId     String?
+  version    String
+  categories Json
+  createdAt  DateTime @default(now())
+
+  @@index([anonId])
+  @@index([createdAt])
+  @@map("consent_records")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  /// Avant/après (sans secret ni donnée personnelle superflue).
+  meta      Json?
+  ipHash    String?
+  createdAt DateTime @default(now())
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// Mesure d'audience minimaliste, sans identifiant personnel persistant.
+model AnalyticsEvent {
+  id         BigInt   @id @default(autoincrement())
+  type       String
+  path       String?
+  targetType String?
+  targetId   String?
+  referrer   String?
+  device     String?
+  country    String?
+  createdAt  DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([targetType, targetId, type])
+  @@map("analytics_events")
+}

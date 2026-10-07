@@ -1,0 +1,16 @@
+{
+  "extends": "@ecine/config/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "declaration": false,
+    "sourceMap": true,
+    "incremental": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "removeComments": true,
+    "types": ["vitest/globals", "node"]
+  },
+  "include": ["src", "test", "prisma.config.ts"]
+}
