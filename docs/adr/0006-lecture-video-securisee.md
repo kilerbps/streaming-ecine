@@ -29,3 +29,15 @@ Aucune protection web sans DRM n'empêche l'enregistrement d'écran. Un DRM (Wid
 - Hébergement des segments : mesurer la bande passante du VPS (Q3), puis envisager un CDN avec authentification par jeton (ADR à venir).
 - `Media.bytes` est un entier 32 bits : la taille exacte des sources de plus de 2 Gio n'y est pas conservée (elle l'est dans `Upload.bytes`). Une migration vers `BigInt` est proposée, en attente de validation.
 - Un IV unique par vidéo, comme demandé dans la spécification. Laisser FFmpeg dériver un IV par segment est possible si souhaité.
+
+## Évolution du 7 octobre 2026 : réseaux instables (lot 1 de `docs/12`)
+
+Validée par le propriétaire (lecteur adapté aux connexions de la RDC).
+
+- **Échelle** : ajout d'un palier **144p** (200 kbit/s), audio **64 kbit/s** jusqu'en 360p (96 kbit/s en 480p, 128 kbit/s au-delà), **segments de 4 s** au lieu de 6 (adaptation plus rapide). Les vidéos existantes doivent être retranscodées.
+- **Démarrage** : débit estimé avant la première image (dernière mesure de l'appareil, sinon Network Information API, sinon type de réseau) ; plus basse qualité si l'économie de données est demandée par le visiteur ou par le téléphone.
+- **Tampon** : 60 s d'avance (120 s au plus), 30 s en arrière, 30 Mo au plus sur les téléphones à 2 Go de mémoire ou moins ; 20 s d'avance en économie de données.
+- **Réseau lent** : chargement des segments plus patient (premier octet 15 s, 10 nouveaux essais espacés jusqu'à 15 s) ; montée de qualité prudente, descente rapide.
+- **Coupure** : reprise automatique (nouveau jeton ou nouvelle session, essais espacés de 3 à 30 s, ou dès le retour du réseau). Avant, le message promettait une reprise qui n'arrivait jamais.
+- **Interface** : chargement visible après 300 ms de blocage, explication après 5 s (« connexion lente », ou bouton « Passer en qualité automatique » si une qualité a été imposée), bandeau « Pas de connexion », partie chargée sous la barre de progression, « Auto (360p) », consommation maximale par heure pour chaque qualité, choix mémorisé sur l'appareil, changement de qualité sans interruption (`nextLevel`).
+- **Non fait** : mesure de la qualité d'expérience (temps de démarrage, blocages) : demande d'ajouter une valeur numérique aux événements d'audience, à proposer séparément.

@@ -26,6 +26,10 @@ import { PlayerControls } from './player-controls';
 import { useHlsPlayback } from './use-hls';
 
 const SAVE_EVERY_SEC = 10;
+/** Le chargement n'apparaît qu'au-delà de 300 ms (docs/05 §7) : pas de clignotement à chaque segment. */
+const SHOW_BUFFERING_AFTER_MS = 300;
+/** Au-delà, on explique : connexion lente, ou qualité choisie trop élevée pour le réseau. */
+const SLOW_NETWORK_AFTER_MS = 5_000;
 const localKey = (filmId: string) => `ecine:progress:${filmId}`;
 
 type Status = 'idle' | 'starting' | 'playing' | 'ended';
@@ -33,6 +37,15 @@ type Status = 'idle' | 'starting' | 'playing' | 'ended';
 function subscribeStorage(onChange: () => void): () => void {
   window.addEventListener('storage', onChange);
   return () => window.removeEventListener('storage', onChange);
+}
+
+function subscribeOnline(onChange: () => void): () => void {
+  window.addEventListener('online', onChange);
+  window.addEventListener('offline', onChange);
+  return () => {
+    window.removeEventListener('online', onChange);
+    window.removeEventListener('offline', onChange);
+  };
 }
 
 function readLocalPosition(filmId: string): number {
@@ -78,6 +91,7 @@ export function Player({
     recoverNative,
     levels,
     currentLevel,
+    playingHeight,
     setQuality,
     subtitleTracks,
     setSubtitle,
@@ -86,7 +100,34 @@ export function Player({
   const containerRef = useRef<HTMLDivElement>(null);
   const lastSaved = useRef(0);
   const startedOnce = useRef(false);
+  const bufferingTimers = useRef<number[]>([]);
   const [status, setStatus] = useState<Status>('idle');
+  const [buffering, setBuffering] = useState(false);
+  const [slowNetwork, setSlowNetwork] = useState(false);
+  const online = useSyncExternalStore(
+    subscribeOnline,
+    () => navigator.onLine,
+    () => true,
+  );
+
+  /** Lecture bloquée faute de données (`waiting`) : chargement visible, puis explication. */
+  const startBuffering = () => {
+    bufferingTimers.current.forEach((id) => window.clearTimeout(id));
+    bufferingTimers.current = [
+      window.setTimeout(() => setBuffering(true), SHOW_BUFFERING_AFTER_MS),
+      window.setTimeout(() => setSlowNetwork(true), SLOW_NETWORK_AFTER_MS),
+    ];
+  };
+  const stopBuffering = () => {
+    bufferingTimers.current.forEach((id) => window.clearTimeout(id));
+    bufferingTimers.current = [];
+    setBuffering(false);
+    setSlowNetwork(false);
+  };
+  useEffect(
+    () => () => bufferingTimers.current.forEach((id) => window.clearTimeout(id)),
+    [],
+  );
   // Visiteur anonyme : position mémorisée localement (FR-004) ; 0 au rendu serveur (pas d'écart d'hydratation).
   const localPosition = useSyncExternalStore(
     subscribeStorage,
@@ -176,20 +217,27 @@ export function Player({
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
         onPlaying={() => {
+          stopBuffering();
           if (status !== 'playing') {
             setStatus('playing');
             containerRef.current?.focus();
             void trackEventAction({ type: 'play_start', targetType: 'FILM', targetId: filmId });
           }
         }}
+        onWaiting={startBuffering}
+        onCanPlay={stopBuffering}
         onTimeUpdate={(e) => persist(e.currentTarget.currentTime)}
-        onPause={(e) => persist(e.currentTarget.currentTime, true)}
+        onPause={(e) => {
+          stopBuffering();
+          persist(e.currentTarget.currentTime, true);
+        }}
         onEnded={(e) => {
+          stopBuffering();
           persist(e.currentTarget.duration, true);
           setStatus('ended');
           void trackEventAction({ type: 'play_complete', targetType: 'FILM', targetId: filmId });
         }}
-        onError={() => void recoverNative()}
+        onError={() => recoverNative()}
       />
 
       {status === 'idle' ? (
@@ -216,7 +264,43 @@ export function Player({
 
       {status === 'starting' && !error ? (
         <div className="absolute inset-0 grid place-items-center bg-[var(--player-bg)]">
-          <Loader label={t('starting')} className="[--uib-color:var(--player-fg)]" />
+          <Loader label={t('starting')} className="[--loader-color:var(--player-fg)]" />
+        </div>
+      ) : null}
+
+      {status === 'playing' && !online && !buffering ? (
+        // Hors connexion mais la réserve chargée suffit encore : simple bandeau, l'image reste visible.
+        <p
+          role="status"
+          className="absolute left-0 top-0 max-w-full bg-[var(--player-bg)] px-3 py-2 text-sm"
+        >
+          {t('offline')}
+        </p>
+      ) : null}
+
+      {status === 'playing' && buffering ? (
+        <div className="pointer-events-none absolute inset-0 grid place-items-center p-4">
+          <div className="flex max-w-xs flex-col items-center gap-3 bg-[var(--player-bg)] px-4 py-3 text-center">
+            <Loader label={t('buffering')} className="[--loader-color:var(--player-fg)]" />
+            {!online ? (
+              <p role="status" className="text-sm">
+                {t('offline')}
+              </p>
+            ) : slowNetwork ? (
+              <p role="status" className="text-sm">
+                {currentLevel === -1 ? t('slowNetwork') : t('slowNetworkManual')}
+              </p>
+            ) : null}
+            {online && slowNetwork && currentLevel !== -1 ? (
+              <button
+                type="button"
+                className="pointer-events-auto min-h-11 border border-[var(--player-fg)] px-4 text-sm hover:bg-[var(--player-fg)] hover:text-[var(--player-bg)]"
+                onClick={() => setQuality(-1)}
+              >
+                {t('switchToAuto')}
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -226,6 +310,7 @@ export function Player({
           containerRef={containerRef}
           levels={levels}
           currentLevel={currentLevel}
+          playingHeight={playingHeight}
           onQuality={setQuality}
           subtitleTracks={subtitleTracks}
           onSubtitle={setSubtitle}

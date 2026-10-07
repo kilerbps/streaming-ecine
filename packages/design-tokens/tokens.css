@@ -53,6 +53,9 @@
   /* Lecteur vidéo : fond noir et commandes blanches, identiques dans les deux thèmes (contraste 21:1). */
   --player-bg: #000000;
   --player-fg: #ffffff;
+  /* Barre de progression : piste et partie déjà chargée (gris opaques, décoratifs, jamais du texte). */
+  --player-track: #333333;
+  --player-buffered: #8c8c8c;
 
   /* Typographie (familles injectées par next/font) */
   --font-serif: var(--font-plex-serif, 'IBM Plex Serif'), Georgia, serif;

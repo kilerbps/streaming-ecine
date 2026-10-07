@@ -28,16 +28,17 @@ const base = {
 };
 
 describe('pickLadder', () => {
-  it('garde les paliers inférieurs ou égaux à la hauteur source', () => {
-    expect(pickLadder(1080)).toEqual([240, 360, 480, 720, 1080]);
-    expect(pickLadder(2160)).toEqual([240, 360, 480, 720, 1080]);
-    expect(pickLadder(720)).toEqual([240, 360, 480, 720]);
-    expect(pickLadder(576)).toEqual([240, 360, 480]);
+  it('garde les paliers inférieurs ou égaux à la hauteur source, 144p compris', () => {
+    expect(pickLadder(1080)).toEqual([144, 240, 360, 480, 720, 1080]);
+    expect(pickLadder(2160)).toEqual([144, 240, 360, 480, 720, 1080]);
+    expect(pickLadder(720)).toEqual([144, 240, 360, 480, 720]);
+    expect(pickLadder(576)).toEqual([144, 240, 360, 480]);
+    expect(pickLadder(200)).toEqual([144]);
   });
 
-  it('produit toujours au moins 240p (source très petite)', () => {
-    expect(pickLadder(144)).toEqual([240]);
-    expect(pickLadder(0)).toEqual([240]);
+  it('produit toujours au moins 144p (source très petite)', () => {
+    expect(pickLadder(120)).toEqual([144]);
+    expect(pickLadder(0)).toEqual([144]);
   });
 });
 
@@ -59,9 +60,9 @@ describe('buildHlsArgs', () => {
     expect(SEGMENT_RE.test('abcdefghij12_12345.ts')).toBe(true);
   });
 
-  it('chiffre en AES-128 via le fichier keyinfo, segments de 6 s en VOD', () => {
+  it('chiffre en AES-128 via le fichier keyinfo, segments de 4 s en VOD', () => {
     expect(opt(args, '-hls_key_info_file')).toBe(base.keyInfoPath);
-    expect(opt(args, '-hls_time')).toBe('6');
+    expect(opt(args, '-hls_time')).toBe('4');
     expect(opt(args, '-hls_playlist_type')).toBe('vod');
     expect(opt(args, '-hls_flags')).toBe('independent_segments');
     expect(opt(args, '-f')).toBe('hls');
@@ -78,7 +79,7 @@ describe('buildHlsArgs', () => {
     ]);
   });
 
-  it('H.264 Main, VBR plafonné par palier, GOP aligné sur 6 s sans image clé de scène', () => {
+  it('H.264 Main, VBR plafonné par palier, GOP aligné sur 4 s sans image clé de scène', () => {
     expect(opt(args, '-c:v:0')).toBe('libx264');
     expect(opt(args, '-preset')).toBe('veryfast');
     expect(opt(args, '-profile:v')).toBe('main');
@@ -87,18 +88,22 @@ describe('buildHlsArgs', () => {
     expect(opt(args, '-maxrate:v:1')).toBe('800k');
     expect(opt(args, '-maxrate:v:2')).toBe('2500k');
     expect(opt(args, '-bufsize:v:2')).toBe('5000k');
-    expect(opt(args, '-g')).toBe('150');
-    expect(opt(args, '-keyint_min')).toBe('150');
+    expect(opt(args, '-g')).toBe('100');
+    expect(opt(args, '-keyint_min')).toBe('100');
     expect(opt(args, '-sc_threshold')).toBe('0');
-    expect(opt(args, '-force_key_frames')).toBe('expr:gte(t,n_forced*6)');
+    expect(opt(args, '-force_key_frames')).toBe('expr:gte(t,n_forced*4)');
   });
 
-  it('AAC 96k sous 720p, 128k à partir de 720p ; une piste audio par variante', () => {
+  it('AAC 64k jusqu’en 360p, 96k en 480p, 128k à partir de 720p ; une piste audio par variante', () => {
     expect(allOpts(args, '-map').filter((m) => m === '0:a:0')).toHaveLength(3);
     expect(opt(args, '-c:a:0')).toBe('aac');
-    expect(opt(args, '-b:a:0')).toBe('96k');
-    expect(opt(args, '-b:a:1')).toBe('96k');
+    expect(opt(args, '-b:a:0')).toBe('64k');
+    expect(opt(args, '-b:a:1')).toBe('64k');
     expect(opt(args, '-b:a:2')).toBe('128k');
+    const low = buildHlsArgs({ ...base, ladder: [144, 480], hasAudio: true });
+    expect(opt(low, '-maxrate:v:0')).toBe('200k');
+    expect(opt(low, '-b:a:0')).toBe('64k');
+    expect(opt(low, '-b:a:1')).toBe('96k');
   });
 
   it('source sans audio : aucune piste audio mappée', () => {
@@ -114,11 +119,11 @@ describe('buildHlsArgs', () => {
     expect(opt(single, '-var_stream_map')).toBe('v:0,a:0,name:240p');
   });
 
-  it('GOP de 6 s calculé sur la cadence (25 i/s par défaut)', () => {
+  it('GOP de 4 s calculé sur la cadence (25 i/s par défaut)', () => {
     expect(
       opt(buildHlsArgs({ ...base, ladder: [240], hasAudio: false, fps: 30000 / 1001 }), '-g'),
-    ).toBe('180');
-    expect(opt(buildHlsArgs({ ...base, ladder: [240], hasAudio: false }), '-g')).toBe('150');
+    ).toBe('120');
+    expect(opt(buildHlsArgs({ ...base, ladder: [240], hasAudio: false }), '-g')).toBe('100');
   });
 
   it('suit la progression sur la sortie standard et ne lit jamais l’entrée standard', () => {

@@ -10,7 +10,7 @@ Bloquer le téléchargement simple (clic droit, lien MP4, outils grand public). 
 
 ## Pipeline
 1. Upload reprenable (morceaux), vérification **signature du fichier** + taille, stockage de la source **privé**.
-2. Worker FFmpeg : échelle de qualités selon la source (240p → 1080p), segments 4–6 s, **AES-128**, miniature + affiche.
+2. Worker FFmpeg : échelle de qualités selon la source (144p → 1080p), segments de 4 s (ADR-0006), **AES-128**, miniature + affiche.
 3. Sortie `media/{filmId}/{renditionId}/` + `master.m3u8`. Qualité de départ **basse** (réseaux variables).
 4. Lecture : `POST /playback/{videoId}/session` → jeton signé (≤ 5 min, lié à la session et à la vidéo) → manifest. `POST …/refresh` renouvelle. Clé via `GET /playback/keys/{keyId}` : jeton obligatoire, `Cache-Control: no-store`, rate limit strict.
 5. Service des segments : Caddy/Nginx (ou CDN) validant le jeton ; pas de listage ; noms non devinables ; HTTPS seulement.

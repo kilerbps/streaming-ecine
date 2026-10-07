@@ -1,6 +1,6 @@
 # E-Ciné
 
-Plateforme congolaise de streaming et de culture cinéma pour les talents de l'**Institut National des Arts** (INA) : films, courts-métrages, fiches des talents, actualités, dans un feed de découverte qui surprend sans piéger.
+Plateforme congolaise de streaming et de culture cinéma, privée et indépendante, gratuite et ouverte à tous : films, courts-métrages, fiches des talents, actualités, dans un feed de découverte qui surprend sans piéger. Slogan : « Le cinéma congolais, en streaming. »
 
 > Dossier de conception complet : [`docs/`](docs/00-README.md) — règles pour l'IA : [`AGENTS.md`](AGENTS.md) — décisions : [`docs/adr/`](docs/adr/).
 
@@ -47,8 +47,13 @@ docker run -d --init --name ecine-worker-dev --network ecine-dev_default --env-f
   -e DATABASE_URL=postgresql://ecine:ecine_dev_local@postgres:5432/ecine \
   -e REDIS_URL=redis://:ecine_dev_local@redis:6379 \
   -v "$(pwd)/storage:/data/storage" ecine-worker:dev
-docker exec ecine-worker-dev node dist/seed/demo-video.js <slug-du-film>
+docker exec ecine-worker-dev node dist/seed/demo-video.js <slug-du-film> [--seconds 40]
+docker exec ecine-worker-dev node dist/seed/demo-video.js --all   # une vidéo pour chaque film publié
 ```
+
+> **Windows (Git Bash)** : préfixer `docker run` et `docker exec` par `MSYS_NO_PATHCONV=1` et donner un chemin Windows au volume (`-v "C:\…\streaming-ecine\storage:/data/storage"`). Sinon Git Bash convertit le chemin, le volume est mal monté et le worker écrit ses vidéos hors de `storage/`. Vérifier avec `docker inspect ecine-worker-dev`.
+>
+> Après un changement de l'échelle de transcodage (`apps/api/src/worker/ffmpeg.ts`), reconstruire l'image puis relancer `--all` : la page d'un film lit sa vidéo prête la plus récente.
 
 ## Commandes
 

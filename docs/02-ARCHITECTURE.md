@@ -103,7 +103,7 @@ Invalidation : à chaque écriture admin, l'API supprime les clés concernées e
 
 1. **Upload** admin vers l'API (envoi par morceaux reprenable, type MIME + signature vérifiés, taille max).
 2. Le fichier source est stocké **hors de tout dossier public** (jamais servi).
-3. **Worker FFmpeg** : échelle de qualités (ex. 240p, 360p, 480p, 720p, 1080p selon la source), segments de 4–6 s, **chiffrement AES-128**, miniature et affiche générées.
+3. **Worker FFmpeg** : échelle de qualités (144p, 240p, 360p, 480p, 720p, 1080p selon la source), segments de 4 s (ADR-0006), **chiffrement AES-128**, miniature et affiche générées.
 4. Sortie : `media/{filmId}/{renditionId}/…` + `master.m3u8`.
 5. **Lecture** : `POST /v1/playback/{videoId}/session` → l'API vérifie l'accès, génère un **jeton signé** (≤ 5 min, lié à la session) et une URL de manifest. Le lecteur (hls.js) renouvelle le jeton. L'endpoint de **clé** exige le jeton et applique un rate limit.
 6. **Service des segments** : Caddy/Nginx avec validation du jeton (ou CDN avec auth par jeton). Pas de listage de répertoire ; en-têtes `Cache-Control` adaptés ; HTTPS uniquement.

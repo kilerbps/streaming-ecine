@@ -211,7 +211,8 @@
 /* Loader orbital imposé (docs/05-DESIGN-SYSTEM.md §6), couleur = --text. */
 .ecine-loader {
   --uib-size: 45px;
-  --uib-color: var(--text);
+  /* Surchargeable par --loader-color (ex. lecteur vidéo : fond noir dans les deux thèmes). */
+  --uib-color: var(--loader-color, var(--text));
   --uib-speed: 1.75s;
   position: relative;
   height: var(--uib-size);

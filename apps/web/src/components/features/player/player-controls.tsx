@@ -5,10 +5,28 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import { Icon } from '@/components/ui/icon';
 import { formatTimecode } from '@/lib/format';
 import { toggleFullscreen } from './fullscreen';
+import { formatDataPerHour } from './network';
 import type { QualityLevel } from './use-hls';
+
+/** Fin de la plage chargée qui contient la position courante (0 si rien n'est chargé à cet endroit). */
+function bufferedAhead(video: HTMLVideoElement): number {
+  const { buffered, currentTime } = video;
+  for (let i = 0; i < buffered.length; i += 1) {
+    if (buffered.start(i) <= currentTime + 0.5 && currentTime <= buffered.end(i)) {
+      return buffered.end(i);
+    }
+  }
+  return 0;
+}
 
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 const HIDE_AFTER_MS = 3000;
+/** Barre de commandes (progression + boutons) et marge : le menu flottant s'arrête au-dessus. */
+const MENU_BOTTOM_OFFSET_PX = 104;
+
+function menuHeightFor(container: HTMLElement | null): number {
+  return Math.max(160, (container?.clientHeight ?? 400) - MENU_BOTTOM_OFFSET_PX);
+}
 const BUTTON =
   'grid size-11 shrink-0 place-items-center hover:bg-[var(--player-fg)] hover:text-[var(--player-bg)]';
 
@@ -18,6 +36,7 @@ export function PlayerControls({
   containerRef,
   levels,
   currentLevel,
+  playingHeight,
   onQuality,
   subtitleTracks,
   onSubtitle,
@@ -27,15 +46,21 @@ export function PlayerControls({
   containerRef: RefObject<HTMLDivElement | null>;
   levels: QualityLevel[];
   currentLevel: number;
+  /** Qualité réellement affichée (utile en « Auto »), `null` avant le premier segment. */
+  playingHeight: number | null;
   onQuality: (index: number) => void;
   subtitleTracks: Array<{ index: number; label: string }>;
   onSubtitle: (index: number) => void;
   errorMessage: string | null;
 }) {
   const t = useTranslations('player');
+  const tc = useTranslations('common');
   const [paused, setPaused] = useState(false);
+  /** Hauteur disponible pour le menu flottant (PC) : hauteur du lecteur moins la barre de commandes. */
+  const [menuMaxHeight, setMenuMaxHeight] = useState(320);
   const [muted, setMuted] = useState(false);
   const [time, setTime] = useState(0);
+  const [loadedUntil, setLoadedUntil] = useState(0);
   const [duration, setDuration] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -51,25 +76,30 @@ export function PlayerControls({
       setPaused(video.paused);
       setMuted(video.muted);
       setTime(video.currentTime);
+      setLoadedUntil(bufferedAhead(video));
       setDuration(Number.isFinite(video.duration) ? video.duration : 0);
     };
     const events = [
       'play',
       'pause',
       'timeupdate',
+      'progress',
       'durationchange',
       'volumechange',
       'loadedmetadata',
     ] as const;
     events.forEach((e) => video.addEventListener(e, sync));
-    const onFullscreen = () => setFullscreen(Boolean(document.fullscreenElement));
+    const onFullscreen = () => {
+      setFullscreen(Boolean(document.fullscreenElement));
+      setMenuMaxHeight(menuHeightFor(containerRef.current));
+    };
     document.addEventListener('fullscreenchange', onFullscreen);
     sync();
     return () => {
       events.forEach((e) => video.removeEventListener(e, sync));
       document.removeEventListener('fullscreenchange', onFullscreen);
     };
-  }, [videoRef]);
+  }, [videoRef, containerRef]);
 
   // Masquage automatique pendant la lecture ; réapparition au moindre geste.
   useEffect(() => {
@@ -91,6 +121,8 @@ export function PlayerControls({
 
   const video = videoRef.current;
   const shown = visible || paused || menuOpen;
+  const percent = (value: number) =>
+    duration > 0 ? Math.min(100, Math.max(0, (value / duration) * 100)) : 0;
 
   return (
     <div
@@ -102,11 +134,30 @@ export function PlayerControls({
         </p>
       ) : null}
       {menuOpen ? (
-        <div className="absolute bottom-full right-2 mb-2 w-64 max-w-[calc(100%-16px)] border border-[var(--player-fg)] bg-[var(--player-bg)] p-4 text-sm">
+        // Mobile : feuille en bas de l'écran (le lecteur est trop bas pour un menu flottant).
+        // PC : menu flottant au-dessus des commandes, défilant si le lecteur est petit.
+        <div
+          className="fixed inset-x-0 bottom-0 z-50 max-h-[70dvh] overflow-y-auto border-t border-[var(--player-fg)] bg-[var(--player-bg)] p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-sm md:absolute md:inset-x-auto md:bottom-full md:right-2 md:mb-2 md:max-h-[var(--menu-max)] md:w-72 md:max-w-[calc(100%-16px)] md:border md:pb-4"
+          style={{ ['--menu-max' as string]: `${menuMaxHeight}px` }}
+        >
+          <div className="mb-2 flex items-center justify-between md:hidden">
+            <p className="eyebrow">{`${t('quality')} · ${t('speed')}`}</p>
+            <button
+              type="button"
+              className={BUTTON}
+              onClick={() => setMenuOpen(false)}
+              aria-label={tc('close')}
+            >
+              <Icon name="close" />
+            </button>
+          </div>
           {levels.length > 0 ? (
-            <fieldset className="mb-4">
+            <fieldset className="mb-4" aria-describedby="ecine-quality-hint">
               <legend className="eyebrow mb-2">{t('quality')}</legend>
-              {[{ index: -1, height: 0 }, ...levels].map((level) => (
+              <p id="ecine-quality-hint" className="mb-2 text-xs opacity-80">
+                {t('dataHint')}
+              </p>
+              {[{ index: -1, height: 0, bitrate: 0 }, ...levels].map((level) => (
                 <label key={level.index} className="flex min-h-9 cursor-pointer items-center gap-3">
                   <input
                     type="radio"
@@ -114,7 +165,18 @@ export function PlayerControls({
                     checked={currentLevel === level.index}
                     onChange={() => onQuality(level.index)}
                   />
-                  {level.index === -1 ? t('auto') : `${level.height}p`}
+                  <span className="flex-1">
+                    {level.index !== -1
+                      ? `${level.height}p`
+                      : playingHeight && currentLevel === -1
+                        ? t('autoWith', { height: playingHeight })
+                        : t('auto')}
+                  </span>
+                  {level.bitrate > 0 ? (
+                    <span className="font-mono text-xs opacity-80">
+                      {formatDataPerHour(level.bitrate)}
+                    </span>
+                  ) : null}
                 </label>
               ))}
             </fieldset>
@@ -173,9 +235,20 @@ export function PlayerControls({
           onChange={(e) => {
             if (video) video.currentTime = Number(e.target.value);
           }}
-          aria-valuetext={`${formatTimecode(time)} / ${formatTimecode(duration)}`}
+          aria-valuetext={`${formatTimecode(time)} / ${formatTimecode(duration)}, ${t('buffered', { time: formatTimecode(loadedUntil) })}`}
           className="block h-6 w-full accent-[var(--accent)]"
         />
+        {/* Partie déjà chargée (tampon) : rassure quand le réseau ralentit. Décoratif, lu via aria-valuetext. */}
+        <div aria-hidden="true" className="relative mx-1 h-[3px] bg-[var(--player-track)]">
+          <div
+            className="absolute inset-y-0 left-0 bg-[var(--player-buffered)]"
+            style={{ width: `${percent(loadedUntil)}%` }}
+          />
+          <div
+            className="absolute inset-y-0 left-0 bg-[var(--accent)]"
+            style={{ width: `${percent(time)}%` }}
+          />
+        </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -210,14 +283,25 @@ export function PlayerControls({
           >
             <Icon name={muted ? 'volumeOff' : 'volume'} />
           </button>
-          <span className="ml-2 font-mono text-xs tabular-nums">
+          <span className="ml-2 whitespace-nowrap font-mono text-xs tabular-nums">
             {formatTimecode(time)} / {formatTimecode(duration)}
           </span>
           <span className="flex-1" />
+          {playingHeight ? (
+            <span
+              className="hidden whitespace-nowrap font-mono text-xs tabular-nums md:inline"
+              aria-hidden="true"
+            >
+              {currentLevel === -1 ? t('autoWith', { height: playingHeight }) : `${playingHeight}p`}
+            </span>
+          ) : null}
           <button
             type="button"
             className={BUTTON}
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={() => {
+              setMenuMaxHeight(menuHeightFor(containerRef.current));
+              setMenuOpen((v) => !v);
+            }}
             aria-expanded={menuOpen}
             aria-label={`${t('quality')}, ${t('speed')}`}
           >

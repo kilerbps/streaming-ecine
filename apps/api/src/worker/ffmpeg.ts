@@ -7,28 +7,36 @@ import { z } from 'zod';
  * `{outDir}/master.m3u8` → `240p/index.m3u8` → segments `{préfixe12}_{00000}.ts`, clé `key://{id}`.
  */
 
-export const LADDER = [240, 360, 480, 720, 1080] as const;
+/** 144p : dernier recours sur les réseaux très faibles (EDGE, 3G saturée), plutôt qu'une coupure. */
+export const LADDER = [144, 240, 360, 480, 720, 1080] as const;
 export type Rung = (typeof LADDER)[number];
 
-/** Durée cible des segments (secondes) ; les images clés sont alignées dessus. */
-export const SEGMENT_SECONDS = 6;
+/**
+ * Durée cible des segments (secondes) ; les images clés sont alignées dessus. 4 s plutôt que 6 :
+ * le débit adaptatif réagit plus vite aux chutes de réseau, au prix de requêtes un peu plus nombreuses.
+ */
+export const SEGMENT_SECONDS = 4;
 /** Qualité constante plafonnée par -maxrate/-bufsize (VBR contraint). */
 const CRF = 23;
 const DEFAULT_FPS = 25;
 
-/** Débits plafonds par palier (kbit/s), réglés pour les réseaux mobiles variables. */
+/**
+ * Débits plafonds par palier (kbit/s), réglés pour les réseaux mobiles variables. L'audio reste à
+ * 64 kbit/s jusqu'en 360p : à 96 kbit/s, il prendrait près d'un quart du débit des petits paliers.
+ */
 export const RUNG_RATES: Record<Rung, { videoK: number; audioK: number }> = {
-  240: { videoK: 400, audioK: 96 },
-  360: { videoK: 800, audioK: 96 },
+  144: { videoK: 200, audioK: 64 },
+  240: { videoK: 400, audioK: 64 },
+  360: { videoK: 800, audioK: 64 },
   480: { videoK: 1200, audioK: 96 },
   720: { videoK: 2500, audioK: 128 },
   1080: { videoK: 4500, audioK: 128 },
 };
 
-/** Paliers ≤ hauteur de la source (jamais d'agrandissement), toujours au moins 240p. */
+/** Paliers ≤ hauteur de la source (jamais d'agrandissement), toujours au moins le plus bas. */
 export function pickLadder(sourceHeight: number): Rung[] {
   const fit = LADDER.filter((h) => h <= sourceHeight);
-  return fit.length > 0 ? fit : [240];
+  return fit.length > 0 ? fit : [LADDER[0]];
 }
 
 /** FFmpeg accepte `/` partout ; indispensable pour que le master référence `240p/index.m3u8`. */
@@ -43,7 +51,7 @@ export interface HlsArgsInput {
   keyInfoPath: string;
   segmentPrefix: string;
   hasAudio: boolean;
-  /** Images par seconde de la source (ffprobe) : taille du GOP = 6 s. */
+  /** Images par seconde de la source (ffprobe) : taille du GOP = durée d'un segment. */
   fps?: number | null;
 }
 

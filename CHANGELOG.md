@@ -1,5 +1,40 @@
 # Journal des modifications
 
+## [Non publié] — 2026-10-07
+
+### Modifié
+
+- E-Ciné devient une plateforme **privée et indépendante, gratuite et ouverte à tous**, sans lien avec l'INA. Nouveau slogan : « Le cinéma congolais, en streaming. » (titre, description, application installée, images de partage, PRD et documentation).
+- Transcodage : palier **144p**, audio à 64 kbit/s jusqu'en 360p, **segments de 4 s** (ADR-0006, évolution du 7 octobre). Les vidéos existantes sont à retranscoder (`demo-video.js --all` en développement).
+- `Media.bytes` passe en entier 64 bits (migration `20261007120000_media_bytes_bigint`) : la taille des sources de plus de 2 Gio est enregistrée exactement.
+
+### Ajouté
+
+- Lecteur adapté aux réseaux instables :
+  - débit de départ estimé ;
+  - tampon adapté à l'appareil ;
+  - chargement visible et explication en cas de blocage ;
+  - bandeau « Pas de connexion » ;
+  - **reprise automatique après une coupure** ;
+  - partie chargée sous la barre de progression ;
+  - « Auto (360p) » et consommation par heure de chaque qualité ;
+  - choix de qualité mémorisé ;
+  - changement de qualité sans interruption.
+- `global-error.tsx` : page d'erreur quand un layout racine échoue.
+- Script `demo-video.js` : options `--all` et `--seconds`.
+- Analyse de ce qui reste à faire (`docs/12-ANALYSE-RESTE-A-FAIRE.md`) et ADR-0010 (stockage objet Cloudflare R2 + CDN, accepté).
+- Tests : configuration de production de l'API et du site, réglages réseau du lecteur, E2E de lecture en 3G simulée et après coupure.
+
+### Corrigé
+
+- Après une erreur réseau, le lecteur affichait « la lecture reprendra dès que possible » sans jamais reprendre ; un appel hors connexion bloquait le démarrage.
+- Sauvegardes : `pipefail` (un échec de `pg_dump` produisait une sauvegarde chiffrée vide jugée réussie) ; le test de restauration accepte un fichier de configuration local (`BACKUP_ENV`).
+
+### Sécurité
+
+- En production, l'API refuse le pilote d'e-mail `log` (liens de réinitialisation dans les journaux), l'adresse d'expédition factice, l'absence de `REVALIDATE_URL` et les URL publiques en HTTP.
+- Le site active les cookies sécurisés par défaut en production et refuse `COOKIE_SECURE=false` sur Vercel en production ; règle unique partagée par `proxy.ts`.
+
 ## [Non publié] — 2026-10-02
 
 ### Ajouté

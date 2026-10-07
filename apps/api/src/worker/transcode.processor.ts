@@ -56,7 +56,7 @@ function toTranscodeError(err: unknown): TranscodeError {
 
 /**
  * Transcodage HLS chiffré (docs/02-ARCHITECTURE.md §8) : sonde, clé AES-128 scellée en base,
- * FFmpeg (échelle 240p → 1080p selon la source), puis vidéo READY et revalidation du site.
+ * FFmpeg (échelle 144p → 1080p selon la source), puis vidéo READY et revalidation du site.
  * La clé en clair n'existe que dans un dossier temporaire privé, supprimé dans tous les cas.
  */
 @Processor(TRANSCODE_QUEUE, { concurrency: 1 })
