@@ -105,7 +105,7 @@ jobs:
       - name: Audit des dépendances (élevé et critique bloquants)
         run: pnpm audit --audit-level high
       - name: Recherche de secrets
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
