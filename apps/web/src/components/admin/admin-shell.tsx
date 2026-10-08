@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import { hasRole, type Role } from '@ecine/contracts';
 import { LogoutButton } from '@/components/features/account/logout-button';
-import { ThemeToggle } from '@/components/layout/toggles';
+import { usePreferences } from '@/components/providers/preferences';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { Logo } from '@/components/ui/logo';
 import { Sheet } from '@/components/ui/sheet';
@@ -198,6 +198,26 @@ function NavList({
  * Cadre de l'administration : menu latéral par sections (repliable sur tablette, feuille sur mobile),
  * barre supérieure avec « Voir le site », thème, utilisateur et déconnexion.
  */
+const THEME_CYCLE = { dark: 'light', light: 'auto', auto: 'dark' } as const;
+const THEME_LABELS = { dark: 'Nuit', light: 'Jour', auto: 'Automatique' } as const;
+const THEME_ICONS = { dark: 'moon', light: 'sun', auto: 'settings' } as const;
+
+/** Thème de l'administration : Nuit, Jour ou Automatique (réglage partagé avec le site, D-09). */
+function ThemeButton() {
+  const { theme, setTheme } = usePreferences();
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(THEME_CYCLE[theme])}
+      aria-label={`Thème : ${THEME_LABELS[theme]}. Passer à ${THEME_LABELS[THEME_CYCLE[theme]]}`}
+      title={`Thème : ${THEME_LABELS[theme]}`}
+      className="press-icon grid size-11 place-items-center rounded-full text-text hover:bg-surface-2"
+    >
+      <Icon name={THEME_ICONS[theme]} />
+    </button>
+  );
+}
+
 export function AdminShell({
   viewer,
   locked = false,
@@ -284,7 +304,7 @@ export function AdminShell({
               <Icon name="external" size={18} />
               Voir le site
             </Link>
-            <ThemeToggle />
+            <ThemeButton />
             <span className="hidden max-w-48 flex-col px-3 text-right leading-tight lg:flex">
               <span className="truncate text-sm">{viewer.displayName}</span>
               <span className="meta">{USER_ROLE_LABELS[viewer.role]}</span>

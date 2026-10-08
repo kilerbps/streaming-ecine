@@ -11,8 +11,8 @@ import { AppProviders } from '@/components/providers/app-providers';
 import { Logo } from '@/components/ui/logo';
 import { adminLoad, adminLoginUrl } from '@/server/actions/admin/core';
 import { getPreferences, getViewer } from '@/server/data';
+import { htmlPreferenceAttributes, themeColorFor } from '@/server/html-preferences';
 import { archivo } from '../fonts';
-import { THEME_COLORS } from '@/lib/theme-colors';
 import '../globals.css';
 
 /** Administration : jamais indexée (en plus de l'en-tête X-Robots-Tag posé par proxy.ts). */
@@ -22,11 +22,11 @@ export const metadata: Metadata = {
   icons: { icon: [{ url: '/icon.svg', type: 'image/svg+xml' }] },
 };
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: THEME_COLORS.dark,
-};
+/** Barre du navigateur : couleur du thème choisi, Automatique par défaut en administration (D-09). */
+export async function generateViewport(): Promise<Viewport> {
+  const preferences = await getPreferences('auto');
+  return { width: 'device-width', initialScale: 1, themeColor: themeColorFor(preferences.theme) };
+}
 
 /** Vrai si l'API refuse l'administration faute de double authentification (comptes ADMIN et plus). */
 async function mfaMissing(): Promise<boolean> {
@@ -39,14 +39,19 @@ async function mfaMissing(): Promise<boolean> {
  * Garde légère ici (connexion, rôle) ; l'autorisation réelle est faite par l'API à chaque requête.
  */
 export default async function AdminLayout({ children }: LayoutProps<'/admin'>) {
-  const [preferences, messages] = await Promise.all([getPreferences(), getMessages()]);
+  const [preferences, messages] = await Promise.all([getPreferences('auto'), getMessages()]);
   let viewer: Me | null;
   try {
     viewer = await getViewer();
   } catch {
     // API injoignable : page sobre plutôt qu'une erreur brute (aucun détail technique).
     return (
-      <html lang="fr" data-theme={preferences.theme} className={archivo.variable}>
+      <html
+        lang="fr"
+        {...htmlPreferenceAttributes(preferences)}
+        className={archivo.variable}
+        suppressHydrationWarning
+      >
         <body>
           <main id="admin-contenu" className="mx-auto max-w-4xl px-4 py-6 md:px-8">
             <Unavailable message="Le serveur E-Ciné ne répond pas pour le moment. Vos contenus ne sont pas touchés : réessayez dans quelques instants." />
@@ -93,7 +98,12 @@ export default async function AdminLayout({ children }: LayoutProps<'/admin'>) {
   }
 
   return (
-    <html lang="fr" data-theme={preferences.theme} className={archivo.variable}>
+    <html
+      lang="fr"
+      {...htmlPreferenceAttributes(preferences)}
+      className={archivo.variable}
+      suppressHydrationWarning
+    >
       <body>
         <NextIntlClientProvider messages={messages}>
           <AppProviders

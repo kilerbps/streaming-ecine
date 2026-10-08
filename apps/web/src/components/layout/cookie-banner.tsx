@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState, useTransition } from 'react';
 import type { ConsentCategories } from '@ecine/contracts';
 import { Button } from '@/components/ui/button';
-import { Motif } from '@/components/ui/motif';
 import { Sheet } from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
 import { routes } from '@/lib/routes';
 import { saveConsentAction } from '@/server/actions/forms';
 
@@ -41,19 +41,16 @@ export function CookieBanner({ initial }: { initial: ConsentCategories | null })
       {visible ? (
         <section
           aria-label={t('title')}
-          className="fixed inset-x-0 bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom))] z-40 border-t border-border bg-surface-1 md:bottom-0 md:left-24 lg:left-60"
+          className="fixed inset-x-3 bottom-[calc(var(--tabbar-offset)+var(--tabbar-h)+8px)] z-40 mx-auto max-w-4xl rounded-xl border border-border bg-surface-1 shadow-[var(--shadow-menu)] lg:bottom-6"
         >
-          <div className="h-2 w-full">
-            <Motif name="damier" tone="highlight" />
-          </div>
-          <div className="container-page flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
-            <p className="max-w-2xl text-sm">
+          <div className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between lg:p-5">
+            <p className="max-w-xl text-[15px] leading-5">
               {t('body')}{' '}
               <Link href={routes.cookies('fr')} className="underline">
                 {t('policy')}
               </Link>
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 lg:shrink-0 lg:flex-nowrap">
               <Button
                 variant="secondary"
                 pending={pending}
@@ -123,20 +120,15 @@ function ConsentRow({
   onChange?: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-start justify-between gap-4 border-b border-border pb-4">
-      <span>
-        <span className="block font-medium">{label}</span>
-        <span className="block text-sm text-muted">{help}</span>
-      </span>
-      <input
-        type="checkbox"
-        role="switch"
-        className="mt-1 size-5 accent-[var(--accent)]"
+    <div className="border-b border-border pb-3">
+      <Switch
+        label={label}
+        description={help}
         checked={checked}
-        disabled={disabled}
-        onChange={(e) => onChange?.(e.target.checked)}
+        locked={disabled}
+        onChange={disabled ? undefined : onChange}
       />
-    </label>
+    </div>
   );
 }
 

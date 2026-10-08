@@ -12,6 +12,7 @@ import { Icon } from '@/components/ui/icon';
 import { LinkButton } from '@/components/ui/link-button';
 import { routes } from '@/lib/routes';
 import { getBookmarks, getContinueWatching, getViewer } from '@/server/data';
+import { LargeTitle } from '@/components/layout/header-title';
 
 export const metadata: Metadata = { title: 'Mon espace' };
 
@@ -29,7 +30,7 @@ export default async function MePage({ params }: PageProps<'/[locale]/moi'>) {
   if (!viewer) {
     return (
       <>
-        <h1 className="font-serif text-4xl md:text-6xl">{t('guestTitle')}</h1>
+        <LargeTitle>{t('guestTitle')}</LargeTitle>
         <p className="mt-4 max-w-xl text-lg text-muted">{t('guestBody')}</p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <LinkButton
@@ -59,9 +60,7 @@ export default async function MePage({ params }: PageProps<'/[locale]/moi'>) {
   return (
     <>
       <header className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-serif text-4xl md:text-6xl">
-          {ta('welcome', { name: viewer.displayName })}
-        </h1>
+        <LargeTitle>{ta('welcome', { name: viewer.displayName })}</LargeTitle>
         <Link
           href={routes.settings(locale)}
           className="inline-flex min-h-11 items-center gap-2 underline-offset-4 hover:underline"

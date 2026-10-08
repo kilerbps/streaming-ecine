@@ -1,12 +1,13 @@
 'use client';
 
 /**
- * Service de sons unique (docs/05-DESIGN-SYSTEM.md §8). Sons courts (≤ 400 ms) synthétisés avec
- * Web Audio : aucun fichier tiers, aucune licence à tracer. Le contexte audio n'est créé qu'après
- * un geste de l'utilisateur ; tout est muet si le réglage « Sons » est coupé.
+ * Sons d'E-Ciné (charte « Nuit de Kin », D-08) : les apps natives sont silencieuses au toucher, donc
+ * les sons de l'interface (J'aime, Ma liste, succès, erreur) sont coupés par défaut ; seul le clap
+ * au lancement d'un film, moment de marque, est actif par défaut. Synthétisés avec Web Audio (aucun
+ * fichier tiers) en attendant le clap commandé à un sound designer. Le contexte audio n'est créé
+ * qu'après un geste de l'utilisateur.
  */
-export type SoundName =
-  'tap' | 'like' | 'bookmark' | 'clap' | 'success' | 'error' | 'toggle' | 'newContent';
+export type SoundName = 'like' | 'bookmark' | 'clap' | 'success' | 'error';
 
 interface Note {
   freq: number;
@@ -17,7 +18,6 @@ interface Note {
 }
 
 const SOUNDS: Record<SoundName, Note[]> = {
-  tap: [{ freq: 880, start: 0, duration: 0.04, type: 'sine', gain: 0.25 }],
   like: [
     { freq: 660, start: 0, duration: 0.08 },
     { freq: 990, start: 0.07, duration: 0.12 },
@@ -39,22 +39,18 @@ const SOUNDS: Record<SoundName, Note[]> = {
     { freq: 196, start: 0, duration: 0.12, type: 'square', gain: 0.25 },
     { freq: 185, start: 0.15, duration: 0.12, type: 'square', gain: 0.25 },
   ],
-  toggle: [{ freq: 1400, start: 0, duration: 0.03, type: 'square', gain: 0.15 }],
-  newContent: [{ freq: 1047, start: 0, duration: 0.1, gain: 0.15 }],
 };
 
 /** Volume maître volontairement bas (inférieur au son des films). */
 const MASTER_GAIN = 0.12;
 
 let context: AudioContext | null = null;
-let enabled = true;
+const settings = { clap: true, ui: false };
 
-export function setSoundEnabled(value: boolean): void {
-  enabled = value;
-}
-
-export function isSoundEnabled(): boolean {
-  return enabled;
+/** Réglages « Son au lancement d'un film » et « Sons de l'interface ». */
+export function setSoundSettings(next: { clap: boolean; ui: boolean }): void {
+  settings.clap = next.clap;
+  settings.ui = next.ui;
 }
 
 function getContext(): AudioContext | null {
@@ -66,7 +62,7 @@ function getContext(): AudioContext | null {
 
 /** À appeler uniquement depuis un gestionnaire d'événement utilisateur (clic, toucher, touche). */
 export function playSound(name: SoundName): void {
-  if (!enabled) return;
+  if (!(name === 'clap' ? settings.clap : settings.ui)) return;
   const ctx = getContext();
   if (!ctx) return;
   const master = ctx.createGain();

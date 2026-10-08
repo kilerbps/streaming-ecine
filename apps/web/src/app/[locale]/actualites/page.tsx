@@ -9,6 +9,7 @@ import { formatDate } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { getArticles } from '@/server/data';
 import { pageMetadata } from '@/server/seo';
+import { LargeTitle } from '@/components/layout/header-title';
 
 type Props = PageProps<'/[locale]/actualites'>;
 
@@ -51,7 +52,7 @@ export default async function NewsPage({ params, searchParams }: Props) {
   return (
     <div className="container-page pt-8 md:pt-12">
       <header className="mb-8 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-        <h1 className="font-serif text-4xl md:text-6xl">{t('listTitle')}</h1>
+        <LargeTitle>{t('listTitle')}</LargeTitle>
         <p className="max-w-sm text-muted md:text-right">{t('listIntro')}</p>
       </header>
       <nav aria-label="Types d'actualités" className="mb-10 flex flex-wrap gap-2">

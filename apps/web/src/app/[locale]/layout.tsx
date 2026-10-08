@@ -6,16 +6,16 @@ import { LOCALES, type Locale } from '@ecine/contracts';
 import { PageViewTracker } from '@/components/analytics/page-view-tracker';
 import { CookieBanner } from '@/components/layout/cookie-banner';
 import { Footer } from '@/components/layout/footer';
-import { MobileHeader, SideRail, TabBar } from '@/components/layout/navigation';
+import { AppHeader, TabBar, TopNav } from '@/components/layout/navigation';
 import { AppProviders } from '@/components/providers/app-providers';
 import { ServiceWorker } from '@/components/pwa/service-worker';
 import { JsonLd } from '@/components/seo/json-ld';
 import { serverConfig } from '@/server/config';
 import { readConsent } from '@/server/consent';
-import { getPreferences, getSiteSettings, getViewer } from '@/server/data';
+import { getCategories, getPreferences, getSiteSettings, getViewer } from '@/server/data';
+import { htmlPreferenceAttributes, LiteDetection, themeColorFor } from '@/server/html-preferences';
 import { absoluteUrl } from '@/server/seo';
 import { archivo } from '../fonts';
-import { THEME_COLORS } from '@/lib/theme-colors';
 import '../globals.css';
 
 function isLocale(value: string): value is Locale {
@@ -36,24 +36,29 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  viewportFit: 'cover',
-  themeColor: THEME_COLORS.dark,
-};
+/** Barre du navigateur : couleur du thème choisi dès le rendu serveur (Nuit par défaut, D-09). */
+export async function generateViewport(): Promise<Viewport> {
+  const preferences = await getPreferences();
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+    themeColor: themeColorFor(preferences.theme),
+  };
+}
 
 export default async function LocaleLayout({ children, params }: LayoutProps<'/[locale]'>) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  const [preferences, viewer, consent, messages, settings, nav] = await Promise.all([
+  const [preferences, viewer, consent, messages, settings, nav, categories] = await Promise.all([
     getPreferences(),
     getViewer(),
     readConsent(),
     getMessages(),
     getSiteSettings().catch(() => null),
     getTranslations('nav'),
+    getCategories().catch(() => []),
   ]);
 
   const organization = {
@@ -82,8 +87,14 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
   };
 
   return (
-    <html lang={locale} data-theme={preferences.theme} className={archivo.variable}>
+    <html
+      lang={locale}
+      {...htmlPreferenceAttributes(preferences)}
+      className={archivo.variable}
+      suppressHydrationWarning
+    >
       <body>
+        <LiteDetection prefs={preferences} />
         <NextIntlClientProvider messages={messages}>
           <AppProviders
             preferences={preferences}
@@ -103,14 +114,16 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
             >
               {nav('skipToContent')}
             </a>
-            <MobileHeader locale={locale} />
-            <SideRail locale={locale} />
-            <div className="md:pl-24 lg:pl-60">
-              <main id="contenu" tabIndex={-1} className="min-h-[70dvh] focus:outline-none">
-                {children}
-              </main>
-              <Footer locale={locale} />
-            </div>
+            <AppHeader locale={locale} categories={categories} />
+            <TopNav locale={locale} />
+            <main
+              id="contenu"
+              tabIndex={-1}
+              className="min-h-[70dvh] focus:outline-none lg:pt-[var(--topnav-h)]"
+            >
+              {children}
+            </main>
+            <Footer locale={locale} />
             <TabBar locale={locale} />
             <CookieBanner initial={consent} />
             <ServiceWorker />

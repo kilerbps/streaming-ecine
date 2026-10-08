@@ -1,70 +1,102 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import { usePreferences } from '@/components/providers/preferences';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Switch } from '@/components/ui/switch';
 
-function Switch({
-  label,
-  help,
-  checked,
-  onChange,
-}: {
-  label: string;
-  help?: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
+function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <label className="flex min-h-14 cursor-pointer items-center justify-between gap-6 border-b border-border py-3">
-      <span>
-        <span className="block font-medium">{label}</span>
-        {help ? <span className="block text-sm text-muted">{help}</span> : null}
-      </span>
-      <input
-        type="checkbox"
-        role="switch"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="size-5 shrink-0 accent-[var(--accent)]"
-      />
-    </label>
+    <section className="mt-8 first:mt-0">
+      <h2 className="text-[17px] font-semibold leading-[22px]">{title}</h2>
+      <div className="mt-3 flex flex-col divide-y divide-border rounded-xl bg-surface-1 px-4 py-1">
+        {children}
+      </div>
+    </section>
   );
 }
 
-/** Réglages toujours accessibles (même sans compte) et mémorisés : thème, sons, économie de données. */
+function Choice({ label, help, children }: { label: string; help: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 py-3">
+      <div>
+        <p className="text-[15px] leading-5">{label}</p>
+        <p className="mt-0.5 text-[13px] leading-[18px] text-muted">{help}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Réglages toujours accessibles (même sans compte), mémorisés en cookies : thème (Nuit, Jour,
+ * Automatique), vibrations, son du clap, sons de l'interface, mode allégé, économie de données.
+ */
 export function PreferencesPanel() {
   const t = useTranslations('prefs');
-  const { theme, sound, saveData, setTheme, setSound, setSaveData } = usePreferences();
+  const prefs = usePreferences();
   return (
     <div>
-      <fieldset className="border-b border-border pb-3">
-        <legend className="font-medium">{t('theme')}</legend>
-        <div className="mt-3 flex gap-2">
-          {(['dark', 'light'] as const).map((value) => (
-            <label
-              key={value}
-              className={`eyebrow inline-flex min-h-11 cursor-pointer items-center gap-2 border px-4 ${theme === value ? 'border-accent text-accent-text' : 'border-border-strong'}`}
-            >
-              <input
-                type="radio"
-                name="theme"
-                value={value}
-                checked={theme === value}
-                onChange={() => setTheme(value)}
-                className="sr-only"
-              />
-              {value === 'dark' ? t('themeDark') : t('themeLight')}
-            </label>
-          ))}
+      <Group title={t('display')}>
+        <Choice label={t('theme')} help={t('themeHelp')}>
+          <SegmentedControl
+            label={t('theme')}
+            value={prefs.theme}
+            onChange={prefs.setTheme}
+            options={[
+              { value: 'dark', label: t('themeDark') },
+              { value: 'light', label: t('themeLight') },
+              { value: 'auto', label: t('themeAuto') },
+            ]}
+          />
+        </Choice>
+      </Group>
+
+      <Group title={t('feedback')}>
+        <div className="py-2">
+          <Switch
+            label={t('haptics')}
+            description={t('hapticsHelp')}
+            checked={prefs.haptics}
+            onChange={prefs.setHaptics}
+          />
         </div>
-      </fieldset>
-      <Switch label={t('sound')} checked={sound} onChange={setSound} />
-      <Switch
-        label={t('saveData')}
-        help={t('saveDataHelp')}
-        checked={saveData}
-        onChange={setSaveData}
-      />
+        <div className="py-2">
+          <Switch label={t('soundClap')} checked={prefs.soundClap} onChange={prefs.setSoundClap} />
+        </div>
+        <div className="py-2">
+          <Switch
+            label={t('soundUi')}
+            description={t('soundUiHelp')}
+            checked={prefs.soundUi}
+            onChange={prefs.setSoundUi}
+          />
+        </div>
+      </Group>
+
+      <Group title={t('data')}>
+        <Choice label={t('perf')} help={t('perfHelp')}>
+          <SegmentedControl
+            label={t('perf')}
+            value={prefs.perf}
+            onChange={prefs.setPerf}
+            options={[
+              { value: 'auto', label: t('perfAuto') },
+              { value: 'on', label: t('perfOn') },
+              { value: 'off', label: t('perfOff') },
+            ]}
+          />
+        </Choice>
+        <div className="py-2">
+          <Switch
+            label={t('saveData')}
+            description={t('saveDataHelp')}
+            checked={prefs.saveData}
+            onChange={prefs.setSaveData}
+          />
+        </div>
+      </Group>
     </div>
   );
 }

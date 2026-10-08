@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { LinkButton } from '@/components/ui/link-button';
 import { routes } from '@/lib/routes';
 import { getBookmarks, getViewer } from '@/server/data';
+import { LargeTitle } from '@/components/layout/header-title';
 
 export const metadata: Metadata = { title: 'Ma liste' };
 
@@ -23,7 +24,7 @@ export default async function MyListPage({
   const page = await getBookmarks(typeof cursor === 'string' ? cursor : undefined);
   return (
     <>
-      <h1 className="mb-10 font-serif text-4xl md:text-6xl">{t('myList')}</h1>
+      <LargeTitle className="mb-10">{t('myList')}</LargeTitle>
       {page.items.length === 0 ? (
         <EmptyState title={t('myListEmpty')} />
       ) : (

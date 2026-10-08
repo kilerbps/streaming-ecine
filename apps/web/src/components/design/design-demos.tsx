@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState, type ReactNode } from 'react';
 import { useToast } from '@/components/providers/toast';
+import type { ThemeSetting } from '@/lib/preferences';
 import { Button } from '@/components/ui/button';
 import { ContextMenu, MoreMenu, type MenuItem } from '@/components/ui/context-menu';
 import { SegmentedControl } from '@/components/ui/segmented-control';
@@ -16,7 +17,7 @@ type Flag = 'theme' | 'perf' | 'savedata' | 'motion';
  * cookie), afin de voir chaque composant en Nuit et en Jour, en mode allégé, en économie de données
  * et en mouvement réduit.
  */
-export function DesignToolbar({ initialTheme }: { initialTheme: 'dark' | 'light' }) {
+export function DesignToolbar({ initialTheme }: { initialTheme: ThemeSetting }) {
   const t = useTranslations('design');
   const [theme, setTheme] = useState(initialTheme);
   const [flags, setFlags] = useState({ perf: false, savedata: false, motion: false });
@@ -45,6 +46,7 @@ export function DesignToolbar({ initialTheme }: { initialTheme: 'dark' | 'light'
         options={[
           { value: 'dark', label: t('night') },
           { value: 'light', label: t('day') },
+          { value: 'auto', label: t('auto') },
         ]}
         className="md:w-56"
       />

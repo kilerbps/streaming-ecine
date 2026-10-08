@@ -75,6 +75,40 @@
   --shadow-menu: 0 12px 32px rgb(10 15 22 / 0.16);
 }
 
+/* Automatique : Jour si le système est en clair, sinon Nuit (valeurs de :root) */
+/* theme-auto:start — généré par `pnpm tokens:theme` (scripts/theme-auto.ts), ne pas modifier à la main */
+@media (prefers-color-scheme: light) {
+  [data-theme='auto'] {
+    color-scheme: light;
+    --bg: #f5f7fa;
+    --surface-1: #ffffff;
+    --surface-2: #ebeff5;
+    --surface-3: #ffffff;
+    --border: rgb(10 15 22 / 0.1);
+    --border-strong: #7a8699;
+    --text: #0a0f16;
+    --text-muted: #4a5568;
+    --text-subtle: #5f6b7d;
+    --accent: #1e76bc;
+    --accent-pressed: #17629e;
+    --accent-text: #17629e;
+    --on-accent: #ffffff;
+    --signal: #d7262b;
+    --signal-text: #c41e24;
+    --success: #1e7a4c;
+    --danger: #b3261e;
+    --warning: #8a5a00;
+    --focus: #0a0f16;
+    --overlay: rgb(10 15 22 / 0.5);
+    --chrome: rgb(255 255 255 / 0.72);
+    --chrome-solid: #ffffff;
+    --chrome-edge: rgb(10 15 22 / 0.06);
+    --shadow-float: 0 8px 24px rgb(10 15 22 / 0.12);
+    --shadow-menu: 0 12px 32px rgb(10 15 22 / 0.16);
+  }
+}
+/* theme-auto:end */
+
 :root {
   /* Marque (logo et aplats uniquement, jamais en couleur de texte) */
   --brand-blue: #1e76bc;
@@ -118,6 +152,10 @@
   --tabbar-h-compact: 48px;
   --header-h: 56px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Barre d'onglets flottante : écart au bas de l'écran, et place à laisser sous le contenu */
+  --tabbar-offset: max(12px, var(--safe-bottom));
+  --tabbar-space: calc(var(--tabbar-h) + var(--tabbar-offset) + 16px);
+  --topnav-h: 64px;
   --container-max: 1584px;
 
   /* Mouvement */
@@ -241,10 +279,6 @@
   --player-track: rgb(255 255 255 / 0.24);
   --player-buffered: rgb(255 255 255 / 0.48);
   --player-played: var(--brand-red);
-
-  /* Alias de la coquille v1, retirés avec elle au lot 2 */
-  --header-height: var(--header-h);
-  --tabbar-height: 56px;
 }
 
 /* Halo d'ambiance : --ambient-color posé par l'écran (ou classe quantifiée si la CSP l'exige) */
@@ -256,34 +290,51 @@
   );
 }
 
-/* Matériau de navigation et ses replis */
-.chrome {
+/* Matériau de navigation et ses replis : .chrome flotte (barre d'onglets, bouton Recherche),
+   .chrome-bar borde le haut de l'écran (en-tête, navigation PC). Écrire seulement backdrop-filter :
+   Lightning CSS ajoute le préfixe -webkit- pour Safari ; déclarer les deux lui fait garder le seul
+   préfixé, que Chrome ignore. */
+.chrome,
+.chrome-bar {
   background: var(--chrome);
   backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+.chrome {
   border: 1px solid var(--chrome-edge);
   box-shadow: var(--shadow-float);
 }
+.chrome-bar {
+  border-bottom: 1px solid var(--chrome-edge);
+}
 @supports not (backdrop-filter: blur(1px)) {
-  .chrome {
+  .chrome,
+  .chrome-bar {
     background: var(--chrome-solid);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .chrome {
+  .chrome,
+  .chrome-bar {
     background: var(--chrome-solid);
     backdrop-filter: none;
   }
 }
-[data-perf='lite'] .chrome,
-[data-savedata='on'] .chrome {
+[data-perf='lite'] :is(.chrome, .chrome-bar),
+[data-savedata='on'] :is(.chrome, .chrome-bar) {
   background: var(--chrome-solid);
   backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 [data-perf='lite'] .ambient,
 [data-savedata='on'] .ambient {
   background: none;
+}
+/* Mode allégé et économie de données : ressorts remplacés par une courbe simple de 150 ms */
+[data-perf='lite'],
+[data-savedata='on'] {
+  --spring-smooth: var(--ease-standard);
+  --spring-smooth-dur: var(--dur-fast);
+  --spring-snappy: var(--ease-standard);
+  --spring-snappy-dur: var(--dur-fast);
 }
 
 /* Mouvement réduit : déplacements instantanés, seuls les fondus courts restent */

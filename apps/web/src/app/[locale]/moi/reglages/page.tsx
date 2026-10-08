@@ -5,6 +5,7 @@ import { AccountSettings } from '@/components/features/account/account-settings'
 import { PreferencesPanel } from '@/components/features/account/preferences-panel';
 import { privateRequest } from '@/server/api-client';
 import { getViewer } from '@/server/data';
+import { LargeTitle } from '@/components/layout/header-title';
 
 export const metadata: Metadata = { title: 'Réglages' };
 
@@ -15,7 +16,7 @@ export default async function SettingsPage() {
   const me = viewer ? await privateRequest(meSchema, '/me') : null;
   return (
     <>
-      <h1 className="font-serif text-4xl md:text-6xl">{t('settings')}</h1>
+      <LargeTitle>{t('settings')}</LargeTitle>
       <section className="mt-10 max-w-xl">
         <PreferencesPanel />
       </section>

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Échoue si une couleur, un rayon, une ombre ou une durée est écrit en dur dans les composants et les
 // pages du site (charte « Nuit de Kin », règle d'or n° 2) : tout passe par packages/design-tokens/tokens.css.
-// Vérifie aussi que lib/theme-colors.ts reflète exactement --bg de tokens.css.
+// Vérifie aussi que lib/theme-colors.ts reflète exactement --bg de tokens.css, et que le thème
+// Automatique généré (scripts/theme-auto.ts) est à jour.
+import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -78,6 +80,16 @@ for (const [key, marker] of [
       `apps/web/src/lib/theme-colors.ts : ${key} = ${declared} au lieu de --bg ${expected}`,
     );
   }
+}
+
+try {
+  execFileSync(process.execPath, [join(root, 'scripts/theme-auto.ts'), '--check'], {
+    stdio: 'pipe',
+  });
+} catch {
+  hits.push(
+    'packages/design-tokens/tokens.css : thème Automatique périmé (lancer pnpm tokens:theme)',
+  );
 }
 
 if (hits.length > 0) {

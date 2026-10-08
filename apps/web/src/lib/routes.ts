@@ -3,6 +3,8 @@ import type { Locale } from '@ecine/contracts';
 /** URLs publiques stables (une URL = un contenu). Les slugs n'ont ni accent ni identifiant seul. */
 export const routes = {
   home: (l: Locale) => `/${l}`,
+  discover: (l: Locale) => `/${l}/decouvrir`,
+  whatsNew: (l: Locale) => `/${l}/nouveautes`,
   films: (l: Locale) => `/${l}/films`,
   shorts: (l: Locale) => `/${l}/courts-metrages`,
   film: (l: Locale, slug: string) => `/${l}/films/${slug}`,

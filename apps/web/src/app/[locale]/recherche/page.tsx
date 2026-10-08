@@ -8,6 +8,7 @@ import { SearchBox } from '@/components/features/search/search-box';
 import { formatDate } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { search } from '@/server/data';
+import { LargeTitle } from '@/components/layout/header-title';
 
 export const metadata: Metadata = { title: 'Rechercher', robots: { index: false, follow: true } };
 
@@ -31,7 +32,7 @@ export default async function SearchPage({
 
   return (
     <div className="container-page pt-8 md:pt-12">
-      <h1 className="font-serif text-4xl md:text-6xl">{t('title')}</h1>
+      <LargeTitle>{t('title')}</LargeTitle>
       <div className="mt-6 max-w-2xl">
         <SearchBox locale={locale} initialQuery={q} autoFocus={!q} />
         <p className="mt-3 text-sm text-muted" aria-live="polite">

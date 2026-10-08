@@ -15,11 +15,11 @@ export function authCookieNames(secure: boolean) {
   return { access: `${prefix}${AUTH_COOKIES.access}`, refresh: `${prefix}${AUTH_COOKIES.refresh}` };
 }
 
-/** Préférences et état d'interface (non sensibles, lisibles côté serveur pour éviter le flash). */
+/**
+ * État d'interface non sensible lu par le serveur. Les préférences (thème, sons, vibrations, mode
+ * allégé, économie de données) sont dans `lib/preferences.ts` (PREFERENCE_COOKIES).
+ */
 export const PREF_COOKIES = {
-  theme: 'ecine_theme',
-  sound: 'ecine_sound',
-  saveData: 'ecine_savedata',
   consent: 'ecine_consent',
   anonId: 'ecine_anon',
   seed: 'ecine_seed',

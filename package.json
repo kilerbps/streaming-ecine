@@ -25,6 +25,7 @@
     "check:tokens": "node scripts/check-tokens.mjs",
     "check:icons": "node scripts/check-icons.mjs",
     "tokens:springs": "node scripts/springs.ts",
+    "tokens:theme": "node scripts/theme-auto.ts",
     "icons:build": "node scripts/build-icons.ts"
   },
   "devDependencies": {

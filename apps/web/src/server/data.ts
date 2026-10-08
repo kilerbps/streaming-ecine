@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import {
   articleDetailSchema,
   articleSummarySchema,
@@ -27,7 +27,8 @@ import {
 import { z } from 'zod';
 import { ApiError, privateRequest, publicGet } from './api-client';
 import { serverConfig } from './config';
-import { authCookieNames, PREF_COOKIES } from './cookie-names';
+import { authCookieNames } from './cookie-names';
+import { resolvePreferences, type Preferences, type ThemeSetting } from '@/lib/preferences';
 
 /** Lectures publiques (cache Next.js + étiquettes revalidées par l'API, cf. content-events.service.ts). */
 
@@ -186,16 +187,11 @@ export async function getContinueWatching() {
   return privateRequest(z.array(continueWatchingItemSchema), '/me/continue-watching');
 }
 
-/** Préférences d'interface lues côté serveur (pas de flash au chargement). */
-export async function getPreferences(): Promise<{
-  theme: 'dark' | 'light';
-  sound: boolean;
-  saveData: boolean;
-}> {
-  const jar = await cookies();
-  return {
-    theme: jar.get(PREF_COOKIES.theme)?.value === 'light' ? 'light' : 'dark',
-    sound: jar.get(PREF_COOKIES.sound)?.value !== 'off',
-    saveData: jar.get(PREF_COOKIES.saveData)?.value === 'on',
-  };
+/**
+ * Préférences d'interface lues côté serveur (pas de flash au chargement). `defaultTheme` : Nuit sur
+ * le site, Automatique en administration (D-09).
+ */
+export async function getPreferences(defaultTheme: ThemeSetting = 'dark'): Promise<Preferences> {
+  const [jar, head] = await Promise.all([cookies(), headers()]);
+  return resolvePreferences((name) => jar.get(name)?.value, head.get('save-data'), defaultTheme);
 }

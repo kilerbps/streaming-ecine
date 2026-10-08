@@ -35,7 +35,8 @@ export function Turnstile({
   theme,
 }: {
   onToken: (token: string | undefined) => void;
-  theme: 'dark' | 'light';
+  /** Thème du widget ; `auto` suit le système, comme le réglage Automatique du site. */
+  theme: 'dark' | 'light' | 'auto';
 }) {
   const container = useRef<HTMLDivElement>(null);
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;

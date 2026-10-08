@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@ecine/contracts';
-import { MotifBand } from '@/components/ui/motif';
 import { routes } from '@/lib/routes';
 import { CookiePreferencesLink } from './cookie-banner';
 
@@ -17,11 +16,10 @@ export async function Footer({ locale }: { locale: Locale }) {
     { href: routes.cookies(locale), label: t('cookies') },
   ];
   return (
-    <footer className="mt-24 pb-[calc(var(--tabbar-height)+env(safe-area-inset-bottom)+24px)] md:pb-12">
-      <MotifBand name="chevrons" className="opacity-80" />
+    <footer className="mt-24 border-t border-border pb-[var(--tabbar-space)] lg:pb-12">
       <div className="container-page grid gap-8 pt-10 md:grid-cols-[1fr_2fr]">
         <div>
-          <p className="font-serif text-xl">E-Ciné</p>
+          <p className="font-display text-xl font-extrabold">E-Ciné</p>
           <p className="mt-2 max-w-xs text-sm text-muted">{t('tagline')}</p>
         </div>
         <nav aria-label="Liens du pied de page">
@@ -41,7 +39,7 @@ export async function Footer({ locale }: { locale: Locale }) {
             </li>
           </ul>
           <p className="meta mt-8">
-            © {new Date().getFullYear()} E-Ciné · {t('rights')}
+            © {new Date().getFullYear()} E-Ciné. {t('rights')}
           </p>
         </nav>
       </div>
