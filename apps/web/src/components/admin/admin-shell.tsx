@@ -177,7 +177,7 @@ function NavList({
                     aria-current={active ? 'page' : undefined}
                     className={`flex min-h-11 items-center gap-3 border-l-2 px-5 text-sm ${
                       active
-                        ? 'border-accent bg-surface-1 text-accent'
+                        ? 'border-accent bg-surface-1 text-accent-text'
                         : 'border-transparent text-muted hover:bg-surface-1 hover:text-text'
                     }`}
                   >
@@ -226,7 +226,7 @@ export function AdminShell({
     <div className="min-h-dvh bg-bg">
       <a
         href="#admin-contenu"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-text"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:text-on-accent"
       >
         Aller au contenu
       </a>

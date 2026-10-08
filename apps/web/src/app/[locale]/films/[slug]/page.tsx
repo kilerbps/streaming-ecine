@@ -102,7 +102,7 @@ export default async function FilmPage({ params, searchParams }: Props) {
         ) : (
           <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
             <Poster image={film.poster} sizes="(min-width: 672px) 33vw, 100vw" preload />
-            <p className="self-end border-l-2 border-highlight px-4 text-muted">{t('noVideo')}</p>
+            <p className="self-end border-l-2 border-signal px-4 text-muted">{t('noVideo')}</p>
           </div>
         )}
       </div>
@@ -163,7 +163,7 @@ export default async function FilmPage({ params, searchParams }: Props) {
                   href={film.trailerUrl}
                   rel="noopener noreferrer"
                   target="_blank"
-                  className="text-accent underline underline-offset-4"
+                  className="text-accent-text underline underline-offset-4"
                 >
                   {t('trailer')}
                 </a>

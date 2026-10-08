@@ -54,7 +54,7 @@ export function TabBar({ locale }: { locale: Locale }) {
                 onClick={() => feedback('tap')}
                 aria-current={active ? 'page' : undefined}
                 className={`flex h-full flex-col items-center justify-center gap-0.5 border-t-2 text-[11px] ${
-                  active ? 'border-accent text-accent' : 'border-transparent text-muted'
+                  active ? 'border-accent text-accent-text' : 'border-transparent text-muted'
                 }`}
               >
                 <Icon name={item.icon} size={22} filled={active && item.icon === 'home'} />
@@ -98,7 +98,7 @@ export function SideRail({ locale }: { locale: Locale }) {
                   aria-current={active ? 'page' : undefined}
                   className={`flex min-h-12 flex-col items-center justify-center gap-1 border-l-2 px-2 text-xs lg:flex-row lg:justify-start lg:gap-4 lg:px-6 lg:text-base ${
                     active
-                      ? 'border-accent text-accent bg-surface-1'
+                      ? 'border-accent text-accent-text bg-surface-1'
                       : 'border-transparent text-muted hover:text-text hover:bg-surface-1'
                   }`}
                 >

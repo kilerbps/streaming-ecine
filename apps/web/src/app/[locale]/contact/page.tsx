@@ -36,7 +36,7 @@ export default async function ContactPage() {
           </div>
         </div>
         {settings ? (
-          <aside className="self-start border-t-2 border-highlight pt-6">
+          <aside className="self-start border-t-2 border-signal pt-6">
             <h2 className="eyebrow text-muted">{t('direct')}</h2>
             <ul className="mt-4 flex flex-col gap-3">
               {settings.contactEmail ? (

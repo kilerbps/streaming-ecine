@@ -68,7 +68,7 @@ export function LikeButton({
       aria-pressed={liked}
       aria-label={liked ? t('unlike') : t('like')}
       onClick={() => requireAuth(() => toggle(!liked), 'like')}
-      className={`inline-flex min-h-11 items-center gap-2 px-2 ${liked ? 'text-highlight' : 'text-text'} hover:bg-surface-2`}
+      className={`inline-flex min-h-11 items-center gap-2 px-2 ${liked ? 'text-signal-text' : 'text-text'} hover:bg-surface-2`}
     >
       <Icon name="heart" filled={liked} />
       {compact ? null : <span className="meta text-current">{count > 0 ? count : ''}</span>}

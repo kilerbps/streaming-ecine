@@ -36,7 +36,7 @@ export function Logo({
             y="1300"
             textAnchor="middle"
             fill="var(--brand-on-red)"
-            fontFamily="var(--font-plex-sans), sans-serif"
+            fontFamily="var(--font-ui)"
             fontWeight="600"
             fontSize="118"
           >

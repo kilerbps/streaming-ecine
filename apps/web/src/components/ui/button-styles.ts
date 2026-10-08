@@ -1,19 +1,22 @@
-/** Classes des boutons, partagées par Button (client) et LinkButton (serveur). */
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-export type ButtonSize = 'md' | 'lg' | 'sm';
+/** Classes des boutons, partagées par Button (client) et LinkButton (serveur). Charte, Composants. */
+export type ButtonVariant = 'primary' | 'secondary' | 'on-image' | 'ghost' | 'danger';
+/** `lg` 52 px (affiche à la une, aperçu), `md` 44 px, `sm` 36 px (administration). */
+export type ButtonSize = 'lg' | 'md' | 'sm';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary:
-    'bg-accent text-accent-text border border-accent hover:bg-text hover:border-text hover:text-bg',
-  secondary: 'bg-transparent text-text border border-border-strong hover:bg-surface-2',
-  ghost: 'bg-transparent text-text border border-transparent hover:bg-surface-2',
-  danger: 'bg-transparent text-danger border border-danger hover:bg-danger hover:text-bg',
+  primary: 'bg-accent text-on-accent hover:bg-accent-pressed active:bg-accent-pressed',
+  secondary: 'bg-surface-2 text-text hover:bg-surface-3',
+  // Sur une image : blanc à 16 % + flou ; plein en mode allégé et en économie de données.
+  'on-image':
+    'bg-[var(--on-image)] text-[var(--on-image-text)] backdrop-blur-md [[data-perf=lite]_&]:backdrop-blur-none [[data-savedata=on]_&]:backdrop-blur-none',
+  ghost: 'bg-transparent text-text hover:bg-surface-2',
+  danger: 'bg-transparent text-danger border border-danger hover:bg-surface-2',
 };
 
 const SIZES: Record<ButtonSize, string> = {
-  sm: 'min-h-9 px-3 text-sm gap-2',
-  md: 'min-h-11 px-4 text-base gap-2',
-  lg: 'min-h-12 px-6 text-base gap-3',
+  lg: 'min-h-[52px] px-6 text-base gap-2',
+  md: 'min-h-11 px-5 text-base gap-2',
+  sm: 'min-h-9 px-4 text-sm gap-2',
 };
 
 export function buttonClasses(
@@ -22,8 +25,8 @@ export function buttonClasses(
   extra = '',
 ): string {
   return [
-    'inline-flex items-center justify-center font-sans font-medium select-none',
-    'transition-colors disabled:opacity-50 disabled:pointer-events-none',
+    'press inline-flex items-center justify-center rounded-md font-semibold select-none',
+    'disabled:opacity-40 disabled:pointer-events-none',
     VARIANTS[variant],
     SIZES[size],
     extra,

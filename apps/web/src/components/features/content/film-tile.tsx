@@ -31,7 +31,7 @@ export async function FilmTile({
         preload={eager}
         className="border border-transparent group-hover:border-border-strong"
       />
-      <p className="eyebrow mt-3 text-highlight">{t(film.kind)}</p>
+      <p className="eyebrow mt-3 text-signal-text">{t(film.kind)}</p>
       <h3 className="mt-1 font-serif text-lg leading-tight underline-offset-4 group-hover:underline">
         {film.title}
       </h3>

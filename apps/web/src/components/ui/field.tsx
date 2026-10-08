@@ -42,7 +42,7 @@ function FieldShell({ id, label, help, error, optional, children }: FieldShellPr
 }
 
 const CONTROL =
-  'w-full min-h-11 bg-surface-1 text-text border border-border-strong rounded-xs px-3 py-2 ' +
+  'w-full min-h-11 bg-surface-1 text-text border border-border-strong rounded-md px-3 py-2 ' +
   'placeholder:text-muted aria-[invalid=true]:border-danger';
 
 function describedBy(id: string, help?: ReactNode, error?: string): string | undefined {
@@ -144,7 +144,10 @@ export function CheckboxField({
 export function FormError({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
-    <div role="alert" className="border-l-2 border-danger bg-surface-1 px-4 py-3 text-sm text-text">
+    <div
+      role="alert"
+      className="rounded-md border-l-4 border-danger bg-surface-1 px-4 py-3 text-sm text-text"
+    >
       {message}
     </div>
   );

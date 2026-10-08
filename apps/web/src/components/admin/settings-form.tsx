@@ -96,7 +96,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
         </div>
       </FormSection>
       <FormSection title="Publicité" description="Prévue pour une version ultérieure.">
-        <div className="border-l-2 border-highlight bg-bg px-4 py-3 text-sm">
+        <div className="border-l-2 border-signal bg-bg px-4 py-3 text-sm">
           <p>
             En version 1, <strong>aucune publicité n’est diffusée</strong>, même si cette case est
             cochée : le site n’affiche aucun emplacement publicitaire et ne charge aucun script de

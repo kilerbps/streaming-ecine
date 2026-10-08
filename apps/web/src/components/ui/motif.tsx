@@ -23,11 +23,7 @@ export function Motif({
   const { size, path } = PATTERNS[name];
   const id = `motif-${name}-${tone}`;
   const color =
-    tone === 'border'
-      ? 'var(--border)'
-      : tone === 'highlight'
-        ? 'var(--highlight)'
-        : 'var(--accent)';
+    tone === 'border' ? 'var(--border)' : tone === 'highlight' ? 'var(--signal)' : 'var(--accent)';
   const filled = name === 'damier';
   return (
     <svg className={className} aria-hidden="true" focusable="false" width="100%" height="100%">

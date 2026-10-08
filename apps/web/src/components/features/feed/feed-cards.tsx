@@ -79,7 +79,7 @@ export function FilmCard({
         <div className="mt-1 flex items-center gap-1 -ml-2">
           <Link
             href={href}
-            className="inline-flex min-h-11 items-center gap-2 px-2 font-medium text-accent hover:underline underline-offset-4"
+            className="inline-flex min-h-11 items-center gap-2 px-2 font-medium text-accent-text hover:underline underline-offset-4"
           >
             {t('feed.openFilm')}
             <Icon name="arrowRight" size={20} />
@@ -158,7 +158,7 @@ export function ArticleCard({
   const href = routes.article(locale, article.slug);
   return (
     <article
-      className="grid gap-5 border-l-2 border-highlight pl-4 md:grid-cols-[7fr_5fr] md:gap-8"
+      className="grid gap-5 border-l-2 border-signal pl-4 md:grid-cols-[7fr_5fr] md:gap-8"
       aria-labelledby={`t-${item.key}`}
     >
       <div className="flex flex-col gap-3">
@@ -182,7 +182,7 @@ export function ArticleCard({
         <p className="line-clamp-3 max-w-prose text-muted">{article.excerpt}</p>
         <Link
           href={href}
-          className="inline-flex min-h-11 items-center gap-2 self-start font-medium text-accent hover:underline underline-offset-4"
+          className="inline-flex min-h-11 items-center gap-2 self-start font-medium text-accent-text hover:underline underline-offset-4"
         >
           {t('feed.readArticle')}
           <Icon name="arrowRight" size={20} />

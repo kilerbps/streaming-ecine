@@ -1,106 +1,312 @@
 /*
- * E-Ciné — design tokens (source unique).
- * Thème choisi par l'attribut data-theme="dark|light" sur <html>, lu côté serveur (pas de flash).
- * Accents dérivés du logo (bleu #1E76BC, rouge du badge) — voir docs/adr/0003-palette-logo.md.
- * Règles : aplats uniquement, aucun dégradé ; contrastes vérifiés par `pnpm check:contrast`.
+ * E-Ciné v2 « Nuit de Kin » — jetons de design (source unique).
+ * Charte : docs/05-DESIGN-SYSTEM.md (v2) et docs/design/02-charte-design-system.md ; ADR-0011.
+ * Thème choisi par l'attribut data-theme sur <html>, rendu côté serveur (pas de flash).
+ * Contrastes vérifiés par `pnpm check:contrast` (contrast-pairs.json) ; seuls trois dégradés sont
+ * autorisés : --scrim-bottom, --scrim-top et .ambient (`pnpm check:gradient`).
  */
 
-/* Sombre « Encre » (par défaut) */
+/* Nuit (par défaut) */
 :root,
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: #121110;
-  --surface-1: #1b1917;
-  --surface-2: #25221f;
-  --border: #3a3531;
-  --border-strong: #857a70;
-  --text: #f2ede6;
-  --text-muted: #b3aa9f;
-  --accent: #5aa3e6;
-  --accent-text: #121110;
-  --highlight: #ff5a5f;
-  --success: #4caf7a;
-  --danger: #f0675b;
+  --bg: #0a0f16;
+  --surface-1: #111823;
+  --surface-2: #1a2330;
+  --surface-3: #243042;
+  --border: rgb(255 255 255 / 0.1);
+  --border-strong: #5b6b80;
+  --text: #f4f6fa;
+  --text-muted: #a7b1c2;
+  --text-subtle: #7d8899;
+  --accent: #1e76bc;
+  --accent-pressed: #17629e;
+  --accent-text: #6ab0f3;
+  --on-accent: #ffffff;
+  --signal: #d7262b;
+  --signal-text: #ff6b6f;
+  --success: #3fb97a;
+  --danger: #f2685c;
+  --warning: #f2b33d;
   --focus: #ffffff;
-  --overlay: #000000;
+  --overlay: rgb(0 0 0 / 0.6);
+  --chrome: rgb(17 24 35 / 0.72);
+  --chrome-solid: #111823;
+  --chrome-edge: rgb(255 255 255 / 0.08);
+  --shadow-float: none;
+  --shadow-menu: 0 12px 32px rgb(0 0 0 / 0.24);
+  --scrim-bottom: linear-gradient(
+    to top,
+    rgb(10 15 22 / 1) 0%,
+    rgb(10 15 22 / 0.8) 35%,
+    rgb(10 15 22 / 0) 75%
+  );
+  --scrim-top: linear-gradient(to bottom, rgb(10 15 22 / 0.6), rgb(10 15 22 / 0));
 }
 
-/* Clair « Papier » */
+/* Jour */
 [data-theme='light'] {
   color-scheme: light;
-  --bg: #f6f1ea;
+  --bg: #f5f7fa;
   --surface-1: #ffffff;
-  --surface-2: #ede6dc;
-  --border: #cfc6b9;
-  --border-strong: #857b70;
-  --text: #1a1714;
-  --text-muted: #5e564e;
-  --accent: #17629e;
-  --accent-text: #ffffff;
-  --highlight: #c41e24;
-  --success: #1e6b45;
+  --surface-2: #ebeff5;
+  --surface-3: #ffffff;
+  --border: rgb(10 15 22 / 0.1);
+  --border-strong: #7a8699;
+  --text: #0a0f16;
+  --text-muted: #4a5568;
+  --text-subtle: #5f6b7d;
+  --accent: #1e76bc;
+  --accent-pressed: #17629e;
+  --accent-text: #17629e;
+  --on-accent: #ffffff;
+  --signal: #d7262b;
+  --signal-text: #c41e24;
+  --success: #1e7a4c;
   --danger: #b3261e;
-  --focus: #1a1714;
-  --overlay: #1a1714;
+  --warning: #8a5a00;
+  --focus: #0a0f16;
+  --overlay: rgb(10 15 22 / 0.5);
+  --chrome: rgb(255 255 255 / 0.72);
+  --chrome-solid: #ffffff;
+  --chrome-edge: rgb(10 15 22 / 0.06);
+  --shadow-float: 0 8px 24px rgb(10 15 22 / 0.12);
+  --shadow-menu: 0 12px 32px rgb(10 15 22 / 0.16);
+  --scrim-bottom: linear-gradient(
+    to top,
+    rgb(245 247 250 / 1) 0%,
+    rgb(245 247 250 / 0.8) 35%,
+    rgb(245 247 250 / 0) 75%
+  );
+  --scrim-top: linear-gradient(to bottom, rgb(245 247 250 / 0.6), rgb(245 247 250 / 0));
 }
 
 :root {
-  /* Couleurs de marque exactes : logo uniquement, jamais pour du texte courant */
+  /* Marque (logo et aplats uniquement, jamais en couleur de texte) */
   --brand-blue: #1e76bc;
   --brand-red: #d7262b;
   --brand-on-red: #ffffff;
 
-  /* Lecteur vidéo : fond noir et commandes blanches, identiques dans les deux thèmes (contraste 21:1). */
+  /* Bouton posé sur une image (blanc à 16 % + flou), identique dans les deux thèmes */
+  --on-image: rgb(255 255 255 / 0.16);
+  --on-image-text: #ffffff;
+
+  /* Typographie : police du système pour lire, Archivo pour regarder (--font-archivo posé par next/font) */
+  --font-ui:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue',
+    Arial, sans-serif;
+  --font-display: var(--font-archivo, 'Archivo'), var(--font-ui);
+
+  /* Rayons concentriques */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Espacements (grille de 4 px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+
+  /* Ergonomie */
+  --target: 44px;
+  --tabbar-h: 64px;
+  --tabbar-h-compact: 48px;
+  --header-h: 56px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --container-max: 1584px;
+
+  /* Mouvement */
+  --dur-press: 100ms;
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  /* springs:start — généré par `pnpm tokens:springs` (scripts/springs.ts), ne pas modifier à la main */
+  /* smooth : raideur 170, amortissement 26, masse 1 ; dépassement 0.0 % */
+  --spring-smooth: linear(
+    0,
+    0.0088,
+    0.0321,
+    0.066,
+    0.1074,
+    0.1537,
+    0.2031,
+    0.2539,
+    0.3049,
+    0.3553,
+    0.4043,
+    0.4515,
+    0.4965,
+    0.5391,
+    0.5791,
+    0.6165,
+    0.6513,
+    0.6835,
+    0.7133,
+    0.7407,
+    0.7658,
+    0.7888,
+    0.8097,
+    0.8288,
+    0.8462,
+    0.8619,
+    0.8762,
+    0.8891,
+    0.9007,
+    0.9112,
+    0.9206,
+    0.9291,
+    0.9368,
+    0.9436,
+    0.9498,
+    0.9553,
+    0.9602,
+    0.9646,
+    0.9685,
+    0.972,
+    0.9752,
+    0.9779,
+    0.9804,
+    0.9826,
+    0.9846,
+    0.9864,
+    0.9879,
+    1
+  );
+  --spring-smooth-dur: 500ms;
+  /* snappy : raideur 400, amortissement 30, masse 1 ; dépassement 2.8 % */
+  --spring-snappy: linear(
+    0,
+    0.0103,
+    0.0382,
+    0.0795,
+    0.1309,
+    0.1892,
+    0.2519,
+    0.3169,
+    0.3825,
+    0.4472,
+    0.5099,
+    0.5698,
+    0.6262,
+    0.6787,
+    0.7271,
+    0.7712,
+    0.8111,
+    0.8467,
+    0.8782,
+    0.9058,
+    0.9298,
+    0.9503,
+    0.9678,
+    0.9823,
+    0.9944,
+    1.0041,
+    1.0118,
+    1.0177,
+    1.0221,
+    1.0251,
+    1.0271,
+    1.0281,
+    1.0284,
+    1.028,
+    1.0272,
+    1.026,
+    1.0245,
+    1.0228,
+    1.021,
+    1.0192,
+    1.0173,
+    1.0155,
+    1.0137,
+    1.012,
+    1.0104,
+    1.009,
+    1.0076,
+    1
+  );
+  --spring-snappy-dur: 350ms;
+  /* springs:end */
+
+  /* Lecteur, identique dans les deux thèmes */
   --player-bg: #000000;
   --player-fg: #ffffff;
-  /* Barre de progression : piste et partie déjà chargée (gris opaques, décoratifs, jamais du texte). */
-  --player-track: #333333;
-  --player-buffered: #8c8c8c;
+  --player-track: rgb(255 255 255 / 0.24);
+  --player-buffered: rgb(255 255 255 / 0.48);
+  --player-played: var(--brand-red);
 
-  /* Typographie (familles injectées par next/font) */
-  --font-serif: var(--font-plex-serif, 'IBM Plex Serif'), Georgia, serif;
-  --font-sans: var(--font-plex-sans, 'IBM Plex Sans'), system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono, 'IBM Plex Mono'), ui-monospace, monospace;
-  --text-12: 0.75rem;
-  --text-14: 0.875rem;
-  --text-16: 1rem;
-  --text-20: 1.25rem;
-  --text-24: 1.5rem;
-  --text-32: 2rem;
-  --text-44: 2.75rem;
-  --text-64: 4rem;
-  --leading-body: 1.5;
-  --leading-tight: 1.15;
-
-  /* Espacement : unité 8 px (mini-unité 4 px) */
-  --space-4: 0.25rem;
-  --space-8: 0.5rem;
-  --space-12: 0.75rem;
-  --space-16: 1rem;
-  --space-24: 1.5rem;
-  --space-32: 2rem;
-  --space-48: 3rem;
-  --space-64: 4rem;
-  --space-96: 6rem;
-
-  /* Rayons et traits : angles droits */
-  --radius-0: 0;
-  --radius-field: 2px;
-  --stroke: 1px;
-  --focus-width: 2px;
-  --focus-offset: 2px;
-
-  /* Mouvement (productif, Carbon) */
-  --ease: cubic-bezier(0.2, 0, 0.38, 0.9);
-  --duration-fast: 70ms;
-  --duration-moderate: 150ms;
-  --duration-slow: 240ms;
-
-  /* Ergonomie mobile */
-  --touch-target: 44px;
+  /* Alias de la coquille v1, retirés avec elle au lot 2 */
+  --header-height: var(--header-h);
   --tabbar-height: 56px;
-  --header-height: 56px;
+}
 
-  /* Points de rupture (référence ; utilisés dans les media queries) : sm 320 · md 672 · lg 1056 · xlg 1312 · max 1584 */
-  --container-max: 1584px;
+/* Halo d'ambiance : --ambient-color posé par l'écran (ou classe quantifiée si la CSP l'exige) */
+.ambient {
+  background: radial-gradient(
+    120% 60% at 50% 0%,
+    color-mix(in oklab, var(--ambient-color, transparent) 35%, transparent),
+    transparent 70%
+  );
+}
+
+/* Matériau de navigation et ses replis */
+.chrome {
+  background: var(--chrome);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--chrome-edge);
+  box-shadow: var(--shadow-float);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .chrome {
+    background: var(--chrome-solid);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .chrome {
+    background: var(--chrome-solid);
+    backdrop-filter: none;
+  }
+}
+[data-perf='lite'] .chrome,
+[data-savedata='on'] .chrome {
+  background: var(--chrome-solid);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+[data-perf='lite'] .ambient,
+[data-savedata='on'] .ambient {
+  background: none;
+}
+
+/* Mouvement réduit : déplacements instantanés, seuls les fondus courts restent */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-press: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --spring-smooth-dur: 0ms;
+    --spring-snappy-dur: 0ms;
+  }
+}
+/* Même effet forcé par l'attribut (aperçu /design, réglage futur « Réduire les animations ») */
+[data-motion='reduce'] {
+  --dur-press: 0ms;
+  --dur-base: 0ms;
+  --dur-slow: 0ms;
+  --spring-smooth-dur: 0ms;
+  --spring-snappy-dur: 0ms;
 }

@@ -289,7 +289,7 @@ export function VideoPanel({
 
       <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4">
         {hydrated && stored && !file && phase === 'idle' ? (
-          <div role="status" className="border-l-2 border-highlight bg-bg px-3 py-2 text-sm">
+          <div role="status" className="border-l-2 border-signal bg-bg px-3 py-2 text-sm">
             <p>
               Envoi interrompu : « {stored.fileName} » ({formatBytes(stored.size)}). Sélectionnez à
               nouveau ce fichier pour reprendre là où l’envoi s’est arrêté.

@@ -1,10 +1,9 @@
-import Image from 'next/image';
 import type { Image as ImageData } from '@ecine/contracts';
-import { Motif } from '@/components/ui/motif';
+import { MediaImage } from '@/components/ui/media-image';
 
 /**
  * Image de contenu dans un cadre de proportions fixes (aucun saut de mise en page).
- * Sans image : aplat + motif, jamais d'image générique.
+ * Sans image : illustration du logo, jamais d'image générique. Voir `ui/media-image.tsx`.
  */
 export function Poster({
   image,
@@ -20,25 +19,6 @@ export function Poster({
   className?: string;
 }) {
   return (
-    <div
-      className={`relative w-full overflow-hidden bg-surface-2 ${className}`}
-      style={{ aspectRatio: ratio }}
-    >
-      {image ? (
-        <Image
-          src={image.src}
-          alt={image.alt}
-          fill
-          sizes={sizes}
-          preload={preload}
-          loading={preload ? 'eager' : undefined}
-          className="object-cover"
-        />
-      ) : (
-        <div className="absolute inset-0 p-6">
-          <Motif name="losanges" />
-        </div>
-      )}
-    </div>
+    <MediaImage image={image} ratio={ratio} sizes={sizes} preload={preload} className={className} />
   );
 }

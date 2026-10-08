@@ -95,7 +95,7 @@ export function DraftBanner<T>({
   return (
     <div
       role="status"
-      className="flex flex-col gap-3 border-l-2 border-highlight bg-surface-1 px-4 py-3 md:flex-row md:items-center md:justify-between"
+      className="flex flex-col gap-3 border-l-2 border-signal bg-surface-1 px-4 py-3 md:flex-row md:items-center md:justify-between"
     >
       <p className="text-sm">
         Un brouillon non enregistré du{' '}

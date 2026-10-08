@@ -328,12 +328,12 @@ export function Player({
 
       {status === 'ended' ? (
         <div className="absolute inset-0 flex flex-col justify-end gap-3 bg-bg p-6 text-text md:p-10">
-          <p className="eyebrow text-highlight">{t('ended')}</p>
+          <p className="eyebrow text-signal-text">{t('ended')}</p>
           <p className="max-w-md font-serif text-2xl md:text-3xl">{title}</p>
           <p className="max-w-md text-muted">{t('endedBody')}</p>
           <Link
             href={routes.films(locale)}
-            className="inline-flex min-h-11 items-center gap-2 self-start font-medium text-accent underline-offset-4 hover:underline"
+            className="inline-flex min-h-11 items-center gap-2 self-start font-medium text-accent-text underline-offset-4 hover:underline"
           >
             {t('moreFilms')}
             <Icon name="arrowRight" size={20} />

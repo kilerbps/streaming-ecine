@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { buttonClasses, type ButtonSize, type ButtonVariant } from './button-styles';
 import { Icon, type IconName } from './icon';
+import { Loader } from './loader';
 
 export type { ButtonVariant } from './button-styles';
 
@@ -66,12 +67,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       type={type}
       data-cta={variant === 'primary' ? 'primary' : undefined}
       className={buttonClasses(variant, size, className)}
-      disabled={disabled || pending}
+      disabled={disabled}
       aria-busy={pending || undefined}
+      aria-disabled={pending || undefined}
       {...rest}
+      // En cours : libellé intact (pas l'apparence désactivée), mais un second appui est ignoré.
+      onClick={pending ? (event) => event.preventDefault() : rest.onClick}
     >
       {icon ? <Icon name={icon} filled={iconFilled} size={20} /> : null}
       {children}
+      {/* En cours : le libellé reste, un loader de 20 px n'apparaît qu'après 300 ms. */}
+      {pending ? (
+        <span className="appear-late [--loader-color:currentColor]" aria-hidden="true">
+          <Loader size="sm" label="" />
+        </span>
+      ) : null}
     </button>
   );
 });

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { THEME_COLORS } from '@/lib/theme-colors';
 
 /** Manifeste PWA : installable, plein écran autonome, couleurs alignées sur le thème sombre (--bg). */
 export default function manifest(): MetadataRoute.Manifest {
@@ -11,8 +12,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#121110',
-    theme_color: '#121110',
+    background_color: THEME_COLORS.dark,
+    theme_color: THEME_COLORS.dark,
     categories: ['entertainment', 'education'],
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

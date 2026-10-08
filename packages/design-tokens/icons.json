@@ -1,0 +1,327 @@
+{
+  "$comment": "Sens → icône Solar et styles générés (scripts/build-icons.ts → apps/web/src/components/ui/icons/solar.generated.tsx). « active » = style quand l'élément est actif (prop filled). Charte : docs/05-DESIGN-SYSTEM.md, Iconographie.",
+  "source": "@iconify-json/solar",
+  "attribution": "Icônes : Solar Icon Set par 480 Design, licence CC BY 4.0 (https://github.com/480-Design/Solar-Icon-Set)",
+  "icons": {
+    "home": {
+      "solar": "home-smile",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "discover": {
+      "solar": "clapperboard-play",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "whatsNew": {
+      "solar": "fire",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "user": {
+      "solar": "user-circle",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "search": {
+      "solar": "magnifer",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "film": {
+      "solar": "clapperboard",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "news": {
+      "solar": "notebook",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "bookmark": {
+      "solar": "bookmark",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "bell": {
+      "solar": "bell",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "heart": {
+      "solar": "heart",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "play": {
+      "solar": "play",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "pause": {
+      "solar": "pause",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "back10": {
+      "solar": "rewind-10-seconds-back",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "forward10": {
+      "solar": "rewind-10-seconds-forward",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "volume": {
+      "solar": "volume-loud",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "volumeOff": {
+      "solar": "volume-cross",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "fullscreen": {
+      "solar": "full-screen-square",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "exitFullscreen": {
+      "solar": "quit-full-screen-square",
+      "styles": ["linear", "bold"],
+      "active": "bold"
+    },
+    "settings": {
+      "solar": "settings",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "captions": {
+      "solar": "subtitles",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "dashboard": {
+      "solar": "widget",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "users": {
+      "solar": "users-group-rounded",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "image": {
+      "solar": "gallery",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "tag": {
+      "solar": "tag",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "flag": {
+      "solar": "flag",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "mail": {
+      "solar": "letter",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "shield": {
+      "solar": "shield-check",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "document": {
+      "solar": "document-text",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "redirect": {
+      "solar": "routing-2",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "chart": {
+      "solar": "chart-2",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "list": {
+      "solar": "list",
+      "styles": ["linear", "bold-duotone"],
+      "active": "bold-duotone"
+    },
+    "close": {
+      "solar": "close-circle",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "chevronLeft": {
+      "solar": "alt-arrow-left",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "chevronRight": {
+      "solar": "alt-arrow-right",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "chevronDown": {
+      "solar": "alt-arrow-down",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "arrowRight": {
+      "solar": "arrow-right",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "arrowUp": {
+      "solar": "arrow-up",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "arrowDown": {
+      "solar": "arrow-down",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "sun": {
+      "solar": "sun",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "moon": {
+      "solar": "moon",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "surprise": {
+      "solar": "magic-stick-3",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "pin": {
+      "solar": "pin",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "share": {
+      "solar": "share",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "check": {
+      "solar": "check-circle",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "alert": {
+      "solar": "danger-triangle",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "menu": {
+      "solar": "hamburger-menu",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "plus": {
+      "solar": "add-circle",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "trash": {
+      "solar": "trash-bin-trash",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "upload": {
+      "solar": "upload-minimalistic",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "download": {
+      "solar": "download-minimalistic",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "external": {
+      "solar": "arrow-right-up",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "logout": {
+      "solar": "logout-2",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "phone": {
+      "solar": "phone",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "globe": {
+      "solar": "global",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "clock": {
+      "solar": "clock-circle",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "calendar": {
+      "solar": "calendar",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "location": {
+      "solar": "map-point",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "dataSaver": {
+      "solar": "leaf",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "edit": {
+      "solar": "pen",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "eye": {
+      "solar": "eye",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "eyeOff": {
+      "solar": "eye-closed",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "refresh": {
+      "solar": "refresh",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "archive": {
+      "solar": "archive",
+      "styles": ["linear"],
+      "active": "linear"
+    },
+    "more": {
+      "solar": "menu-dots",
+      "styles": ["linear"],
+      "active": "linear"
+    }
+  }
+}

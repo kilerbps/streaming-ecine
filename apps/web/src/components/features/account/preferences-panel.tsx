@@ -43,7 +43,7 @@ export function PreferencesPanel() {
           {(['dark', 'light'] as const).map((value) => (
             <label
               key={value}
-              className={`eyebrow inline-flex min-h-11 cursor-pointer items-center gap-2 border px-4 ${theme === value ? 'border-accent text-accent' : 'border-border-strong'}`}
+              className={`eyebrow inline-flex min-h-11 cursor-pointer items-center gap-2 border px-4 ${theme === value ? 'border-accent text-accent-text' : 'border-border-strong'}`}
             >
               <input
                 type="radio"

@@ -8,9 +8,9 @@ const TONES: Record<Tone, string> = {
   neutral: 'text-text border-border-strong',
   muted: 'text-muted border-border',
   success: 'text-success border-success',
-  highlight: 'text-highlight border-highlight',
+  highlight: 'text-signal-text border-signal',
   danger: 'text-danger border-danger',
-  accent: 'text-accent border-accent',
+  accent: 'text-accent-text border-accent',
 };
 
 /** Pastille d'état : le texte porte l'information (jamais la couleur seule). */

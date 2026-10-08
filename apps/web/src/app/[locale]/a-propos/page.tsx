@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@ecine/contracts';
+import { Credits } from '@/components/features/content/credits';
 import { Poster } from '@/components/features/content/poster';
 import { StaticPageView, staticPageMetadata } from '@/components/features/content/static-page';
 import { getTeam } from '@/server/data';
@@ -41,6 +42,7 @@ export default async function AboutPage({ params }: PageProps<'/[locale]/a-propo
           </ul>
         )}
       </section>
+      <Credits />
     </StaticPageView>
   );
 }

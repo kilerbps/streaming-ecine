@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Serif } from 'next/font/google';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
@@ -12,27 +11,9 @@ import { AppProviders } from '@/components/providers/app-providers';
 import { Logo } from '@/components/ui/logo';
 import { adminLoad, adminLoginUrl } from '@/server/actions/admin/core';
 import { getPreferences, getViewer } from '@/server/data';
+import { archivo } from '../fonts';
+import { THEME_COLORS } from '@/lib/theme-colors';
 import '../globals.css';
-
-const serif = IBM_Plex_Serif({
-  subsets: ['latin'],
-  weight: ['500', '600'],
-  style: ['normal', 'italic'],
-  variable: '--font-plex-serif',
-  display: 'swap',
-});
-const sans = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-plex-sans',
-  display: 'swap',
-});
-const mono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-plex-mono',
-  display: 'swap',
-});
 
 /** Administration : jamais indexée (en plus de l'en-tête X-Robots-Tag posé par proxy.ts). */
 export const metadata: Metadata = {
@@ -41,7 +22,11 @@ export const metadata: Metadata = {
   icons: { icon: [{ url: '/icon.svg', type: 'image/svg+xml' }] },
 };
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#121110' };
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: THEME_COLORS.dark,
+};
 
 /** Vrai si l'API refuse l'administration faute de double authentification (comptes ADMIN et plus). */
 async function mfaMissing(): Promise<boolean> {
@@ -61,11 +46,7 @@ export default async function AdminLayout({ children }: LayoutProps<'/admin'>) {
   } catch {
     // API injoignable : page sobre plutôt qu'une erreur brute (aucun détail technique).
     return (
-      <html
-        lang="fr"
-        data-theme={preferences.theme}
-        className={`${serif.variable} ${sans.variable} ${mono.variable}`}
-      >
+      <html lang="fr" data-theme={preferences.theme} className={archivo.variable}>
         <body>
           <main id="admin-contenu" className="mx-auto max-w-4xl px-4 py-6 md:px-8">
             <Unavailable message="Le serveur E-Ciné ne répond pas pour le moment. Vos contenus ne sont pas touchés : réessayez dans quelques instants." />
@@ -112,11 +93,7 @@ export default async function AdminLayout({ children }: LayoutProps<'/admin'>) {
   }
 
   return (
-    <html
-      lang="fr"
-      data-theme={preferences.theme}
-      className={`${serif.variable} ${sans.variable} ${mono.variable}`}
-    >
+    <html lang="fr" data-theme={preferences.theme} className={archivo.variable}>
       <body>
         <NextIntlClientProvider messages={messages}>
           <AppProviders

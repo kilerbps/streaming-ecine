@@ -1,33 +1,44 @@
 @import 'tailwindcss';
 @import '@ecine/design-tokens/tokens.css';
 
-/* Tailwind relié aux tokens : aucune couleur en dur dans les composants. */
+/*
+ * Tailwind relié aux jetons « Nuit de Kin » : aucune couleur, rayon ou durée en dur dans les composants
+ * (`pnpm check:tokens`). Les jetons --radius-* et --ease-* portent les mêmes noms que ceux de Tailwind :
+ * les valeurs de tokens.css (hors couche) l'emportent directement sur les classes rounded-* et ease-*.
+ */
 @theme inline {
   --color-bg: var(--bg);
   --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-text: var(--text);
   --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
   --color-accent: var(--accent);
+  --color-accent-pressed: var(--accent-pressed);
   --color-accent-text: var(--accent-text);
-  --color-highlight: var(--highlight);
+  --color-on-accent: var(--on-accent);
+  --color-signal: var(--signal);
+  --color-signal-text: var(--signal-text);
   --color-success: var(--success);
   --color-danger: var(--danger);
+  --color-warning: var(--warning);
   --color-focus: var(--focus);
   --color-overlay: var(--overlay);
+  --color-chrome-solid: var(--chrome-solid);
   --color-brand-blue: var(--brand-blue);
   --color-brand-red: var(--brand-red);
 
-  --radius-xs: 2px;
-  --radius-sm: 2px;
-  --radius-md: 2px;
-  --radius-lg: 2px;
-  --ease-productive: var(--ease);
+  --font-sans: var(--font-ui);
+  --font-display: var(--font-display);
+  /* Classes héritées de la v1 : les titres passent en Archivo, la chasse fixe disparaît (D-05). */
+  --font-serif: var(--font-display);
+  --font-mono: var(--font-ui);
 }
 
-/* Points de rupture Carbon : sm 320 · md 672 · lg 1056 · xl 1312 · 2xl 1584 */
+/* Points de rupture : sm 320 · md 672 · lg 1056 · xl 1312 · 2xl 1584 (attention : sm s'applique dès 320 px). */
 @theme {
   --breakpoint-sm: 20rem;
   --breakpoint-md: 42rem;
@@ -39,16 +50,10 @@
 
 @layer base {
   :root {
-    --default-transition-duration: var(--duration-moderate);
-    --default-transition-timing-function: var(--ease);
+    --default-transition-duration: var(--dur-fast);
+    --default-transition-timing-function: var(--ease-standard);
   }
-  /* Mouvement réduit : durées des tokens à zéro (transitions), animations coupées composant par composant. */
   @media (prefers-reduced-motion: reduce) {
-    :root {
-      --duration-fast: 0ms;
-      --duration-moderate: 0ms;
-      --duration-slow: 0ms;
-    }
     html {
       scroll-behavior: auto;
     }
@@ -60,20 +65,28 @@
     text-size-adjust: 100%;
   }
   body {
-    font-family: var(--font-sans);
-    font-size: var(--text-16);
-    line-height: var(--leading-body);
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    line-height: 1.5;
     min-height: 100dvh;
     background: var(--bg);
     color: var(--text);
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
   }
-  h1,
+  /* Titre d'écran et d'affiche : Archivo 800 ; titres de section : police du système, 700. */
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
   h2,
   h3 {
-    font-family: var(--font-serif);
-    line-height: var(--leading-tight);
+    font-family: var(--font-ui);
+    font-weight: 700;
+    line-height: 1.25;
     text-wrap: balance;
   }
   p {
@@ -83,93 +96,169 @@
     color: inherit;
     text-underline-offset: 3px;
   }
-  /* Focus visible ≥ 3:1, 2 px + décalage 2 px, sur tout élément interactif. */
+  /* Focus visible ≥ 3:1, 2 px décalé de 2 px, sur tout élément interactif. */
   :focus-visible {
-    outline: var(--focus-width) solid var(--focus);
-    outline-offset: var(--focus-offset);
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
   }
   ::selection {
     background: var(--accent);
-    color: var(--accent-text);
+    color: var(--on-accent);
   }
 }
 
 @layer components {
-  /* Métadonnées : année, durée, timecode (IBM Plex Mono). */
+  /* Métadonnées (style « Sous-titre ») : casse normale, police du système, chiffres tabulaires. */
   .meta {
-    font-family: var(--font-mono);
-    font-size: var(--text-12);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
     color: var(--text-muted);
   }
+  /* Surtitre (style « Légende ») : plus de capitales espacées (D-14). */
   .eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--text-12);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 600;
   }
   .container-page {
     width: 100%;
     max-width: var(--container-max);
     margin-inline: auto;
-    padding-inline: var(--space-16);
+    padding-inline: var(--space-4);
   }
   @media (width >= 42rem) {
     .container-page {
-      padding-inline: var(--space-32);
+      padding-inline: var(--space-8);
+    }
+  }
+  @media (width >= 66rem) {
+    .container-page {
+      padding-inline: var(--space-12);
+    }
+  }
+  @media (width >= 82rem) {
+    .container-page {
+      padding-inline: var(--space-16);
     }
   }
   .prose-ecine {
-    max-width: 68ch;
-    font-size: var(--text-16);
+    max-width: 70ch;
+    font-size: 1rem;
+    line-height: 1.5;
   }
   .prose-ecine h2 {
-    font-size: var(--text-24);
-    margin-top: var(--space-48);
-    margin-bottom: var(--space-16);
+    font-size: 1.25rem;
+    margin-top: var(--space-12);
+    margin-bottom: var(--space-4);
   }
   .prose-ecine h3 {
-    font-size: var(--text-20);
-    margin-top: var(--space-32);
-    margin-bottom: var(--space-12);
+    font-size: 1.0625rem;
+    margin-top: var(--space-8);
+    margin-bottom: var(--space-3);
   }
   .prose-ecine p,
   .prose-ecine ul,
   .prose-ecine ol,
   .prose-ecine blockquote {
-    margin-bottom: var(--space-16);
+    margin-bottom: var(--space-4);
   }
   .prose-ecine ul {
-    list-style: square;
-    padding-left: var(--space-24);
+    list-style: disc;
+    padding-left: var(--space-6);
   }
   .prose-ecine ol {
     list-style: decimal;
-    padding-left: var(--space-24);
+    padding-left: var(--space-6);
   }
   .prose-ecine a {
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: underline;
   }
   .prose-ecine blockquote {
-    border-left: 2px solid var(--highlight);
-    padding-left: var(--space-16);
-    font-family: var(--font-serif);
+    border-left: 2px solid var(--signal);
+    padding-left: var(--space-4);
     font-style: italic;
   }
-  /* Skeleton : aplat + pulsation d'opacité (jamais de shimmer). */
+  /*
+   * Skeleton : aplat qui pulse (0,55 ↔ 1), jamais de shimmer. Invisible pendant 150 ms pour qu'une
+   * navigation rapide ne clignote pas ; figé en mouvement réduit.
+   */
   .skeleton {
     background: var(--surface-2);
-    animation: ecine-pulse 1.2s var(--ease) infinite alternate;
+    border-radius: var(--radius-sm);
+    animation:
+      ecine-appear 0s linear 150ms both,
+      ecine-pulse 1.2s var(--ease-standard) 150ms infinite alternate;
   }
   @media (prefers-reduced-motion: reduce) {
     .skeleton {
-      animation: none;
+      animation: ecine-appear 0s linear 150ms both;
     }
   }
+  [data-motion='reduce'] .skeleton {
+    animation: ecine-appear 0s linear 150ms both;
+  }
+  /*
+   * Appui : réduction en 100 ms, retour en ressort « vif » au relâchement (charte, Mouvement). Les
+   * couleurs gardent leur transition courte ; seules transform et opacity bougent.
+   */
+  .press,
+  .press-icon {
+    transition:
+      transform var(--spring-snappy-dur) var(--spring-snappy),
+      background-color var(--dur-fast) var(--ease-standard),
+      color var(--dur-fast) var(--ease-standard),
+      border-color var(--dur-fast) var(--ease-standard),
+      opacity var(--dur-fast) var(--ease-standard);
+  }
+  .press:active,
+  .press-icon:active {
+    transition-duration:
+      var(--dur-press), var(--dur-fast), var(--dur-fast), var(--dur-fast), var(--dur-fast);
+    transition-timing-function: var(--ease-standard);
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+  .press-icon:active {
+    transform: scale(0.92);
+  }
+  [data-perf='lite'] .press,
+  [data-perf='lite'] .press-icon {
+    transition-timing-function: var(--ease-standard);
+  }
+  /* Apparition différée (bouton en cours, skeleton) : rien ne clignote pour une attente courte. */
+  .appear-late {
+    animation: ecine-appear 0s linear 300ms both;
+  }
+  /* Largeur des affiches en rangée : 3 affiches et le bord de la 4e sur 390 px (invite à glisser). */
+  .tile-size {
+    --tile-w: 112px;
+  }
+  @media (width >= 42rem) {
+    .tile-size {
+      --tile-w: 148px;
+    }
+  }
+  @media (width >= 66rem) {
+    .tile-size {
+      --tile-w: 184px;
+    }
+  }
+  /* Chiffre du Top 10 : contour de 2 px --text-muted, intérieur couleur du fond. */
+  .top10-rank {
+    color: var(--bg);
+    -webkit-text-stroke: 2px var(--text-muted);
+    paint-order: stroke fill;
+  }
+  /* Coin coupé du badge du logo : signature de marque des badges. */
+  .badge-cut {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+  }
   .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--safe-bottom);
   }
   .no-scrollbar {
     scrollbar-width: none;
@@ -199,9 +288,53 @@
   }
 }
 
+@keyframes ecine-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Feuille : monte depuis le bas (ressort « doux »), sort vers le bas (courbe de sortie). */
+@keyframes ecine-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes ecine-sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* Notification : montée de 12 px et fondu. */
+@keyframes ecine-toast-in {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+
+/* Menu et palette : fondu et échelle 0,98 → 1. */
+@keyframes ecine-menu-in {
+  from {
+    transform: scale(0.98);
+    opacity: 0;
+  }
+}
+
+@keyframes ecine-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes ecine-pulse {
   from {
-    opacity: 0.6;
+    opacity: 0.55;
   }
   to {
     opacity: 1;
@@ -218,6 +351,10 @@
   height: var(--uib-size);
   width: var(--uib-size);
   animation: ecine-rotate calc(var(--uib-speed) * 4) linear infinite;
+}
+/* Petite taille (bouton en cours) : 20 px. */
+.ecine-loader.ecine-loader--sm {
+  --uib-size: 20px;
 }
 .ecine-loader__label {
   position: absolute;
@@ -406,4 +543,11 @@
   .ecine-loader .particle::before {
     opacity: 0.65;
   }
+}
+[data-motion='reduce'] .ecine-loader,
+[data-motion='reduce'] .ecine-loader .particle::before {
+  animation: none;
+}
+[data-motion='reduce'] .ecine-loader .particle::before {
+  opacity: 0.65;
 }

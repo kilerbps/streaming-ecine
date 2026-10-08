@@ -64,7 +64,7 @@ export default async function PersonPage({ params }: Props) {
       <div className="grid gap-8 md:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] md:gap-14">
         <Poster image={person.photo} ratio="4/5" sizes="(min-width: 672px) 35vw, 100vw" preload />
         <div className="flex flex-col justify-end">
-          <p className="eyebrow text-highlight">{person.roles.map((r) => tr(r)).join(' · ')}</p>
+          <p className="eyebrow text-signal-text">{person.roles.map((r) => tr(r)).join(' · ')}</p>
           <h1 className="mt-3 font-serif text-4xl md:text-6xl">{person.name}</h1>
           {person.birthYear ? (
             <p className="meta mt-3">{t('born', { year: person.birthYear })}</p>

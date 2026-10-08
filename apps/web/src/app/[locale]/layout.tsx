@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Serif } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
@@ -15,27 +14,9 @@ import { serverConfig } from '@/server/config';
 import { readConsent } from '@/server/consent';
 import { getPreferences, getSiteSettings, getViewer } from '@/server/data';
 import { absoluteUrl } from '@/server/seo';
+import { archivo } from '../fonts';
+import { THEME_COLORS } from '@/lib/theme-colors';
 import '../globals.css';
-
-const serif = IBM_Plex_Serif({
-  subsets: ['latin'],
-  weight: ['500', '600'],
-  style: ['normal', 'italic'],
-  variable: '--font-plex-serif',
-  display: 'swap',
-});
-const sans = IBM_Plex_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-plex-sans',
-  display: 'swap',
-});
-const mono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-plex-mono',
-  display: 'swap',
-});
 
 function isLocale(value: string): value is Locale {
   return (LOCALES as readonly string[]).includes(value);
@@ -59,7 +40,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#121110',
+  themeColor: THEME_COLORS.dark,
 };
 
 export default async function LocaleLayout({ children, params }: LayoutProps<'/[locale]'>) {
@@ -101,11 +82,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
   };
 
   return (
-    <html
-      lang={locale}
-      data-theme={preferences.theme}
-      className={`${serif.variable} ${sans.variable} ${mono.variable}`}
-    >
+    <html lang={locale} data-theme={preferences.theme} className={archivo.variable}>
       <body>
         <NextIntlClientProvider messages={messages}>
           <AppProviders
@@ -122,7 +99,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
           >
             <a
               href="#contenu"
-              className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-text"
+              className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:text-on-accent"
             >
               {nav('skipToContent')}
             </a>

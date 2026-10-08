@@ -191,7 +191,7 @@ export function PublishPanel({
             <ul className="mt-2 flex flex-col gap-2 text-sm">
               {check.missing.map((item) => (
                 <li key={item} className="flex items-start gap-2">
-                  <Icon name="alert" size={18} className="mt-0.5 shrink-0 text-highlight" />
+                  <Icon name="alert" size={18} className="mt-0.5 shrink-0 text-signal-text" />
                   <span>{item}</span>
                 </li>
               ))}

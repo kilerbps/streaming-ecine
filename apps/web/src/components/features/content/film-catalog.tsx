@@ -88,7 +88,7 @@ function CategoryLink({ href, active, label }: { href: string; active: boolean; 
       aria-current={active ? 'page' : undefined}
       className={`eyebrow inline-flex min-h-11 items-center whitespace-nowrap border px-4 ${
         active
-          ? 'border-accent bg-accent text-accent-text'
+          ? 'border-accent bg-accent text-on-accent'
           : 'border-border-strong text-text hover:bg-surface-2'
       }`}
     >

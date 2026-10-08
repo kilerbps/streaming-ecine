@@ -54,7 +54,7 @@ export function BookmarkButton({
       aria-pressed={saved}
       aria-label={withLabel ? undefined : label}
       onClick={() => requireAuth(() => toggle(!saved), 'list')}
-      className={`inline-flex min-h-11 items-center gap-2 px-2 hover:bg-surface-2 ${saved ? 'text-accent' : 'text-text'}`}
+      className={`inline-flex min-h-11 items-center gap-2 px-2 hover:bg-surface-2 ${saved ? 'text-accent-text' : 'text-text'}`}
     >
       <Icon name="bookmark" filled={saved} />
       {withLabel ? <span className="text-sm">{saved ? t('inList') : t('bookmark')}</span> : null}

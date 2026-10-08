@@ -60,7 +60,7 @@ export default async function NewsPage({ params, searchParams }: Props) {
             key={f.href}
             href={f.href}
             aria-current={f.active ? 'page' : undefined}
-            className={`eyebrow inline-flex min-h-11 items-center border px-4 ${f.active ? 'border-accent bg-accent text-accent-text' : 'border-border-strong hover:bg-surface-2'}`}
+            className={`eyebrow inline-flex min-h-11 items-center border px-4 ${f.active ? 'border-accent bg-accent text-on-accent' : 'border-border-strong hover:bg-surface-2'}`}
           >
             {f.label}
           </Link>
@@ -77,7 +77,7 @@ export default async function NewsPage({ params, searchParams }: Props) {
           >
             <Poster image={lead.cover} ratio="3/2" sizes="(min-width: 672px) 58vw, 100vw" preload />
             <div className="flex flex-col justify-end gap-3">
-              <p className="eyebrow text-highlight">
+              <p className="eyebrow text-signal-text">
                 {tk(lead.kind)} · <span className="text-muted">{formatDate(lead.publishedAt)}</span>
               </p>
               <h2 className="font-serif text-3xl md:text-4xl group-hover:underline underline-offset-4">

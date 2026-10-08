@@ -42,7 +42,7 @@ export function VerifyEmailBanner() {
   const toast = useToast();
   const [pending, startTransition] = useTransition();
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-highlight bg-surface-1 px-4 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-signal bg-surface-1 px-4 py-3">
       <p className="text-sm">{t('verifyEmailBanner')}</p>
       <Button
         size="sm"
