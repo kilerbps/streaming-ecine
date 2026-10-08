@@ -68,6 +68,7 @@ Thème **Nuit** par défaut, thème **Jour** complet ; thème choisi par `data-t
 | `--on-image` · `--on-image-text` | Bouton posé sur une image (blanc à 16 %) | variante `on-image` |
 
 - **`--text-subtle` est interdit sur `surface-2` et `surface-3` en Nuit** (contraste insuffisant).
+- **Les zones d'image sont toujours en Nuit** (décision du propriétaire, 8 octobre 2026) : affiche à la une, haut de fiche, aperçus. Leur conteneur porte `data-theme="dark"` : voiles sombres, texte et boutons `on-image` blancs, même en thème Jour ; le reste de la page suit le thème. Les voiles `--scrim-*` sont donc les mêmes dans les deux thèmes.
 - **Lecteur, identique dans les deux thèmes** : `--player-bg` noir, `--player-fg` blanc, piste blanc à 24 %, partie chargée blanc à 48 %, partie lue `--signal`. Ces valeurs tranchent l'ancien point « en attente » de `--player-track` / `--player-buffered`.
 - **Couleur de la barre du navigateur** : `apps/web/src/lib/theme-colors.ts`, contrôlé par `pnpm check:tokens` (doit égaler `--bg` de chaque thème).
 - **Contrastes** : les 32 paires de `packages/design-tokens/contrast-pairs.json` sont vérifiées par `pnpm check:contrast` (WCAG 2.2 : texte ≥ 4,5:1, grands textes et composants ≥ 3:1).
@@ -77,7 +78,7 @@ Thème **Nuit** par défaut, thème **Jour** complet ; thème choisi par `data-t
 | Jeton | Usage |
 | --- | --- |
 | `--scrim-bottom` | Sous un texte posé sur une image (affiche à la une, fiche, extrait) |
-| `--scrim-top` | Derrière l'en-tête transparent sur image |
+| `--scrim-top` | Derrière l'en-tête transparent sur image (boutons ronds `on-image` Retour et Partager) |
 | `.ambient` | Halo radial en haut de l'accueil et des fiches, couleur dominante de l'affiche (`--ambient-color`) ; supprimé en mode allégé |
 
 `pnpm check:gradient` refuse tout autre dégradé dans `apps/` et `packages/`. La CSP autorise les attributs `style` (`style-src-attr 'unsafe-inline'`, ADR-0004) : la couleur dominante est donc posée en variable CSS en ligne, sans quantification.

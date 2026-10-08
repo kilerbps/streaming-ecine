@@ -1,6 +1,6 @@
 # ADR-0011 — Charte « Nuit de Kin » (design system v2)
 
-- Statut : **décisions D-01 à D-14 validées par le propriétaire le 8 octobre 2026. Mise en œuvre : lot 1 (fondations et page `/design`) ; validation visuelle de `/design` par le propriétaire en attente (porte G1).**
+- Statut : **décisions D-01 à D-14 validées par le propriétaire le 8 octobre 2026. Lot 1 (fondations et page `/design`) livré ; `/design` validée par le propriétaire le 8 octobre 2026 (porte G1).**
 - Date : 2026-10-08
 - Amende l'ADR-0003 (palette dérivée du logo). Ne touche pas l'ADR-0004 (CSP) ni l'ADR-0006 (lecture sécurisée).
 
@@ -19,6 +19,7 @@
    - `--highlight` est remplacé par `--signal` / `--signal-text` ;
    - couleurs du lecteur tranchées : piste blanc à 24 %, partie chargée blanc à 48 %, partie lue `--signal`.
 3. **Dégradés (D-01)** : trois seulement, définis une fois dans `tokens.css` (`--scrim-bottom`, `--scrim-top`, `.ambient`). `check:gradient` passe en liste blanche ; le dégradé du badge reste exclusif au fichier du logo.
+   **Écart à la charte, décidé par le propriétaire le 8 octobre 2026 (porte G1)** : les voiles sont sombres dans les deux thèmes, et les zones d'image (affiche à la une, haut de fiche, aperçus) restent en Nuit (`data-theme="dark"` sur leur conteneur). Raison : avec les voiles clairs du thème Jour prévus par la charte, les boutons `on-image` blancs devenaient illisibles.
 4. **Formes et élévation (D-02, D-03, D-04)** : rayons concentriques de 4 à 24 px ; ombre réservée aux couches flottantes ; matériau translucide sur la navigation seulement, avec repli plein.
 5. **Typographie (D-05)** : police du système + Archivo 700/800 (≤ 45 Ko) ; IBM Plex retirée ; plus de chasse fixe ; casse normale (D-14).
 6. **Icônes (D-06)** : Solar Icon Set (480 Design, CC BY 4.0), généré au build sans appel réseau ; attribution obligatoire.
@@ -37,4 +38,3 @@
 ## Reste à fournir par le propriétaire
 
 - Le SVG officiel du logo (les déclinaisons seront générées par script).
-- La validation visuelle de la page `/design` (porte G1).

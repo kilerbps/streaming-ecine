@@ -35,6 +35,7 @@
   --chrome-edge: rgb(255 255 255 / 0.08);
   --shadow-float: none;
   --shadow-menu: 0 12px 32px rgb(0 0 0 / 0.24);
+  /* Voiles des zones d'image : sombres dans les deux thèmes (zones d'image en Nuit, ADR-0011). */
   --scrim-bottom: linear-gradient(
     to top,
     rgb(10 15 22 / 1) 0%,
@@ -72,13 +73,6 @@
   --chrome-edge: rgb(10 15 22 / 0.06);
   --shadow-float: 0 8px 24px rgb(10 15 22 / 0.12);
   --shadow-menu: 0 12px 32px rgb(10 15 22 / 0.16);
-  --scrim-bottom: linear-gradient(
-    to top,
-    rgb(245 247 250 / 1) 0%,
-    rgb(245 247 250 / 0.8) 35%,
-    rgb(245 247 250 / 0) 75%
-  );
-  --scrim-top: linear-gradient(to bottom, rgb(245 247 250 / 0.6), rgb(245 247 250 / 0));
 }
 
 :root {

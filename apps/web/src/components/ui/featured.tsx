@@ -82,7 +82,13 @@ export function Featured({ items, labels }: { items: FeaturedItem[]; labels: Fea
 
   if (shown.length === 0) return null;
   return (
-    <section aria-roledescription={labels.carousel} aria-label={labels.region} className="relative">
+    // Zone d'image : toujours en Nuit, quel que soit le thème (voile sombre, texte et boutons blancs).
+    <section
+      data-theme="dark"
+      aria-roledescription={labels.carousel}
+      aria-label={labels.region}
+      className="relative"
+    >
       <div
         ref={track}
         onPointerDown={() => setStopped(true)}

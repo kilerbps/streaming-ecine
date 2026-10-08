@@ -58,6 +58,10 @@
       scroll-behavior: auto;
     }
   }
+  /* Zone forcée dans un thème (ex. data-theme="dark" sur une affiche) : la couleur héritée suit. */
+  [data-theme] {
+    color: var(--text);
+  }
   html {
     background: var(--bg);
     color: var(--text);

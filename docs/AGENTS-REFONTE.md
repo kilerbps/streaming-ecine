@@ -64,7 +64,7 @@ Lire : onglet 02 en entier.
 - [x] Ajouter `check:tokens`, `check:icons` et la liste blanche de `check:gradient`.
 - [x] Publier `docs/05-DESIGN-SYSTEM.md` v2 et un ADR-0011 « Charte Nuit de Kin » qui amende l'ADR-0003.
 
-Porte G1 : contrastes conformes, `/design` validée par le client.
+Porte G1 : contrastes conformes, `/design` validée par le client. **Validée le 8 octobre 2026.**
 
 ### Lot 2 · Coquille native
 

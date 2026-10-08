@@ -119,11 +119,12 @@ export default async function DesignPage({ params }: PageProps<'/[locale]/design
     (viewer !== null && hasRole(viewer.role, 'MODERATOR'));
   if (!allowed) notFound();
 
-  const [t, ts, tt, tf, preferences, films, people] = await Promise.all([
+  const [t, ts, tt, tf, tc, preferences, films, people] = await Promise.all([
     getTranslations('design'),
     getTranslations('design.samples'),
     getTranslations('design.typeStyles'),
     getTranslations('design.featured'),
+    getTranslations('common'),
     getPreferences(),
     getFilms({ limit: 8 }).catch(() => null),
     getPeople().catch(() => null),
@@ -267,9 +268,14 @@ export default async function DesignPage({ params }: PageProps<'/[locale]/design
           </LinkButton>
         </div>
         {first ? (
-          <div className="relative max-w-md overflow-hidden rounded-lg">
+          <div data-theme="dark" className="relative max-w-md overflow-hidden rounded-lg">
             <MediaImage image={first.poster} ratio="16/9" sizes="(min-width: 672px) 448px, 100vw" />
+            <div className="absolute inset-x-0 top-0 h-[120px] bg-[image:var(--scrim-top)]" />
             <div className="absolute inset-0 bg-[image:var(--scrim-bottom)]" />
+            <div className="absolute inset-x-3 top-3 flex justify-between">
+              <IconButton icon="chevronLeft" label={tc('back')} tone="on-image" />
+              <IconButton icon="share" label={ts('share')} tone="on-image" />
+            </div>
             <div className="absolute bottom-4 left-4">
               <Button variant="on-image" icon="play">
                 {ts('onImage')}

@@ -20,6 +20,7 @@
   - notification avec action « Annuler » ;
   - champs, étiquette, état vide, skeletons aux formes exactes ;
   - couleur de la barre du navigateur tirée de `--bg`.
+- Zones d'image toujours en Nuit, quel que soit le thème (décision du 8 octobre 2026, porte G1) : voiles sombres, texte et boutons blancs sur l'affiche à la une et le haut des fiches.
 - `docs/05-DESIGN-SYSTEM.md` v2 ; ADR-0011 (amende l'ADR-0003) ; `docs/licences.md` à jour.
 
 ### Ajouté
