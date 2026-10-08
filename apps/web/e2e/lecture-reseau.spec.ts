@@ -74,8 +74,12 @@ test.describe('Lecture sur réseau lent', () => {
       const end = video.buffered.length ? video.buffered.end(video.buffered.length - 1) : 0;
       video.currentTime = Math.min(video.duration - 20, end + 30);
     });
-    await expect(page.getByText('Pas de connexion. La lecture reprendra toute seule')).toBeVisible();
-    await expect(page.getByRole('status').filter({ hasText: 'Chargement de la vidéo' })).toBeVisible();
+    await expect(
+      page.getByText('Pas de connexion. La lecture reprendra toute seule'),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Chargement de la vidéo' }),
+    ).toBeVisible();
 
     const stalledAt = await page.evaluate(() => document.querySelector('video')!.currentTime);
     await page.waitForTimeout(8_000);
@@ -102,9 +106,13 @@ test.describe('Lecture sur réseau lent', () => {
 
     await page.reload();
     await page.getByRole('button', { name: /Regarder|Reprendre/ }).click();
-    await page.waitForFunction(() => (document.querySelector('video')?.currentTime ?? 0) > 1, null, {
-      timeout: 45_000,
-    });
+    await page.waitForFunction(
+      () => (document.querySelector('video')?.currentTime ?? 0) > 1,
+      null,
+      {
+        timeout: 45_000,
+      },
+    );
     await openQualityMenu(page);
     await expect(page.getByRole('radio', { name: /^240p/ })).toBeChecked();
   });

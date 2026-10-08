@@ -31,9 +31,9 @@ const NOW = Date.UTC(2026, 9, 7);
 
 describe('débit de départ', () => {
   it('reprend la dernière mesure récente de cet appareil', () => {
-    expect(initialBandwidthEstimate({ downlink: 10 }, { bps: 900_000, at: NOW - 60_000 }, NOW)).toBe(
-      900_000,
-    );
+    expect(
+      initialBandwidthEstimate({ downlink: 10 }, { bps: 900_000, at: NOW - 60_000 }, NOW),
+    ).toBe(900_000);
   });
 
   it('ignore une mesure de plus de 3 jours', () => {

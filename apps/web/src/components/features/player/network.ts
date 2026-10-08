@@ -57,7 +57,9 @@ export function initialBandwidthEstimate(
   if (connection?.downlink && connection.downlink > 0) {
     return clampEstimate(connection.downlink * 1_000_000 * 0.8);
   }
-  const byType = connection?.effectiveType ? BY_EFFECTIVE_TYPE[connection.effectiveType] : undefined;
+  const byType = connection?.effectiveType
+    ? BY_EFFECTIVE_TYPE[connection.effectiveType]
+    : undefined;
   return byType ?? DEFAULT_ESTIMATE;
 }
 
@@ -114,12 +116,16 @@ export function recoveryDelay(attempt: number): number {
  * Qualité mémorisée : la plus haute qui ne dépasse pas la hauteur voulue, sinon la plus basse.
  * Renvoie l'index hls.js, ou -1 s'il n'y a aucune qualité.
  */
-export function preferredLevelIndex(levels: ReadonlyArray<{ height: number }>, height: number): number {
+export function preferredLevelIndex(
+  levels: ReadonlyArray<{ height: number }>,
+  height: number,
+): number {
   let best = -1;
   let lowest = -1;
   levels.forEach((level, index) => {
     if (lowest === -1 || level.height < levels[lowest]!.height) lowest = index;
-    if (level.height <= height && (best === -1 || level.height > levels[best]!.height)) best = index;
+    if (level.height <= height && (best === -1 || level.height > levels[best]!.height))
+      best = index;
   });
   return best === -1 ? lowest : best;
 }
