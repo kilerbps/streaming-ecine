@@ -67,6 +67,8 @@ jobs:
         run: |
           pnpm check:gradient
           pnpm check:contrast
+          pnpm check:tokens
+          pnpm check:icons
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
