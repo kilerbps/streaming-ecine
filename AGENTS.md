@@ -9,6 +9,8 @@ E-Ciné : plateforme congolaise de streaming (films, courts-métrages, publicati
 
 ## 1. Ordre de lecture
 
+**Refonte « Nuit de Kin » en cours (depuis le 8 octobre 2026)** : commence par `docs/AGENTS-REFONTE.md`, puis `docs/design/00-prd-refonte.md` et l'onglet de ton lot. Ces documents priment sur `docs/05` et l'ADR-0003 en cas de contradiction.
+
 1. `docs/01-PRD.md` (quoi) → 2. `docs/10-ROADMAP-TACHES.md` (phase en cours) → 3. `docs/02`, `03`, `04` (comment) → 4. `docs/05` (design) → 5. `docs/06` et `07` (sécurité, SEO, légal) → 6. `docs/08` (pratiques) → 7. `docs/skills/*` (selon la tâche) → 8. `docs/11` (liens officiels).
 
 ## 2. Règle d'or : demande avant d'agir
