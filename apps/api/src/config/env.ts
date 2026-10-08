@@ -102,7 +102,12 @@ export const envSchema = z
         message: 'Requis en production (mise à jour du site après publication)',
       });
     }
-    for (const key of ['APP_URL', 'API_PUBLIC_URL', 'MEDIA_PUBLIC_URL', 'REVALIDATE_URL'] as const) {
+    for (const key of [
+      'APP_URL',
+      'API_PUBLIC_URL',
+      'MEDIA_PUBLIC_URL',
+      'REVALIDATE_URL',
+    ] as const) {
       const value = env[key];
       if (value && !value.startsWith('https://')) {
         ctx.addIssue({ code: 'custom', path: [key], message: 'HTTPS obligatoire en production' });

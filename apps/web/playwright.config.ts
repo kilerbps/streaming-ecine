@@ -29,6 +29,10 @@ export default defineConfig({
       testIgnore: /perf\//,
     },
     // Appareil de référence de la refonte (Android modeste, 4G lente, processeur ×4) : e2e/perf.
-    { name: 'android-ref', use: { ...devices['Pixel 7'], channel }, testMatch: /perf\/.*\.spec\.ts/ },
+    {
+      name: 'android-ref',
+      use: { ...devices['Pixel 7'], channel },
+      testMatch: /perf\/.*\.spec\.ts/,
+    },
   ],
 });

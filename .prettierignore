@@ -7,6 +7,7 @@ pnpm-lock.yaml
 apps/api/src/generated
 apps/api/prisma/migrations
 docs-constrution
+docs-refonte-design
 docs
 lychee.toml
 *.tsv

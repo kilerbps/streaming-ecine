@@ -61,7 +61,11 @@ describe('configuration de production', () => {
 
   it('garde les règles existantes (Turnstile, 2FA admin, cookies sécurisés)', () => {
     const message = problems(
-      production({ TURNSTILE_SECRET: undefined, ADMIN_MFA_REQUIRED: 'false', COOKIE_SECURE: 'false' }),
+      production({
+        TURNSTILE_SECRET: undefined,
+        ADMIN_MFA_REQUIRED: 'false',
+        COOKIE_SECURE: 'false',
+      }),
     );
     expect(message).toContain('TURNSTILE_SECRET');
     expect(message).toContain('ADMIN_MFA_REQUIRED');

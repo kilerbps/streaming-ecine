@@ -25,7 +25,12 @@ describe('cookies sécurisés', () => {
 
   it('ne peuvent pas être désactivés sur Vercel en production', () => {
     expect(() =>
-      parseServerConfig({ ...base, NODE_ENV: 'production', VERCEL_ENV: 'production', COOKIE_SECURE: 'false' }),
+      parseServerConfig({
+        ...base,
+        NODE_ENV: 'production',
+        VERCEL_ENV: 'production',
+        COOKIE_SECURE: 'false',
+      }),
     ).toThrow(/COOKIE_SECURE/);
   });
 
