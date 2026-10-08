@@ -55,14 +55,14 @@ Porte G0 : base mesurée, décisions tranchées.
 
 Lire : onglet 02 en entier.
 
-- [ ] Recopier `tokens.css` v2 sous `[data-ui="v2"]`, mettre à jour `contrast-pairs.json` et `globals.css`.
-- [ ] Écrire `scripts/springs.ts` et générer les deux ressorts.
-- [ ] Retirer IBM Plex des deux mises en page, ajouter Archivo 700 et 800, mesurer le poids (≤ 45 Ko).
-- [ ] Mettre en place Solar : `icons.json`, `scripts/build-icons.ts`, composant `Icon` inchangé en API, attribution.
-- [ ] Construire ou restyler les primitives de l'onglet 02 (Composants), dont la feuille glissable et le badge à coin coupé.
-- [ ] Créer la page `/design` (non indexée, réservée à l'équipe) : chaque composant, chaque état, Nuit et Jour, mouvement réduit, mode allégé.
-- [ ] Ajouter `check:tokens`, `check:icons` et la liste blanche de `check:gradient`.
-- [ ] Publier `docs/05-DESIGN-SYSTEM.md` v2 et un ADR-0010 « Charte Nuit de Kin » qui amende l'ADR-0003.
+- [x] Recopier `tokens.css` v2 (sans portée `[data-ui="v2"]` : la v2 remplace la v1, décision du 8 octobre 2026), mettre à jour `contrast-pairs.json` et `globals.css`.
+- [x] Écrire `scripts/springs.ts` et générer les deux ressorts.
+- [x] Retirer IBM Plex des deux mises en page, ajouter Archivo 700 et 800, mesurer le poids (≤ 45 Ko).
+- [x] Mettre en place Solar : `icons.json`, `scripts/build-icons.ts`, composant `Icon` inchangé en API, attribution.
+- [x] Construire ou restyler les primitives de l'onglet 02 (Composants), dont la feuille glissable et le badge à coin coupé.
+- [x] Créer la page `/design` (non indexée, réservée à l'équipe) : chaque composant, chaque état, Nuit et Jour, mouvement réduit, mode allégé.
+- [x] Ajouter `check:tokens`, `check:icons` et la liste blanche de `check:gradient`.
+- [x] Publier `docs/05-DESIGN-SYSTEM.md` v2 et un ADR-0011 « Charte Nuit de Kin » qui amende l'ADR-0003.
 
 Porte G1 : contrastes conformes, `/design` validée par le client.
 

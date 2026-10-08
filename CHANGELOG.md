@@ -1,5 +1,37 @@
 # Journal des modifications
 
+## [Non publié] — 2026-10-08 · Refonte « Nuit de Kin », lot 1 (fondations)
+
+### Modifié
+
+- Jetons v2 « Nuit de Kin » (`packages/design-tokens/tokens.css`) :
+  - neutres bleu nuit (Nuit `#0A0F16`, Jour `#F5F7FA`) ;
+  - bleu du logo pour agir, rouge pour signaler ;
+  - rayons de 4 à 24 px, ombres réservées aux couches flottantes, matériau translucide pour la navigation avec repli plein ;
+  - durées, courbes et deux ressorts générés.
+
+  La v2 remplace directement la v1 (pré-lancement). `contrast-pairs.json` passe à 32 paires, toutes conformes.
+
+- Polices : IBM Plex retirée, remplacée par la police du système et Archivo 700/800 (35 Ko au lieu de 116 Ko).
+- Icônes : jeu Solar (480 Design, CC BY 4.0) généré au build sans appel réseau, à la place des 64 icônes maison. API de `<Icon>` inchangée. Coordonnées arrondies au centième pour alléger le JavaScript.
+- Primitives restylées :
+  - bouton : variantes `on-image` et `danger`, état « en cours » qui garde le libellé ;
+  - feuille glissable avec points d'arrêt ;
+  - notification avec action « Annuler » ;
+  - champs, étiquette, état vide, skeletons aux formes exactes ;
+  - couleur de la barre du navigateur tirée de `--bg`.
+- `docs/05-DESIGN-SYSTEM.md` v2 ; ADR-0011 (amende l'ADR-0003) ; `docs/licences.md` à jour.
+
+### Ajouté
+
+- Primitives : bouton icône, badge à coin coupé, pastille, contrôle segmenté, interrupteur, champ de recherche, barre de progression, image avec couleur dominante et point focal, tuiles (affiche, paysage, Top 10, portrait), rangée, affiche à la une, menu contextuel et bouton « … », illustrations construites avec le logo.
+- Page `/design` (non indexée ; ouverte en développement, avec `DESIGN_PAGE_ENABLED` ou pour l'équipe) : chaque composant dans ses états, avec une barre d'outils Nuit/Jour, mode allégé, économie de données, mouvement réduit.
+- Captures de référence de `/design` avec audit axe, en mobile et PC, dans les 4 modes (`E2E_CAPTURES=1`, `e2e/design`).
+- Contrôles `pnpm check:tokens` (aucune valeur en dur) et `pnpm check:icons` (Solar seul, icônes à jour), ajoutés à la CI ; `check:gradient` passe en liste blanche (`--scrim-bottom`, `--scrim-top`, `.ambient`).
+- Générateurs `pnpm tokens:springs` et `pnpm icons:build`.
+- Attribution des icônes : `THIRD_PARTY_NOTICES.md`, section « Crédits » des pages À propos et Mentions légales.
+- Mesure après le lot 1 dans `docs/design/base-2026-10.md` : JavaScript +7 % (limite +10 %), poids total en baisse de 55 Ko par page.
+
 ## [Non publié] — 2026-10-08 · Refonte « Nuit de Kin », lot 0 (mesure et cadrage)
 
 ### Ajouté

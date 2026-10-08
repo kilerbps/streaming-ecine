@@ -1,6 +1,6 @@
 # ADR-0003 — Palette dérivée du logo
 
-- Statut : **appliqué provisoirement — validation visuelle du propriétaire requise**
+- Statut : **amendé par l'ADR-0011 (charte « Nuit de Kin », 8 octobre 2026)** : neutres bleu nuit, couleurs du logo en aplats d'action et de moment, couleurs du lecteur tranchées. Le badge en aplat et l'attente du SVG officiel restent valables.
 - Date : 2026-10-02
 
 ## Contexte
