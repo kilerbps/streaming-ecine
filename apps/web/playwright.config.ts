@@ -22,10 +22,13 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'mobile', use: { ...devices['Pixel 7'], channel } },
+    { name: 'mobile', use: { ...devices['Pixel 7'], channel }, testIgnore: /perf\// },
     {
       name: 'pc',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 }, channel },
+      testIgnore: /perf\//,
     },
+    // Appareil de référence de la refonte (Android modeste, 4G lente, processeur ×4) : e2e/perf.
+    { name: 'android-ref', use: { ...devices['Pixel 7'], channel }, testMatch: /perf\/.*\.spec\.ts/ },
   ],
 });

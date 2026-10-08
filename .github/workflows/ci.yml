@@ -134,4 +134,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: npx --yes @lhci/cli@0.15.x autorun --config=lighthouserc.json --collect.url=${{ vars.PREVIEW_URL }}/fr
+      # 5 pages de la refonte (lot 0), budgets R-PERF dans lighthouserc.json. Découvrir et
+      # l'administration s'ajoutent avec leurs écrans (lots 4 et 5).
+      - run: >-
+          npx --yes @lhci/cli@0.15.x autorun --config=lighthouserc.json
+          --collect.url=${{ vars.PREVIEW_URL }}/fr
+          --collect.url=${{ vars.PREVIEW_URL }}/fr/films/${{ vars.PREVIEW_FILM_SLUG || 'le-chant-des-pirogues' }}
+          --collect.url=${{ vars.PREVIEW_URL }}/fr/films
+          --collect.url=${{ vars.PREVIEW_URL }}/fr/recherche?q=kin
+          --collect.url=${{ vars.PREVIEW_URL }}/fr/personnes
