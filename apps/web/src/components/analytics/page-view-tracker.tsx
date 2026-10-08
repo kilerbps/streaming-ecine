@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
-import { trackEventAction } from '@/server/actions/forms';
+import { startSessionIfNeeded, track } from '@/lib/analytics';
 
 /**
  * Mesure d'audience des pages vues (FR-104). Le serveur ne transmet l'événement à l'API que si le
@@ -19,7 +19,8 @@ export function PageViewTracker({ enabled }: { enabled: boolean }) {
       document.referrer && !document.referrer.startsWith(window.location.origin)
         ? document.referrer
         : undefined;
-    void trackEventAction({ type: 'page_view', path: pathname, referrer });
+    startSessionIfNeeded(pathname);
+    track({ type: 'page_view', path: pathname, referrer });
   }, [enabled, pathname]);
 
   return null;

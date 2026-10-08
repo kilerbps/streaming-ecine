@@ -1,5 +1,25 @@
 # Journal des modifications
 
+## [Non publié] — 2026-10-08 · Refonte « Nuit de Kin », lot 0 (mesure et cadrage)
+
+### Ajouté
+
+- Dossier de la refonte importé : `docs/AGENTS-REFONTE.md` (guide des lots, adapté au pré-lancement) et `docs/design/` (PRD, benchmark, charte, expérience native, écrans, administration, sources). Les décisions D-01 à D-14 sont validées par le propriétaire.
+- Mesure de la refonte : 16 types d'événements, avec provenance, valeur numérique et session de navigation aléatoire (migration `20261008090000_analytics_source_value_session`). Branchés :
+  - session ;
+  - lancement de lecture (avec sa source), temps jusqu'à la première image, progression toutes les 10 s, achèvement à 90 % ;
+  - ouverture et réussite de la connexion à la demande (avec la raison) ;
+  - ajout à Ma liste, J'aime, installation de l'application.
+- Profil d'appareil de référence dans Playwright (`android-ref` : processeur ×4, 4G lente) et mesure de laboratoire sur 5 pages (`e2e/perf`).
+- Base de laboratoire `docs/design/base-2026-10.md` : LCP de 2,4 à 3,3 s, blocage de 0,7 à 1,3 s, 305 Ko de JavaScript et 116 Ko de polices.
+
+### Modifié
+
+- Lighthouse CI :
+  - 5 pages au lieu d'une ;
+  - catégories accessibilité, SEO et bonnes pratiques de nouveau évaluées ;
+  - budgets TBT, JavaScript (base + 10 %) et polices (45 Ko).
+
 ## [Non publié] — 2026-10-07
 
 ### Modifié

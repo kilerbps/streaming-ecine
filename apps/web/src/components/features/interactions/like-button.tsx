@@ -7,6 +7,7 @@ import { useAuth } from '@/components/providers/auth';
 import { usePreferences } from '@/components/providers/preferences';
 import { useToast } from '@/components/providers/toast';
 import { Icon } from '@/components/ui/icon';
+import { track } from '@/lib/analytics';
 import { setLikeAction } from '@/server/actions/interactions';
 
 /**
@@ -49,6 +50,7 @@ export function LikeButton({
     const result = await setLikeAction(targetType, targetId, next);
     if (result.ok) {
       setCount(result.data.likeCount);
+      if (next) track({ type: 'like', targetType, targetId });
       return;
     }
     setLiked(previous.liked);
@@ -65,7 +67,7 @@ export function LikeButton({
       type="button"
       aria-pressed={liked}
       aria-label={liked ? t('unlike') : t('like')}
-      onClick={() => requireAuth(() => toggle(!liked))}
+      onClick={() => requireAuth(() => toggle(!liked), 'like')}
       className={`inline-flex min-h-11 items-center gap-2 px-2 ${liked ? 'text-highlight' : 'text-text'} hover:bg-surface-2`}
     >
       <Icon name="heart" filled={liked} />

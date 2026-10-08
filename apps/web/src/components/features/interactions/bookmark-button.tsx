@@ -6,6 +6,7 @@ import { useAuth } from '@/components/providers/auth';
 import { usePreferences } from '@/components/providers/preferences';
 import { useToast } from '@/components/providers/toast';
 import { Icon } from '@/components/ui/icon';
+import { track } from '@/lib/analytics';
 import { setBookmarkAction } from '@/server/actions/interactions';
 
 /** « Ma liste » (effet de dotation) : optimiste, avec retour en arrière en cas d'échec. */
@@ -35,6 +36,7 @@ export function BookmarkButton({
     const result = await setBookmarkAction(filmId, next);
     if (result.ok) {
       toast(next ? t('inList') : t('unbookmark'), 'success');
+      if (next) track({ type: 'list_add', targetType: 'FILM', targetId: filmId });
       return;
     }
     setSaved(!next);
@@ -51,7 +53,7 @@ export function BookmarkButton({
       type="button"
       aria-pressed={saved}
       aria-label={withLabel ? undefined : label}
-      onClick={() => requireAuth(() => toggle(!saved))}
+      onClick={() => requireAuth(() => toggle(!saved), 'list')}
       className={`inline-flex min-h-11 items-center gap-2 px-2 hover:bg-surface-2 ${saved ? 'text-accent' : 'text-text'}`}
     >
       <Icon name="bookmark" filled={saved} />

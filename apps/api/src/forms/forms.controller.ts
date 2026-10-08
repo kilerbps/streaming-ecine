@@ -112,6 +112,9 @@ export class FormsController {
         targetId: input.targetId ?? null,
         referrer,
         device: deviceCategory(ua),
+        source: input.source ?? null,
+        value: input.value ?? null,
+        session: input.session ?? null,
       },
     });
   }

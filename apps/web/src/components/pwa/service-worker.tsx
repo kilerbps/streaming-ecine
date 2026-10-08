@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { track } from '@/lib/analytics';
 
 /**
  * Enregistre le service worker (production uniquement) et propose, sans insister,
@@ -9,6 +10,13 @@ import { Button } from '@/components/ui/button';
  */
 export function ServiceWorker() {
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
+
+  // Installation de l'application (indicateur « Installation de l'app » du PRD de la refonte).
+  useEffect(() => {
+    const onInstalled = () => track({ type: 'appinstalled' });
+    window.addEventListener('appinstalled', onInstalled);
+    return () => window.removeEventListener('appinstalled', onInstalled);
+  }, []);
 
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;

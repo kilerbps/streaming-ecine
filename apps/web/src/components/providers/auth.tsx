@@ -13,7 +13,11 @@ import {
 } from 'react';
 import type { Me } from '@ecine/contracts';
 import { AuthForms } from '@/components/features/auth/auth-forms';
+import { track } from '@/lib/analytics';
 import { Sheet } from '@/components/ui/sheet';
+
+/** Raison de la feuille de connexion, mesurée (`auth_sheet_open`, `auth_success`). */
+export type AuthReason = 'like' | 'list' | 'report' | 'reminder' | 'session';
 
 export interface Viewer {
   displayName: string;
@@ -27,7 +31,7 @@ interface AuthContextValue {
    * Connexion à la demande (FR-080) : exécute l'action si le visiteur est connecté, sinon ouvre la
    * feuille de connexion puis reprend automatiquement l'action après connexion.
    */
-  requireAuth: (action: () => Promise<unknown> | void) => void;
+  requireAuth: (action: () => Promise<unknown> | void, reason: AuthReason) => void;
   /** À appeler quand une action renvoie `code: 'auth'` (session expirée). */
   sessionExpired: (retry?: () => Promise<unknown> | void) => void;
   setViewer: (viewer: Viewer | null) => void;
@@ -47,29 +51,40 @@ export function AuthProvider({
   const [viewer, setViewer] = useState<Viewer | null>(initialViewer);
   const [open, setOpen] = useState(false);
   const pending = useRef<(() => Promise<unknown> | void) | null>(null);
+  const reasonRef = useRef<AuthReason>('session');
+
+  const openSheet = useCallback((reason: AuthReason) => {
+    reasonRef.current = reason;
+    setOpen(true);
+    track({ type: 'auth_sheet_open', source: reason });
+  }, []);
 
   const requireAuth = useCallback(
-    (action: () => Promise<unknown> | void) => {
+    (action: () => Promise<unknown> | void, reason: AuthReason) => {
       if (viewer) {
         void action();
         return;
       }
       pending.current = action;
-      setOpen(true);
+      openSheet(reason);
     },
-    [viewer],
+    [viewer, openSheet],
   );
 
-  const sessionExpired = useCallback((retry?: () => Promise<unknown> | void) => {
-    setViewer(null);
-    pending.current = retry ?? null;
-    setOpen(true);
-  }, []);
+  const sessionExpired = useCallback(
+    (retry?: () => Promise<unknown> | void) => {
+      setViewer(null);
+      pending.current = retry ?? null;
+      openSheet('session');
+    },
+    [openSheet],
+  );
 
   const onAuthenticated = useCallback(
     (me: Me) => {
       setViewer({ displayName: me.displayName, role: me.role, emailVerified: me.emailVerified });
       setOpen(false);
+      track({ type: 'auth_success', source: reasonRef.current });
       const action = pending.current;
       pending.current = null;
       // L'utilisateur reste au même endroit : l'action interrompue est rejouée, la page est rafraîchie.

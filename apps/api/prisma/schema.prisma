@@ -617,6 +617,11 @@ model AnalyticsEvent {
   targetId   String?
   referrer   String?
   device     String?
+  /// Provenance ou raison (`film_page`, `resume`, `like`…), valeur numérique (ms, secondes) et session de
+  /// navigation tirée au hasard (jamais conservée d'une visite à l'autre) : refonte, lot 0.
+  source     String?
+  value      Int?
+  session    String?
   country    String?
   createdAt  DateTime @default(now())
 

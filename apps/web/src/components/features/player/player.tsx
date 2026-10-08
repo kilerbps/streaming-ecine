@@ -17,11 +17,12 @@ import { usePreferences } from '@/components/providers/preferences';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Loader } from '@/components/ui/loader';
+import { track } from '@/lib/analytics';
 import { formatTimecode } from '@/lib/format';
 import { routes } from '@/lib/routes';
-import { trackEventAction } from '@/server/actions/forms';
 import { saveProgressAction } from '@/server/actions/interactions';
 import { toggleFullscreen } from './fullscreen';
+import { createPlaybackMeter, type PlaybackSource } from './playback-meter';
 import { PlayerControls } from './player-controls';
 import { useHlsPlayback } from './use-hls';
 
@@ -71,6 +72,7 @@ export function Player({
   runtimeSec,
   locale,
   autoStart = false,
+  source,
 }: {
   filmId: string;
   videoId: string;
@@ -80,6 +82,8 @@ export function Player({
   runtimeSec: number | null;
   locale: Locale;
   autoStart?: boolean;
+  /** Provenance mesurée de la lecture ; par défaut, la fiche ou la reprise directe. */
+  source?: PlaybackSource;
 }) {
   const t = useTranslations('player');
   const tf = useTranslations('film');
@@ -100,6 +104,9 @@ export function Player({
   const containerRef = useRef<HTMLDivElement>(null);
   const lastSaved = useRef(0);
   const startedOnce = useRef(false);
+  const [meter] = useState(() =>
+    createPlaybackMeter(filmId, source ?? (autoStart ? 'resume' : 'film_page'), track),
+  );
   const bufferingTimers = useRef<number[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [buffering, setBuffering] = useState(false);
@@ -124,10 +131,7 @@ export function Player({
     setBuffering(false);
     setSlowNetwork(false);
   };
-  useEffect(
-    () => () => bufferingTimers.current.forEach((id) => window.clearTimeout(id)),
-    [],
-  );
+  useEffect(() => () => bufferingTimers.current.forEach((id) => window.clearTimeout(id)), []);
   // Visiteur anonyme : position mémorisée localement (FR-004) ; 0 au rendu serveur (pas d'écart d'hydratation).
   const localPosition = useSyncExternalStore(
     subscribeStorage,
@@ -156,10 +160,11 @@ export function Player({
 
   const begin = useCallback(async () => {
     feedback('clap');
+    meter.begin();
     setStatus('starting');
     const ok = await start(canResume ? resumeAt : 0);
     if (!ok) setStatus('idle');
-  }, [feedback, start, canResume, resumeAt]);
+  }, [feedback, meter, start, canResume, resumeAt]);
 
   useEffect(() => {
     if (autoStart && status === 'idle' && !startedOnce.current) {
@@ -221,12 +226,16 @@ export function Player({
           if (status !== 'playing') {
             setStatus('playing');
             containerRef.current?.focus();
-            void trackEventAction({ type: 'play_start', targetType: 'FILM', targetId: filmId });
+            meter.firstFrame();
           }
         }}
         onWaiting={startBuffering}
         onCanPlay={stopBuffering}
-        onTimeUpdate={(e) => persist(e.currentTarget.currentTime)}
+        onTimeUpdate={(e) => {
+          const video = e.currentTarget;
+          persist(video.currentTime);
+          meter.time(video.currentTime, video.duration, video.paused);
+        }}
         onPause={(e) => {
           stopBuffering();
           persist(e.currentTarget.currentTime, true);
@@ -235,7 +244,6 @@ export function Player({
           stopBuffering();
           persist(e.currentTarget.duration, true);
           setStatus('ended');
-          void trackEventAction({ type: 'play_complete', targetType: 'FILM', targetId: filmId });
         }}
         onError={() => recoverNative()}
       />

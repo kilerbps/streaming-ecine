@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  analyticsEventInputSchema,
   contactInputSchema,
   filmInputSchema,
   hasRole,
@@ -89,5 +90,32 @@ describe('hasRole', () => {
     expect(hasRole('EDITOR', 'ADMIN')).toBe(false);
     expect(hasRole('MODERATOR', 'EDITOR')).toBe(false);
     expect(hasRole('MEMBER', 'MEMBER')).toBe(true);
+  });
+});
+
+describe('analyticsEventInputSchema', () => {
+  it('accepte les événements de la refonte avec source, valeur et session', () => {
+    const event = {
+      type: 'play_first_frame',
+      targetType: 'FILM',
+      targetId: 'cfilm123',
+      source: 'film_page',
+      value: 1840,
+      session: 'a1b2c3d4e5f6a7b8',
+    };
+    expect(analyticsEventInputSchema.parse(event)).toEqual(event);
+  });
+
+  it('refuse un type inconnu, une source libre ou une valeur négative', () => {
+    expect(analyticsEventInputSchema.safeParse({ type: 'tracking_pixel' }).success).toBe(false);
+    expect(analyticsEventInputSchema.safeParse({ type: 'like', source: 'Mon Texte' }).success).toBe(
+      false,
+    );
+    expect(analyticsEventInputSchema.safeParse({ type: 'play_progress', value: -1 }).success).toBe(
+      false,
+    );
+    expect(analyticsEventInputSchema.safeParse({ type: 'like', session: 'court' }).success).toBe(
+      false,
+    );
   });
 });

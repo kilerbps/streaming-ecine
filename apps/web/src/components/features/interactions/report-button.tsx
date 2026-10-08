@@ -56,7 +56,7 @@ export function ReportButton({
     <>
       <button
         type="button"
-        onClick={() => requireAuth(() => setOpen(true))}
+        onClick={() => requireAuth(() => setOpen(true), 'report')}
         className="inline-flex min-h-11 items-center gap-2 px-2 text-muted hover:bg-surface-2 hover:text-text"
         aria-label={t('report')}
       >
