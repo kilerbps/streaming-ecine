@@ -11,9 +11,10 @@ import { Icon, type IconName } from '@/components/ui/icon';
 import { Logo } from '@/components/ui/logo';
 import { pillClasses, PillLink } from '@/components/ui/pill';
 import { SearchField } from '@/components/ui/search-field';
-import { Sheet } from '@/components/ui/sheet';
+import { Sheet, SheetLink } from '@/components/ui/sheet';
 import { routes } from '@/lib/routes';
 import { scrollToTop, useScroll } from '@/lib/scroll-state';
+import { restoreTabScroll, useTabScrollMemory } from '@/lib/tab-scroll';
 import { useHeaderTitle } from './header-title';
 
 /**
@@ -88,13 +89,15 @@ export function TabBar({ locale }: { locale: Locale }) {
   const items = tabs(locale);
   const index = items.findIndex((tab) => tab.active(pathname));
   const searchActive = under(routes.search(locale))(pathname);
+  useTabScrollMemory(items.map((tab) => tab.href));
 
-  const onTab = (event: MouseEvent, active: boolean) => {
+  const onTab = (event: MouseEvent, tab: Tab, active: boolean) => {
     if (active) {
       event.preventDefault();
       scrollToTop();
       return;
     }
+    restoreTabScroll(tab.href);
     feedback('tap');
   };
 
@@ -121,7 +124,7 @@ export function TabBar({ locale }: { locale: Locale }) {
                 <Link
                   href={tab.href}
                   aria-current={active ? 'page' : undefined}
-                  onClick={(event) => onTab(event, active)}
+                  onClick={(event) => onTab(event, tab, active)}
                   className={`flex h-full flex-col items-center justify-center ${active ? 'text-accent-text' : 'text-muted'}`}
                 >
                   <span className="flex flex-col items-center gap-0.5 transition-[scale] duration-[var(--dur-base)] ease-[var(--ease-standard)] group-data-[compact]/tabbar:scale-[0.85]">
@@ -268,14 +271,13 @@ function HomePills({ locale, categories }: { locale: Locale; categories: Categor
             <ul className="flex flex-col">
               {categories.map((category) => (
                 <li key={category.slug}>
-                  <Link
+                  <SheetLink
                     href={routes.category(locale, category.slug)}
-                    onClick={() => setOpen(false)}
                     className="flex min-h-11 items-center justify-between border-b border-border text-[15px]"
                   >
                     {category.name}
                     <Icon name="chevronRight" size={20} className="text-muted" />
-                  </Link>
+                  </SheetLink>
                 </li>
               ))}
             </ul>

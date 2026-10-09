@@ -10,6 +10,7 @@ import { routes } from '@/lib/routes';
 import { getArticles } from '@/server/data';
 import { pageMetadata } from '@/server/seo';
 import { LargeTitle } from '@/components/layout/header-title';
+import { PullToRefresh } from '@/components/features/system/pull-to-refresh';
 
 type Props = PageProps<'/[locale]/actualites'>;
 
@@ -51,6 +52,7 @@ export default async function NewsPage({ params, searchParams }: Props) {
 
   return (
     <div className="container-page pt-8 md:pt-12">
+      <PullToRefresh />
       <header className="mb-8 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
         <LargeTitle>{t('listTitle')}</LargeTitle>
         <p className="max-w-sm text-muted md:text-right">{t('listIntro')}</p>

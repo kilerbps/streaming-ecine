@@ -1,7 +1,9 @@
 'use client';
 
 import { ContextMenu as Ctx, DropdownMenu as Drop } from 'radix-ui';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { vibrate } from '@/lib/haptics';
+import { useHistoryLayer } from '@/lib/use-history-layer';
 import { Icon, type IconName } from './icon';
 
 export interface MenuItem {
@@ -17,11 +19,20 @@ const CONTENT =
 const ITEM =
   'flex min-h-11 cursor-pointer select-none items-center gap-3 rounded-sm px-3 text-[15px] outline-none data-[highlighted]:bg-surface-2';
 
-function Items({ items, Item }: { items: MenuItem[]; Item: typeof Ctx.Item | typeof Drop.Item }) {
+function Items({
+  items,
+  Item,
+  leave,
+}: {
+  items: MenuItem[];
+  Item: typeof Ctx.Item | typeof Drop.Item;
+  leave: (after: () => void) => void;
+}) {
+  // L'action s'exécute une fois le menu fermé et son entrée d'historique retirée.
   return items.map((item) => (
     <Item
       key={item.key}
-      onSelect={item.onSelect}
+      onSelect={() => leave(item.onSelect)}
       className={`${ITEM} ${item.danger ? 'text-danger' : ''}`}
     >
       <Icon name={item.icon} size={20} className={item.danger ? '' : 'text-muted'} />
@@ -43,13 +54,23 @@ export function ContextMenu({
   preview?: ReactNode;
   children: ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+  // Le menu contextuel de Radix ne se pilote pas : la fermeture passe par Échap, qu'il écoute déjà.
+  const leave = useHistoryLayer(open, () =>
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })),
+  );
   return (
-    <Ctx.Root>
+    <Ctx.Root
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) vibrate('menu');
+      }}
+    >
       <Ctx.Trigger asChild>{children}</Ctx.Trigger>
       <Ctx.Portal>
         <Ctx.Content className={CONTENT} collisionPadding={16}>
           {preview ? <div className="p-2 pb-3">{preview}</div> : null}
-          <Items items={items} Item={Ctx.Item} />
+          <Items items={items} Item={Ctx.Item} leave={leave} />
         </Ctx.Content>
       </Ctx.Portal>
     </Ctx.Root>
@@ -58,8 +79,10 @@ export function ContextMenu({
 
 /** Bouton « … » qui ouvre les mêmes actions : l'équivalent visible du menu contextuel. */
 export function MoreMenu({ items, label }: { items: MenuItem[]; label: string }) {
+  const [open, setOpen] = useState(false);
+  const leave = useHistoryLayer(open, () => setOpen(false));
   return (
-    <Drop.Root>
+    <Drop.Root open={open} onOpenChange={setOpen}>
       <Drop.Trigger
         aria-label={label}
         className="press-icon grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-surface-2 hover:text-text"
@@ -68,7 +91,7 @@ export function MoreMenu({ items, label }: { items: MenuItem[]; label: string })
       </Drop.Trigger>
       <Drop.Portal>
         <Drop.Content className={CONTENT} align="end" sideOffset={4} collisionPadding={16}>
-          <Items items={items} Item={Drop.Item} />
+          <Items items={items} Item={Drop.Item} leave={leave} />
         </Drop.Content>
       </Drop.Portal>
     </Drop.Root>

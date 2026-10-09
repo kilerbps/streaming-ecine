@@ -1,9 +1,45 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Dialog } from 'radix-ui';
-import { useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useRef,
+  useState,
+  type ComponentProps,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
+import { vibrate } from '@/lib/haptics';
+import { useHistoryLayer } from '@/lib/use-history-layer';
 import { Icon } from './icon';
+
+/** Sortie de la feuille ouverte (retire son entrée d'historique, puis exécute la suite). */
+const SheetLeaveContext = createContext<((after: () => void) => void) | null>(null);
+
+/**
+ * Lien placé dans une feuille : ferme la feuille et retire son entrée d'historique avant de
+ * naviguer (sinon le retour d'Android ramènerait sur la feuille fermée).
+ */
+export function SheetLink({ onClick, ...props }: ComponentProps<typeof Link>) {
+  const leave = useContext(SheetLeaveContext);
+  const router = useRouter();
+  return (
+    <Link
+      {...props}
+      onClick={(event) => {
+        onClick?.(event);
+        const modified = event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0;
+        if (event.defaultPrevented || modified || !leave) return;
+        event.preventDefault();
+        leave(() => router.push(String(props.href)));
+      }}
+    />
+  );
+}
 
 /** Fermeture au-delà de 30 % de la hauteur, ou sur un geste plus rapide que 0,5 px/ms. */
 const CLOSE_RATIO = 0.3;
@@ -44,6 +80,7 @@ export function Sheet({
     v: number;
   } | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const leave = useHistoryLayer(open, () => onOpenChange(false));
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (!isPhone() || !panel.current) return;
@@ -87,8 +124,10 @@ export function Sheet({
       else onOpenChange(false);
     } else if (expandable && !expanded && state.dy < -DETENT_THRESHOLD) {
       setExpanded(true);
+      vibrate('detent');
     } else if (expandable && expanded && state.dy > DETENT_THRESHOLD) {
       setExpanded(false);
+      vibrate('detent');
     }
   };
 
@@ -148,7 +187,7 @@ export function Sheet({
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8 pt-4 md:px-6">
-            {children}
+            <SheetLeaveContext.Provider value={leave}>{children}</SheetLeaveContext.Provider>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

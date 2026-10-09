@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@ecine/contracts';
 import { DiscoverFeed } from '@/components/features/feed/discover-feed';
+import { PullToRefresh } from '@/components/features/system/pull-to-refresh';
 import { pageMetadata } from '@/server/seo';
 
 export async function generateMetadata({ params }: PageProps<'/[locale]'>): Promise<Metadata> {
@@ -21,5 +22,10 @@ export async function generateMetadata({ params }: PageProps<'/[locale]'>): Prom
 /** Accueil : fil de découverte en attendant l'accueil en rangées (lot 3 de la refonte, D-10). */
 export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   const { locale } = await params;
-  return <DiscoverFeed locale={locale as Locale} />;
+  return (
+    <>
+      <PullToRefresh />
+      <DiscoverFeed locale={locale as Locale} />
+    </>
+  );
 }
