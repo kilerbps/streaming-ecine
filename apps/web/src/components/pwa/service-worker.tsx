@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { track } from '@/lib/analytics';
@@ -9,6 +10,7 @@ import { track } from '@/lib/analytics';
  * de passer à la nouvelle version quand elle est prête.
  */
 export function ServiceWorker() {
+  const t = useTranslations('pwa');
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null);
 
   // Installation de l'application (indicateur « Installation de l'app » du PRD de la refonte).
@@ -49,15 +51,16 @@ export function ServiceWorker() {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 top-4 z-50 flex items-center justify-between gap-4 border border-border-strong bg-surface-1 px-4 py-3 md:left-auto md:right-6 md:w-96"
+      className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+12px)] z-50 mx-auto flex max-w-md items-center justify-between gap-3 rounded-full bg-surface-3 py-2 pl-4 pr-2 shadow-[var(--shadow-menu)] animate-[ecine-fade_var(--dur-base)_var(--ease-standard)] lg:left-auto lg:right-6 lg:top-[calc(var(--topnav-h)+12px)]"
     >
-      <p className="text-sm">Nouvelle version disponible.</p>
+      <p className="text-[15px] leading-5">{t('updateAvailable')}</p>
       <Button
         size="sm"
         variant="secondary"
+        icon="refresh"
         onClick={() => waiting.postMessage({ type: 'SKIP_WAITING' })}
       >
-        Mettre à jour
+        {t('update')}
       </Button>
     </div>
   );

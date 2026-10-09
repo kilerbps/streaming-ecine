@@ -13,6 +13,7 @@ import { LinkButton } from '@/components/ui/link-button';
 import { routes } from '@/lib/routes';
 import { getBookmarks, getContinueWatching, getViewer } from '@/server/data';
 import { LargeTitle } from '@/components/layout/header-title';
+import { InstallAppButton } from '@/components/pwa/install-prompt';
 
 export const metadata: Metadata = { title: 'Mon espace' };
 
@@ -51,6 +52,9 @@ export default async function MePage({ params }: PageProps<'/[locale]/moi'>) {
           <h2 className="mb-4 font-serif text-2xl">{t('settings')}</h2>
           <PreferencesPanel />
         </section>
+        <div className="mt-10">
+          <InstallAppButton />
+        </div>
       </>
     );
   }
@@ -109,6 +113,9 @@ export default async function MePage({ params }: PageProps<'/[locale]/moi'>) {
           </Link>
         </p>
       ) : null}
+      <div className="mt-12">
+        <InstallAppButton />
+      </div>
       <div className="mt-16 border-t border-border pt-8">
         <LogoutButton />
       </div>

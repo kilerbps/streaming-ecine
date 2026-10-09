@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Loader } from '@/components/ui/loader';
 import { track } from '@/lib/analytics';
+import { FILM_COMPLETE_EVENT } from '@/lib/install';
 import { formatTimecode } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { saveProgressAction } from '@/server/actions/interactions';
@@ -105,7 +106,11 @@ export function Player({
   const lastSaved = useRef(0);
   const startedOnce = useRef(false);
   const [meter] = useState(() =>
-    createPlaybackMeter(filmId, source ?? (autoStart ? 'resume' : 'film_page'), track),
+    createPlaybackMeter(filmId, source ?? (autoStart ? 'resume' : 'film_page'), (event) => {
+      track(event);
+      // Un film terminé est un bon moment pour proposer d'installer l'app (components/pwa).
+      if (event.type === 'play_complete') window.dispatchEvent(new Event(FILM_COMPLETE_EVENT));
+    }),
   );
   const bufferingTimers = useRef<number[]>([]);
   const [status, setStatus] = useState<Status>('idle');

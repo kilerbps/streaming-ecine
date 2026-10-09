@@ -462,5 +462,18 @@
       "slide": "diapositive",
       "show": "Afficher {title}"
     }
+  },
+  "pwa": {
+    "installTitle": "Installez E-Ciné sur votre téléphone.",
+    "installBody": "Il s'ouvre comme une app et prend très peu de place.",
+    "install": "Installer",
+    "later": "Plus tard",
+    "installApp": "Installer l'application",
+    "iosTitle": "Installer E-Ciné sur l'iPhone",
+    "iosStep1": "Touchez le bouton Partager, en bas de Safari.",
+    "iosStep2": "Choisissez « Sur l'écran d'accueil ».",
+    "iosStep3": "Touchez « Ajouter » : E-Ciné rejoint vos apps.",
+    "updateAvailable": "Nouvelle version disponible.",
+    "update": "Mettre à jour"
   }
 }

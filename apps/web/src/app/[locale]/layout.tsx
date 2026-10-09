@@ -8,6 +8,7 @@ import { CookieBanner } from '@/components/layout/cookie-banner';
 import { Footer } from '@/components/layout/footer';
 import { AppHeader, TabBar, TopNav } from '@/components/layout/navigation';
 import { AppProviders } from '@/components/providers/app-providers';
+import { InstallPrompt } from '@/components/pwa/install-prompt';
 import { ServiceWorker } from '@/components/pwa/service-worker';
 import { JsonLd } from '@/components/seo/json-ld';
 import { serverConfig } from '@/server/config';
@@ -127,6 +128,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
             <TabBar locale={locale} />
             <CookieBanner initial={consent} />
             <ServiceWorker />
+            <InstallPrompt />
             <PageViewTracker enabled={Boolean(consent?.analytics)} />
           </AppProviders>
         </NextIntlClientProvider>
