@@ -32,6 +32,8 @@ export const PREFERENCE_COOKIES = {
   perf: 'ecine_perf',
   /** Posé par la détection automatique (appareil modeste) pour les rendus suivants. */
   perfDetected: 'ecine_perf_auto',
+  /** Dernière visite de Nouveautés (pastille de l'onglet, lib/news-seen.ts). */
+  newsSeen: 'ecine_news_seen',
 } as const;
 
 type CookieReader = (name: string) => string | undefined;

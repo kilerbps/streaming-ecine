@@ -14,6 +14,7 @@ import { SearchField } from '@/components/ui/search-field';
 import { Sheet, SheetLink } from '@/components/ui/sheet';
 import { routes } from '@/lib/routes';
 import { scrollToTop, useScroll } from '@/lib/scroll-state';
+import { ensureNewsBaseline, markNewsSeen, useNewsSeen } from '@/lib/news-seen';
 import { restoreTabScroll, useTabScrollMemory } from '@/lib/tab-scroll';
 import { useHeaderTitle } from './header-title';
 
@@ -71,6 +72,30 @@ function useKeyboardOpen(): boolean {
   return open;
 }
 
+/** Pastille rouge de 8 px, sans chiffre (nouveauté depuis la dernière visite de Nouveautés). */
+function NewsDot({ label }: { label: string }) {
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className="absolute -right-1 -top-0.5 size-2 rounded-full bg-signal"
+      />
+      <span className="sr-only">{label}</span>
+    </>
+  );
+}
+
+/** Visite de Nouveautés : la pastille s'efface ; ailleurs, première date de référence. */
+function useNewsDot(pathname: string, locale: Locale, serverDot: boolean): boolean {
+  const seen = useNewsSeen();
+  const onNews = tabs(locale)[2]!.active(pathname);
+  useEffect(() => {
+    if (onNews) markNewsSeen();
+    else ensureNewsBaseline();
+  }, [onNews]);
+  return serverDot && !seen && !onNews;
+}
+
 function focusSearchField(): void {
   document.querySelector<HTMLInputElement>('#contenu input[type="search"]')?.focus();
 }
@@ -80,9 +105,10 @@ function focusSearchField(): void {
  * bouton Recherche détaché. Se rétracte quand on descend, revient en remontant ou en bout de page ;
  * masquée quand le clavier est ouvert. Nouveau toucher sur l'onglet actif : retour en haut.
  */
-export function TabBar({ locale }: { locale: Locale }) {
+export function TabBar({ locale, whatsNewDot }: { locale: Locale; whatsNewDot: boolean }) {
   const t = useTranslations('nav');
   const pathname = usePathname();
+  const dot = useNewsDot(pathname, locale, whatsNewDot);
   const { feedback } = usePreferences();
   const compact = useScroll((s) => s.direction === 'down' && !s.atTop && !s.atBottom);
   const keyboard = useKeyboardOpen();
@@ -130,7 +156,10 @@ export function TabBar({ locale }: { locale: Locale }) {
                   className={`flex h-full flex-col items-center justify-center ${active ? 'text-accent-text' : 'text-muted'}`}
                 >
                   <span className="flex flex-col items-center gap-0.5 transition-[scale] duration-[var(--dur-base)] ease-[var(--ease-standard)] group-data-[compact]/tabbar:scale-[0.85]">
-                    <Icon name={tab.icon} size={24} filled={active} />
+                    <span className="relative">
+                      <Icon name={tab.icon} size={24} filled={active} />
+                      {tab.key === 'whatsNew' && dot ? <NewsDot label={t('newsDot')} /> : null}
+                    </span>
                     <span className="text-[11px] font-semibold leading-[13px] transition-opacity duration-[var(--dur-base)] group-data-[compact]/tabbar:opacity-0">
                       {t(tab.key)}
                     </span>
@@ -176,13 +205,14 @@ function initials(name: string): string {
  * Navigation haute sur PC (≥ 1 056 px) : transparente en haut de page, matériau après 24 px.
  * Logo, six destinations, champ de recherche qui s'élargit au focus, avatar Moi.
  */
-export function TopNav({ locale }: { locale: Locale }) {
+export function TopNav({ locale, whatsNewDot }: { locale: Locale; whatsNewDot: boolean }) {
   const t = useTranslations('nav');
   const tc = useTranslations('common');
   const ts = useTranslations('search');
   const pathname = usePathname();
   const material = useScroll((s) => s.y > 24);
   const { viewer } = useAuth();
+  const dot = useNewsDot(pathname, locale, whatsNewDot);
   const links: Array<{
     key: TabKey | 'films' | 'shorts' | 'people';
     href: string;
@@ -221,7 +251,10 @@ export function TopNav({ locale }: { locale: Locale }) {
                   aria-current={active ? 'page' : undefined}
                   className={`flex min-h-11 items-center rounded-full px-3 text-[15px] font-semibold ${active ? 'bg-surface-2/80 text-text' : 'text-muted hover:text-text'}`}
                 >
-                  {t(link.key)}
+                  <span className="relative">
+                    {t(link.key)}
+                    {link.key === 'whatsNew' && dot ? <NewsDot label={t('newsDot')} /> : null}
+                  </span>
                 </Link>
               </li>
             );
