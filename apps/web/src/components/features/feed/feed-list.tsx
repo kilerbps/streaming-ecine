@@ -137,7 +137,11 @@ export function FeedList({
     <div>
       <ol className="flex flex-col">
         {items.map((item, index) => (
-          <li key={item.key} className="border-b border-border py-10 first:pt-2 md:py-14">
+          // Cartes hors écran ignorées par la mise en page (défilement, ouverture d'une feuille).
+          <li
+            key={item.key}
+            className="border-b border-border py-10 [contain-intrinsic-size:auto_640px] [content-visibility:auto] first:pt-2 md:py-14"
+          >
             {item.type === 'film' ? (
               <FilmCard item={item} locale={locale} eager={index === 0} />
             ) : null}

@@ -22,14 +22,16 @@ const SheetLeaveContext = createContext<((after: () => void) => void) | null>(nu
 
 /**
  * Lien placé dans une feuille : ferme la feuille et retire son entrée d'historique avant de
- * naviguer (sinon le retour d'Android ramènerait sur la feuille fermée).
+ * naviguer (sinon le retour d'Android ramènerait sur la feuille fermée). Sans préchargement : une
+ * feuille affiche d'un coup beaucoup de liens, que Next.js précharge sinon tous (données, calcul).
  */
-export function SheetLink({ onClick, ...props }: ComponentProps<typeof Link>) {
+export function SheetLink({ onClick, prefetch = false, ...props }: ComponentProps<typeof Link>) {
   const leave = useContext(SheetLeaveContext);
   const router = useRouter();
   return (
     <Link
       {...props}
+      prefetch={prefetch}
       onClick={(event) => {
         onClick?.(event);
         const modified = event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0;
