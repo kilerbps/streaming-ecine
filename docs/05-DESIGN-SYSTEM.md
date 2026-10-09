@@ -41,7 +41,7 @@ Le logo est une caméra construite avec les lettres É et C : blocs bleus sépar
 - Zone de protection : la hauteur d'une barre du clap, sur les quatre côtés.
 - Interdits : recolorer, étirer, ajouter ombre ou halo, faire pivoter, poser le logo en couleur sur une image sans voile, utiliser le badge seul.
 - Icône d'app : symbole blanc sur `#1E76BC`, zone utile de 80 % pour la version « maskable ».
-- **Le SVG actuel est reconstitué depuis un PNG.** Il n'est pas redessiné une seconde fois : on attend le SVG officiel (`[À FOURNIR]` par le propriétaire), puis toutes les déclinaisons sont générées par script.
+- **Le SVG actuel est reconstitué depuis un PNG.** Il n'est pas redessiné une seconde fois : on attend le SVG officiel (`[À FOURNIR]` par le propriétaire). Sources : `packages/design-tokens/logo/logo.svg` (complet) et `symbol.svg` (caméra seule). `pnpm brand:build` (`scripts/build-brand.ts`) en génère toutes les déclinaisons : icônes de l'app (192, 512, maskable), icône Apple, favicon SVG, écrans de démarrage iPhone et leur liste pour les métadonnées. Le composant `logo.tsx` reprend la même géométrie et sera mis à jour avec le SVG officiel.
 
 ## 3. Couleurs
 

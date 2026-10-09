@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="340 575 1255 590">
+  <!-- Symbole E-Ciné (caméra seule), même géométrie que logo.svg. À REMPLACER avec le SVG officiel. -->
+  <g fill="#1e76bc">
+    <path d="M347 661 793 622 805 757 493 785 496 819 352 831Z" />
+    <path d="M817 620 1263 581 1278 748 1143 760 1140 728 963 744 966 776 831 788Z" />
+    <path d="M352 850H800V985H487V1020H800V1155H352Z" />
+    <path d="M824 850H959V1020H1137V986H1272V1155H824Z" />
+    <path d="M1272 776 1559 610Q1585 597 1585 625V1106Q1585 1134 1559 1121L1272 955Z" />
+  </g>
+</svg>

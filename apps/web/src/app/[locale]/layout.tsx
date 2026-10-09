@@ -17,6 +17,7 @@ import { getCategories, getPreferences, getSiteSettings, getViewer } from '@/ser
 import { htmlPreferenceAttributes, LiteDetection, themeColorFor } from '@/server/html-preferences';
 import { absoluteUrl } from '@/server/seo';
 import { archivo } from '../fonts';
+import { STARTUP_IMAGES } from '../startup-images.generated';
 import '../globals.css';
 
 function isLocale(value: string): value is Locale {
@@ -32,7 +33,12 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: 'E-Ciné',
     manifest: '/manifest.webmanifest',
     icons: { icon: [{ url: '/icon.svg', type: 'image/svg+xml' }], apple: '/apple-icon.png' },
-    appleWebApp: { capable: true, title: 'E-Ciné', statusBarStyle: 'black-translucent' },
+    appleWebApp: {
+      capable: true,
+      title: 'E-Ciné',
+      statusBarStyle: 'black-translucent',
+      startupImage: STARTUP_IMAGES,
+    },
     formatDetection: { telephone: false },
   };
 }
