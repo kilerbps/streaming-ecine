@@ -222,16 +222,29 @@ Tous dans `apps/web/src/components/ui/`, présentés sur `/design`.
 D'abord **éviter l'attente** (cache, préchargement, navigations instantanées, mises à jour optimistes).
 
 - Pas de skeleton si la donnée arrive en moins de 150 ms : la classe `.skeleton` n'apparaît qu'après ce délai.
+- Chaque route a un `loading.tsx` à la forme de l'écran (`components/ui/page-skeletons.tsx`).
+- **Aucun `loading.tsx` au-dessus d'une décision 404 ou redirection** : dès qu'un skeleton s'affiche, le statut HTTP 200 est envoyé et ne peut plus changer (soft 404, redirection 301 perdue). Les listes et l'accueil sont dans des groupes de routes `(liste)` et `(accueil)` ; l'existence d'une fiche est vérifiée dans un `layout.tsx` de son segment, au-dessus de son skeleton. Une adresse inconnue doit toujours répondre 404 (test `e2e/coquille.spec.ts`).
 - Skeleton = aplat `--surface-2` avec pulsation d'opacité. **Jamais de shimmer** (c'est un dégradé).
 - **Loader orbital** (`.ecine-loader`, choisi par le propriétaire) : seulement pour une attente de plus de 300 ms sans skeleton (lecteur, action serveur longue). Couleur `--text`, surchargeable par `--loader-color` (le lecteur le met en blanc) ; `role="status"` et texte masqué ; figé en mouvement réduit. Taille 45 px, 20 px avec `ecine-loader--sm` (boutons en cours). Le CSS est dans `apps/web/src/app/globals.css`.
 
 ## 10. Sons et vibrations
 
-Révision prévue au lot 2 (D-08) : **sons d'interface coupés par défaut**, clap au lancement d'un film conservé, réglages Sons et Vibrations séparés. Jusque-là, `lib/sound.ts` garde le comportement v1.
+Trois réglages dans Moi → Réglages (D-08), en cookies : **Vibrations** (`ecine_haptics`, activé), **Son au lancement d'un film** (`ecine_sound_clap`, activé), **Sons de l'interface** (`ecine_sound_ui`, coupé par défaut, car les apps natives sont silencieuses au toucher). `lib/haptics.ts` porte les durées de la charte (onglet 8 ms, J'aime 12 ms, point d'arrêt de feuille 6 ms, menu 20 ms…) ; `lib/sound.ts` ne garde que J'aime, Ma liste, succès, erreur et le clap.
 
 - Aucun son avant un geste de l'utilisateur (politique d'autoplay des navigateurs).
 - Sons courts (≤ 400 ms), jamais de musique ni de boucle ; vibration jamais essentielle.
 - Toute ressource sonore tierce est tracée avec sa licence dans `docs/licences.md`.
+
+## 10 bis. Coquille native (lot 2)
+
+- **Barre d'onglets flottante** sous 1 056 px (`components/layout/navigation.tsx`) : Accueil, Découvrir, Nouveautés, Moi et bouton Recherche détaché ; matériau `.chrome`, lentille en ressort doux, rétraction au défilement (`lib/scroll-state.ts`), masquée clavier ouvert, retour en haut au second toucher, pastille rouge sur Nouveautés (`lib/news-seen.ts`), mémoire de défilement par onglet (`lib/tab-scroll.ts`). Place à laisser sous le contenu : `--tabbar-space`.
+- **Navigation PC** (≥ 1 056 px) : `--topnav-h`, transparente puis `.chrome-bar` après 24 px.
+- **En-tête mobile** : s'efface en descendant au-delà de 56 px, revient en remontant ; grand titre réduit (`LargeTitle`, `components/layout/header-title.tsx`).
+- **Couches et retour d'Android** : feuilles et menus s'inscrivent dans l'historique (`lib/use-history-layer.ts`) ; un lien dans une feuille passe par `SheetLink`.
+- **Tirer pour rafraîchir** : accueil et Nouveautés (`components/features/system/pull-to-refresh.tsx`), rebond natif coupé sur `html` et `body`.
+- **Thème** Nuit, Jour ou Automatique : le bloc Automatique de `tokens.css` est généré depuis le thème Jour (`pnpm tokens:theme`). **Mode allégé** Automatique, Activé ou Désactivé : détecté avant l'affichage (`LITE_DETECTION_SCRIPT`, nonce), attributs `data-perf` et `data-savedata` rendus par le serveur (`server/html-preferences.tsx`).
+- **Transitions de page** : `components/layout/page-transition.tsx` et gabarits `template.tsx`, sous `NEXT_PUBLIC_VIEW_TRANSITIONS`.
+- **Application installable** : `components/pwa/install-prompt.tsx`, `lib/install.ts` ; déclinaisons du logo par `pnpm brand:build`.
 
 ## 11. Accessibilité
 

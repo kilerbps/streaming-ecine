@@ -1,5 +1,48 @@
 # Journal des modifications
 
+## [Non publié] — 2026-10-09 · Refonte « Nuit de Kin », lot 2 (coquille native)
+
+### Ajouté
+
+- Barre d'onglets flottante (Accueil, Découvrir, Nouveautés, Moi) et bouton Recherche détaché sous 1 056 px :
+  - lentille qui glisse en ressort ;
+  - rétraction au défilement, masquée quand le clavier est ouvert ;
+  - retour en haut au second toucher ;
+  - pastille rouge sur Nouveautés ;
+  - mémoire de défilement par onglet.
+- Navigation haute sur PC, transparente puis en matériau ; le rail latéral public est retiré.
+- En-tête mobile qui s'efface au défilement, pastilles Films, Courts-métrages et Catégories sur l'accueil, grand titre réduit dans l'en-tête.
+- Route `/fr/decouvrir` (fil actuel, en attendant le lot 4). Nouveautés mène aux actualités jusqu'au lot 3.
+- Réglages séparés :
+  - thème Nuit, Jour ou Automatique ;
+  - vibrations ;
+  - son au lancement d'un film ;
+  - sons de l'interface, coupés par défaut ;
+  - mode allégé Automatique, Activé ou Désactivé, détecté avant l'affichage ;
+  - économie de données reprise de l'en-tête `Save-Data`.
+- Couleur de la barre du navigateur rendue côté serveur.
+- Skeleton à la forme de l'écran pour chaque route.
+- Touche retour d'Android qui ferme d'abord la feuille ou le menu ouvert.
+- Tirer pour rafraîchir sur l'accueil et les actualités.
+- Transitions de page sous `NEXT_PUBLIC_VIEW_TRANSITIONS` (désactivées par défaut).
+- Application installable :
+  - invitation à la 2e visite ou après un film terminé ;
+  - feuille d'instructions pour iPhone ;
+  - raccourcis du manifeste ;
+  - icônes et écrans de démarrage générés depuis le logo (`pnpm brand:build`).
+- Pages 404, erreur et hors ligne illustrées avec le logo ; motifs textiles retirés (D-13).
+- Tests : `e2e/coquille.spec.ts` et mesure de fluidité `e2e/perf/fluidite.spec.ts` (porte G2).
+
+### Corrigé
+
+- Matériau translucide sans flou dans Chrome : Lightning CSS ne gardait que `-webkit-backdrop-filter`.
+- 404 et redirections réelles préservées malgré les skeletons (décision prise avant tout streaming).
+- Débordement horizontal de `/design` sur mobile.
+
+### Connu
+
+- Porte G2 non atteinte en laboratoire (42 à 52 images/s au défilement, 21 à 44 à l'ouverture d'une feuille) sur une machine de mesure trop chargée ; voir `docs/design/base-2026-10.md`.
+
 ## [Non publié] — 2026-10-08 · Refonte « Nuit de Kin », lot 1 (fondations)
 
 ### Modifié

@@ -70,17 +70,17 @@ Porte G1 : contrastes conformes, `/design` validée par le client. **Validée le
 
 Lire : onglet 03 en entier.
 
-- [ ] Barre d'onglets flottante et bouton Recherche (rétraction, pastille, retour en haut).
-- [ ] Navigation haute sur PC, suppression du rail public.
-- [ ] En-têtes : grand titre, transparent puis matériau, masquage au défilement ; `theme-color` rendu côté serveur.
-- [ ] Transitions de page sous `NEXT_PUBLIC_VIEW_TRANSITIONS`, sens poussée ou retour, respect de `hasUAVisualTransition`.
-- [ ] Gestes : feuilles glissables, appui long, tirer pour rafraîchir ; historique pour la touche retour d'Android.
-- [ ] `lib/haptics.ts` et `lib/sound.ts` revus, trois réglages séparés.
-- [ ] `loading.tsx` pour chaque route, skeleton après 150 ms, `<Suspense>` sur les parties lentes.
-- [ ] Mode allégé : détection serveur et script avec nonce, attributs, réglage.
-- [ ] Application installable : invite, manifeste, raccourcis, écran de démarrage, notification de mise à jour.
-- [ ] Pages 404, erreur, hors ligne et états vides avec les illustrations du logo.
-- [ ] Mémoire de défilement par onglet.
+- [x] Barre d'onglets flottante et bouton Recherche (rétraction, pastille, retour en haut). Nouveautés mène aux actualités jusqu'à l'écran `/fr/nouveautes` (lot 3) ; Découvrir ouvre `/fr/decouvrir`, qui reprend le fil actuel jusqu'au lot 4.
+- [x] Navigation haute sur PC, suppression du rail public.
+- [x] En-têtes : grand titre, transparent puis matériau, masquage au défilement ; `theme-color` rendu côté serveur.
+- [x] Transitions de page sous `NEXT_PUBLIC_VIEW_TRANSITIONS`, sens poussée ou retour, respect de `hasUAVisualTransition` (le retour du navigateur n'est pas animé par E-Ciné). Désactivées par défaut, à essayer sur appareils.
+- [x] Gestes : feuilles glissables, appui long, tirer pour rafraîchir ; historique pour la touche retour d'Android.
+- [x] `lib/haptics.ts` et `lib/sound.ts` revus, trois réglages séparés.
+- [x] `loading.tsx` pour chaque route, skeleton après 150 ms, `<Suspense>` sur les parties lentes. Règle : aucun skeleton au-dessus d'une décision 404 ou redirection (voir `docs/05`, Chargement).
+- [x] Mode allégé : détection serveur et script avec nonce, attributs, réglage.
+- [x] Application installable : invite, manifeste, raccourcis, écran de démarrage, notification de mise à jour.
+- [x] Pages 404, erreur, hors ligne et états vides avec les illustrations du logo.
+- [x] Mémoire de défilement par onglet.
 
 Porte G2 : sur l'appareil de référence, 60 images/s au défilement de l'accueil, à l'ouverture d'une feuille et au changement d'onglet ; INP < 200 ms.
 
