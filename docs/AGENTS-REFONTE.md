@@ -84,6 +84,8 @@ Lire : onglet 03 en entier.
 
 Porte G2 : sur l'appareil de référence, 60 images/s au défilement de l'accueil, à l'ouverture d'une feuille et au changement d'onglet ; INP < 200 ms.
 
+> **Décision du propriétaire, 9 octobre 2026** : G2 non atteinte en laboratoire (machine de mesure trop chargée, `docs/design/base-2026-10.md`). On passe au lot 3 ; G2 sera mesurée sur le nouvel accueil en rangées, sur un téléphone Android réel. La feuille allégée (blocage du défilement plus léger que celui de Radix) devient une tâche du lot 3 si la mesure la confirme.
+
 ### Lot 3 · Accueil et catalogue
 
 Lire : onglet 04 (Accueil à Moi, Connexion), onglet 05 (Éditeurs, Images, Programmation).
