@@ -2,9 +2,9 @@
 
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { Motif } from '@/components/ui/motif';
+import { SystemMessage } from '@/components/ui/system-message';
 
-/** Erreur inattendue : message utile, sans trace technique ; un seul CTA « Réessayer ». */
+/** Erreur inattendue : message utile, sans trace technique ; un seul bouton « Réessayer ». */
 export default function ErrorPage({
   retry,
 }: {
@@ -14,17 +14,23 @@ export default function ErrorPage({
   const t = useTranslations('errors');
   const tc = useTranslations('common');
   return (
-    <div className="container-page grid gap-10 py-12 md:grid-cols-[1fr_1.4fr] md:items-center md:py-24">
-      <div className="aspect-square w-full max-w-xs">
-        <Motif name="damier" tone="border" />
-      </div>
-      <div role="alert">
-        <h1 className="font-serif text-4xl md:text-5xl">{t('serverTitle')}</h1>
-        <p className="mt-4 max-w-lg text-lg text-muted">{t('serverBody')}</p>
-        <Button variant="primary" size="lg" className="mt-8" onClick={() => retry()}>
+    <SystemMessage
+      illustration="missing"
+      title={t('serverTitle')}
+      role="alert"
+      actions={
+        <Button
+          variant="primary"
+          size="lg"
+          icon="refresh"
+          className="self-start"
+          onClick={() => retry()}
+        >
           {tc('retry')}
         </Button>
-      </div>
-    </div>
+      }
+    >
+      {t('serverBody')}
+    </SystemMessage>
   );
 }

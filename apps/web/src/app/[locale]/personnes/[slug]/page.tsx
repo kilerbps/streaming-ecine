@@ -6,7 +6,6 @@ import { Poster } from '@/components/features/content/poster';
 import { Breadcrumbs } from '@/components/seo/breadcrumbs';
 import { JsonLd } from '@/components/seo/json-ld';
 import { Icon } from '@/components/ui/icon';
-import { MotifBand } from '@/components/ui/motif';
 import { filmMeta } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { getPerson } from '@/server/data';
@@ -94,8 +93,7 @@ export default async function PersonPage({ params }: Props) {
         </div>
       </div>
 
-      <MotifBand name="damier" className="mt-16 opacity-60" />
-      <section aria-labelledby="filmographie" className="mt-10">
+      <section aria-labelledby="filmographie" className="mt-16 border-t border-border pt-10">
         <h2 id="filmographie" className="font-serif text-3xl">
           {t('filmography')}
         </h2>

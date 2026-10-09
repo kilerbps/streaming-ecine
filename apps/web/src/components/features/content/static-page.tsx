@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@ecine/contracts';
-import { MotifBand } from '@/components/ui/motif';
 import { formatDate, truncate } from '@/lib/format';
 import { Markdown } from '@/lib/markdown';
 import { getStaticPage } from '@/server/data';
@@ -38,8 +37,7 @@ export async function StaticPageView({
           {t('version', { version: page.version, date: formatDate(page.updatedAt) })}
         </p>
       </header>
-      <MotifBand name="chevrons" className="my-10 max-w-3xl opacity-70" />
-      <div className="prose-ecine">
+      <div className="prose-ecine mt-10 max-w-3xl border-t border-border pt-10">
         <Markdown source={page.body} />
       </div>
       {children}

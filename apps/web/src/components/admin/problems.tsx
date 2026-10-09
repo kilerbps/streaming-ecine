@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { LinkButton } from '@/components/ui/link-button';
-import { Motif } from '@/components/ui/motif';
+import { Illustration } from '@/components/ui/illustration';
 import { RetryButton } from './retry-button';
 
 /** Écrans d'erreur de l'administration : message clair, une seule action principale. */
@@ -16,11 +16,9 @@ function ProblemFrame({
 }) {
   return (
     <div className="grid gap-8 py-8 md:grid-cols-[160px_1fr] md:items-start md:py-12" role="alert">
-      <div className="h-24 w-full max-w-40 md:h-40">
-        <Motif name="damier" tone="border" />
-      </div>
+      <Illustration variant="missing" className="h-auto w-32 md:w-40" />
       <div className="max-w-2xl">
-        <h1 className="font-serif text-3xl md:text-4xl">{title}</h1>
+        <h1 className="font-display text-[28px] font-extrabold leading-8">{title}</h1>
         <div className="mt-4 flex flex-col gap-3 text-muted">{children}</div>
         {action ? <div className="mt-8 flex flex-wrap gap-3">{action}</div> : null}
       </div>

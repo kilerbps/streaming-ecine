@@ -25,8 +25,11 @@ export function themeColorFor(theme: ThemeSetting): Viewport['themeColor'] {
 }
 
 /**
- * Détection du mode allégé avant l'affichage (mode Automatique, appareil pas encore détecté).
- * Script en ligne autorisé par le nonce CSP de la requête (ADR-0004).
+ * Détection du mode allégé avant l'affichage (mode Automatique, appareil pas encore détecté) :
+ * script en ligne en tête du <body>, exécuté pendant la lecture du HTML, avant le premier rendu,
+ * autorisé par le nonce CSP de la requête (ADR-0004). `next/script` (beforeInteractive) le
+ * différerait après le démarrage de Next.js. Limite connue : sur une réponse 404, React reconstruit
+ * la mise en page côté client et signale la balise en développement (sans effet en production).
  */
 export async function LiteDetection({ prefs }: { prefs: Preferences }) {
   if (prefs.perf !== 'auto' || prefs.lite) return null;

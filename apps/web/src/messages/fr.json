@@ -310,6 +310,7 @@
     "rights": "Tous droits réservés aux auteurs des œuvres."
   },
   "errors": {
+    "notFoundLabel": "Erreur 404",
     "notFoundTitle": "Cette page n'existe pas",
     "notFoundBody": "Le lien est peut-être ancien ou mal saisi. Cherchez un film ou un talent :",
     "backHome": "Revenir à l'accueil",

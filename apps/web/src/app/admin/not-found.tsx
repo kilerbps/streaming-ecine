@@ -1,15 +1,13 @@
 import { LinkButton } from '@/components/ui/link-button';
-import { Motif } from '@/components/ui/motif';
+import { Illustration } from '@/components/ui/illustration';
 
 /** Élément introuvable dans l'administration (identifiant inconnu, contenu effacé). */
 export default function AdminNotFound() {
   return (
     <div className="grid gap-8 py-8 md:grid-cols-[160px_1fr] md:items-start md:py-12">
-      <div className="h-24 w-full max-w-40 md:h-40">
-        <Motif name="losanges" tone="border" />
-      </div>
+      <Illustration variant="missing" className="h-auto w-32 md:w-40" />
       <div className="max-w-2xl">
-        <h1 className="font-serif text-3xl md:text-4xl">Élément introuvable</h1>
+        <h1 className="font-display text-[28px] font-extrabold leading-8">Élément introuvable</h1>
         <p className="mt-4 text-muted">
           Ce contenu n’existe pas ou plus. Vérifiez le lien, ou retrouvez-le depuis la liste
           correspondante.

@@ -7,7 +7,7 @@ import { useToast } from '@/components/providers/toast';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Loader } from '@/components/ui/loader';
-import { MotifBand } from '@/components/ui/motif';
+import { Illustration } from '@/components/ui/illustration';
 import { loadFeedPageAction } from '@/server/actions/interactions';
 import { ArticleCard, FilmCard, PostCard } from './feed-cards';
 
@@ -171,9 +171,9 @@ export function FeedList({
         </section>
       ) : null}
       {!cursor ? (
-        <div className="py-12">
-          <MotifBand name="losanges" />
-          <p className="mt-6 text-center text-muted">{tc('endOfList')}</p>
+        <div className="flex flex-col items-center py-12">
+          <Illustration variant="empty" className="h-auto w-24" />
+          <p className="mt-4 text-center text-muted">{tc('endOfList')}</p>
         </div>
       ) : null}
     </div>

@@ -12,13 +12,12 @@ const web = join(root, 'apps/web/src');
 const FORBIDDEN_IMPORTS =
   /from ['"](?:lucide-react|react-icons[^'"]*|@heroicons\/[^'"]+|@phosphor-icons\/[^'"]+|@tabler\/icons[^'"]*|@iconify\/react|@fortawesome\/[^'"]+|react-feather)['"]/;
 // Seuls fichiers autorisés à dessiner un <svg> : le composant Icon (enveloppe), les icônes générées,
-// le logo, les illustrations du logo, et les motifs provisoires (retirés au lot 2, D-13).
+// le logo et les illustrations construites avec le logo (D-13).
 const SVG_ALLOWED = new Set([
   'apps/web/src/components/ui/icon.tsx',
   'apps/web/src/components/ui/icons/solar.generated.tsx',
   'apps/web/src/components/ui/logo.tsx',
   'apps/web/src/components/ui/illustration.tsx',
-  'apps/web/src/components/ui/motif.tsx',
 ]);
 
 const hits = [];
