@@ -90,20 +90,20 @@ enum ReportState {
 // ——— Comptes et sessions ———
 
 model User {
-  id                  String    @id @default(cuid())
-  email               String    @unique
-  emailVerified       DateTime?
-  passwordHash        String?
-  displayName         String
-  role                Role      @default(MEMBER)
-  locale              String    @default("fr")
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  emailVerified      DateTime?
+  passwordHash       String?
+  displayName        String
+  role               Role      @default(MEMBER)
+  locale             String    @default("fr")
   /// Secret TOTP chiffré (AES-256-GCM), jamais renvoyé.
-  twoFactorSecretEnc  String?
-  twoFactorEnabledAt  DateTime?
-  disabledAt          DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  deletedAt           DateTime?
+  twoFactorSecretEnc String?
+  twoFactorEnabledAt DateTime?
+  disabledAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
 
   sessions     Session[]
   emailTokens  EmailToken[]
@@ -112,6 +112,9 @@ model User {
   progress     WatchProgress[]
   articles     Article[]
   posts        Post[]
+  reminders    Reminder[]
+  tastes       UserTaste[]
+  dismissals   FilmDismissal[]
   reports      Report[]
   auditEntries AuditLog[]
   uploads      Upload[]
@@ -121,20 +124,20 @@ model User {
 
 /// Jeton de rafraîchissement tournant (stocké haché). `family` permet la détection de rejeu.
 model Session {
-  id         String    @id @default(cuid())
-  userId     String
-  tokenHash  String    @unique
-  family     String
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  family    String
   /// Vrai si la connexion de cette famille a validé le second facteur (TOTP).
-  mfa        Boolean   @default(false)
-  userAgent  String?
-  ipHash     String?
-  expiresAt  DateTime
+  mfa       Boolean   @default(false)
+  userAgent String?
+  ipHash    String?
+  expiresAt DateTime
   /// Renseigné quand ce jeton a été remplacé par rotation (fenêtre de grâce anti-concurrence).
-  rotatedAt  DateTime?
-  revokedAt  DateTime?
-  createdAt  DateTime  @default(now())
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rotatedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([family])
@@ -159,35 +162,55 @@ model EmailToken {
 // ——— Catalogue ———
 
 model Film {
-  id            String       @id @default(cuid())
-  slug          String       @unique
-  kind          FilmKind
-  state         PublishState @default(DRAFT)
-  publishAt     DateTime?
-  year          Int?
-  runtimeSec    Int?
-  originalTitle String?
+  id                String       @id @default(cuid())
+  slug              String       @unique
+  kind              FilmKind
+  state             PublishState @default(DRAFT)
+  publishAt         DateTime?
+  year              Int?
+  runtimeSec        Int?
+  originalTitle     String?
   /// Obligatoire : preuve d'autorisation de diffusion.
-  rightsNote    String
+  rightsNote        String
   /// Publication impossible tant que false.
-  rightsOk      Boolean      @default(false)
-  posterId      String?
-  trailerUrl    String?
-  ageRating     String?
-  seoNoIndex    Boolean      @default(false)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  deletedAt     DateTime?
+  rightsOk          Boolean      @default(false)
+  posterId          String?
+  trailerUrl        String?
+  ageRating         String?
+  seoNoIndex        Boolean      @default(false)
+  /// Langues audio (codes ISO 639 : ln, fr, sw, kg, lua…) ; au moins une pour publier.
+  audioLanguages    String[]     @default([])
+  /// Langues des sous-titres disponibles.
+  subtitleLanguages String[]     @default([])
+  /// Lieu de tournage affiché sur la fiche (« Kinshasa »).
+  filmingLocation   String?
+  /// Titre dessiné (PNG ou SVG transparent) qui remplace le titre en Archivo.
+  titleImageId      String?
+  /// Début du générique, pour « À suivre » dans le lecteur ; repli : 30 s avant la fin.
+  creditsStartSec   Int?
+  /// Sortie annoncée : avant cette date, le film est « Bientôt » (rappels), sans lecture.
+  releaseAt         DateTime?
+  /// Fin de disponibilité réelle, affichée seulement si elle existe.
+  availableUntil    DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
 
-  translations FilmTranslation[]
-  credits      Credit[]
-  categories   FilmCategory[]
-  videos       VideoAsset[]
-  poster       Media?            @relation("FilmPoster", fields: [posterId], references: [id], onDelete: SetNull)
-  bookmarks    Bookmark[]
-  progress     WatchProgress[]
-  featuredIn   Article[]         @relation("ArticleFeaturedFilm")
-  uploads      Upload[]
+  translations  FilmTranslation[]
+  credits       Credit[]
+  categories    FilmCategory[]
+  videos        VideoAsset[]
+  poster        Media?            @relation("FilmPoster", fields: [posterId], references: [id], onDelete: SetNull)
+  titleImage    Media?            @relation("FilmTitleImage", fields: [titleImageId], references: [id], onDelete: SetNull)
+  featuredSlots FeaturedSlot[]
+  homeRowItems  HomeRowItem[]
+  reminders     Reminder[]
+  dismissals    FilmDismissal[]
+  topTen        TopTenEntry[]
+  bookmarks     Bookmark[]
+  progress      WatchProgress[]
+  featuredIn    Article[]         @relation("ArticleFeaturedFilm")
+  uploads       Upload[]
 
   @@index([state, publishAt])
   @@index([kind, state, publishAt])
@@ -199,11 +222,13 @@ model FilmTranslation {
   locale         String
   title          String
   synopsis       String
+  /// Phrase d'accroche (80 caractères au plus) : affiche à la une, Découvrir.
+  tagline        String?
   seoTitle       String?
   seoDescription String?
   /// Colonne générée par PostgreSQL (titre A + résumé B, configuration française) — voir la migration search.
   searchVector   Unsupported("tsvector")? @default(dbgenerated()) @map("search_vector")
-  film           Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  film           Film                     @relation(fields: [filmId], references: [id], onDelete: Cascade)
 
   @@id([filmId, locale])
   @@index([searchVector], type: Gin)
@@ -225,6 +250,7 @@ model Person {
   translations PersonTranslation[]
   credits      Credit[]
   photo        Media?              @relation("PersonPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  homeTalent   HomeTalent?
 
   @@index([state])
   @@map("people")
@@ -263,6 +289,7 @@ model Category {
   createdAt    DateTime              @default(now())
   translations CategoryTranslation[]
   films        FilmCategory[]
+  tastes       UserTaste[]
 
   @@map("categories")
 }
@@ -327,24 +354,35 @@ model ContentKey {
 
 /// Images et fichiers. `storageKey` est une clé de stockage, jamais une URL.
 model Media {
-  id         String    @id @default(cuid())
-  kind       MediaKind
-  storageKey String    @unique
-  mime       String
-  bytes      BigInt
-  width      Int?
-  height     Int?
+  id            String    @id @default(cuid())
+  kind          MediaKind
+  storageKey    String    @unique
+  mime          String
+  bytes         BigInt
+  width         Int?
+  height        Int?
   /// Obligatoire pour une image publiée, sauf si `decorative`.
-  alt        String?
-  decorative Boolean   @default(false)
-  createdAt  DateTime  @default(now())
+  alt           String?
+  decorative    Boolean   @default(false)
+  /// Couleur dominante (#rrggbb), calculée à l'envoi.
+  dominantColor String?
+  /// Aperçu flou WebP de 16 px (data URL, moins de 500 octets), calculé à l'envoi.
+  blurDataUrl   String?
+  /// Point focal (0 à 1), posé une fois en administration.
+  focalX        Float?
+  focalY        Float?
+  /// Recadrages par ratio, en fractions de l'image : { "2:3": { x, y, w, h }, … } (validé par Zod).
+  /// L'image d'origine n'est jamais réécrite.
+  crops         Json?
+  createdAt     DateTime  @default(now())
 
-  filmPosters   Film[]       @relation("FilmPoster")
-  personPhotos  Person[]     @relation("PersonPhoto")
-  articleCovers Article[]    @relation("ArticleCover")
-  postImages    PostImage[]
-  teamPhotos    TeamMember[] @relation("TeamPhoto")
-  videoSources  VideoAsset[] @relation("VideoSource")
+  filmPosters     Film[]       @relation("FilmPoster")
+  filmTitleImages Film[]       @relation("FilmTitleImage")
+  personPhotos    Person[]     @relation("PersonPhoto")
+  articleCovers   Article[]    @relation("ArticleCover")
+  postImages      PostImage[]
+  teamPhotos      TeamMember[] @relation("TeamPhoto")
+  videoSources    VideoAsset[] @relation("VideoSource")
 
   @@index([kind])
   @@map("media")
@@ -406,7 +444,7 @@ model ArticleTranslation {
   seoDescription String?
   /// Colonne générée par PostgreSQL (titre A + chapeau B + texte C) — voir la migration search.
   searchVector   Unsupported("tsvector")? @default(dbgenerated()) @map("search_vector")
-  article        Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  article        Article                  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@id([articleId, locale])
   @@index([searchVector], type: Gin)
@@ -628,4 +666,120 @@ model AnalyticsEvent {
   @@index([type, createdAt])
   @@index([targetType, targetId, type])
   @@map("analytics_events")
+}
+
+/// Affiche à la une : 5 emplacements programmés (heure de Kinshasa) ; vide → dernier film publié.
+model FeaturedSlot {
+  id           String    @id @default(cuid())
+  filmId       String
+  /// Ordre d'affichage, de 1 à 5.
+  position     Int
+  startsAt     DateTime
+  endsAt       DateTime?
+  /// Aperçu vidéo muet autorisé (sous conditions de réseau et d'appareil).
+  previewVideo Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  film         Film      @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@index([startsAt, endsAt])
+  @@map("featured_slots")
+}
+
+/// Rangée éditoriale de l'accueil (« Spécial 30 juin »), placée parmi les positions éditoriales.
+model HomeRow {
+  id           String               @id @default(cuid())
+  position     Int
+  startsAt     DateTime?
+  endsAt       DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  translations HomeRowTranslation[]
+  items        HomeRowItem[]
+
+  @@index([position])
+  @@map("home_rows")
+}
+
+model HomeRowTranslation {
+  rowId  String
+  locale String
+  title  String
+  row    HomeRow @relation(fields: [rowId], references: [id], onDelete: Cascade)
+
+  @@id([rowId, locale])
+  @@map("home_row_translations")
+}
+
+model HomeRowItem {
+  rowId    String
+  filmId   String
+  position Int
+  row      HomeRow @relation(fields: [rowId], references: [id], onDelete: Cascade)
+  film     Film    @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@id([rowId, filmId])
+  @@index([rowId, position])
+  @@map("home_row_items")
+}
+
+/// Talents à l'honneur sur l'accueil (6 à 12, ordonnés).
+model HomeTalent {
+  personId String @id
+  position Int
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@map("home_talents")
+}
+
+/// « Me le rappeler » d'un membre pour un film à venir (notifié à la sortie).
+model Reminder {
+  userId     String
+  filmId     String
+  createdAt  DateTime  @default(now())
+  notifiedAt DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film       Film      @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@id([userId, filmId])
+  @@index([filmId])
+  @@map("reminders")
+}
+
+/// Goûts d'un membre (trois genres choisis), pour ordonner les rangées par catégorie.
+model UserTaste {
+  userId     String
+  categoryId String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([userId, categoryId])
+  @@map("user_tastes")
+}
+
+/// « Pas pour moi » : titre retiré des rangées personnalisées d'un membre pendant 90 jours.
+model FilmDismissal {
+  userId    String
+  filmId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film      Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@id([userId, filmId])
+  @@index([userId, expiresAt])
+  @@map("film_dismissals")
+}
+
+/// Top 10 en RDC : instantané quotidien (visiteurs uniques ayant lancé le titre sur 7 jours glissants).
+model TopTenEntry {
+  day     DateTime @db.Date
+  rank    Int
+  filmId  String
+  viewers Int
+  film    Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@id([day, rank])
+  @@unique([day, filmId])
+  @@map("top_ten_entries")
 }
