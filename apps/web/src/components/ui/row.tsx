@@ -34,6 +34,7 @@ export function Row({
         </h2>
         {seeAll ? (
           <Link
+            transitionTypes={['push']}
             href={seeAll.href}
             aria-label={seeAll.label}
             className="press-icon -mr-2.5 grid size-11 shrink-0 place-items-center rounded-full text-muted hover:text-text"

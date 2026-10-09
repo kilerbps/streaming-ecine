@@ -275,6 +275,95 @@
   }
 }
 
+/* Transitions de page (NEXT_PUBLIC_VIEW_TRANSITIONS, components/layout/page-transition.tsx).
+   Seules transform et opacity s'animent ; la page reste cliquable pendant la transition. */
+::view-transition {
+  pointer-events: none;
+}
+/* Le reste de l'écran (racine) change d'un coup ; seul le contenu de la page s'anime. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+/* En-tête, navigation PC et barre d'onglets restent immobiles : le repère ne bouge pas. */
+::view-transition-group(ecine-header),
+::view-transition-group(ecine-topnav),
+::view-transition-group(ecine-tabbar) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(ecine-header),
+::view-transition-old(ecine-topnav),
+::view-transition-old(ecine-tabbar) {
+  display: none;
+}
+::view-transition-new(ecine-header),
+::view-transition-new(ecine-topnav),
+::view-transition-new(ecine-tabbar) {
+  animation: none;
+}
+/* Changement d'onglet : fondu de 150 ms, aucun glissement. */
+::view-transition-old(.vt-tab) {
+  animation: var(--dur-fast) var(--ease-exit) both ecine-fade-out;
+}
+::view-transition-new(.vt-tab) {
+  animation: var(--dur-fast) var(--ease-standard) both ecine-fade;
+}
+/* Approfondissement : le nouvel écran arrive de 30 % à droite en fondu, l'ancien part vers −10 %
+   et s'assombrit ; le retour joue l'inverse. 250 ms. */
+::view-transition-old(.vt-push) {
+  animation: var(--dur-base) var(--ease-standard) both ecine-push-out;
+}
+::view-transition-new(.vt-push) {
+  animation: var(--dur-base) var(--ease-standard) both ecine-push-in;
+}
+::view-transition-old(.vt-pop) {
+  animation: var(--dur-base) var(--ease-standard) both ecine-pop-out;
+}
+::view-transition-new(.vt-pop) {
+  animation: var(--dur-base) var(--ease-standard) both ecine-pop-in;
+}
+/* Mouvement réduit, mode allégé, économie de données : fondu de 150 ms au plus. */
+:root:is([data-motion='reduce'], [data-perf='lite'], [data-savedata='on'])::view-transition-old(*) {
+  animation: var(--dur-fast) var(--ease-exit) both ecine-fade-out;
+}
+:root:is([data-motion='reduce'], [data-perf='lite'], [data-savedata='on'])::view-transition-new(*) {
+  animation: var(--dur-fast) var(--ease-standard) both ecine-fade;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*) {
+    animation: var(--dur-fast) var(--ease-exit) both ecine-fade-out;
+  }
+  ::view-transition-new(*) {
+    animation: var(--dur-fast) var(--ease-standard) both ecine-fade;
+  }
+}
+
+@keyframes ecine-push-in {
+  from {
+    transform: translateX(30%);
+    opacity: 0;
+  }
+}
+@keyframes ecine-push-out {
+  to {
+    transform: translateX(-10%);
+    opacity: 0.4;
+  }
+}
+@keyframes ecine-pop-in {
+  from {
+    transform: translateX(-10%);
+    opacity: 0.4;
+  }
+}
+@keyframes ecine-pop-out {
+  to {
+    transform: translateX(30%);
+    opacity: 0;
+  }
+}
+
 @keyframes ecine-fade {
   from {
     opacity: 0;

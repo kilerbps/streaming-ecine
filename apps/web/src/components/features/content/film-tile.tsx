@@ -22,6 +22,7 @@ export async function FilmTile({
   const t = await getTranslations('kinds');
   return (
     <Link
+      transitionTypes={['push']}
       href={routes.film(locale, film.slug)}
       className="group block focus-visible:outline-offset-4"
     >

@@ -104,6 +104,7 @@ export function TabBar({ locale }: { locale: Locale }) {
   return (
     <nav
       aria-label={t('mainNav')}
+      style={{ viewTransitionName: 'ecine-tabbar' }}
       data-compact={compact ? '' : undefined}
       data-hidden={keyboard ? '' : undefined}
       className="group/tabbar fixed inset-x-3 bottom-[var(--tabbar-offset)] z-30 flex items-center justify-center gap-2 transition-[translate,opacity] duration-[var(--dur-base)] ease-[var(--ease-standard)] data-[hidden]:pointer-events-none data-[hidden]:translate-y-[calc(100%+var(--tabbar-offset))] data-[hidden]:opacity-0 lg:hidden"
@@ -123,6 +124,7 @@ export function TabBar({ locale }: { locale: Locale }) {
               <li key={tab.key}>
                 <Link
                   href={tab.href}
+                  transitionTypes={['tab']}
                   aria-current={active ? 'page' : undefined}
                   onClick={(event) => onTab(event, tab, active)}
                   className={`flex h-full flex-col items-center justify-center ${active ? 'text-accent-text' : 'text-muted'}`}
@@ -141,6 +143,7 @@ export function TabBar({ locale }: { locale: Locale }) {
       </div>
       <Link
         href={routes.search(locale)}
+        transitionTypes={['tab']}
         aria-label={t('search')}
         aria-current={searchActive ? 'page' : undefined}
         onClick={(event) => {
@@ -192,7 +195,10 @@ export function TopNav({ locale }: { locale: Locale }) {
   ];
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 hidden h-[var(--topnav-h)] lg:block">
+    <header
+      style={{ viewTransitionName: 'ecine-topnav' }}
+      className="fixed inset-x-0 top-0 z-30 hidden h-[var(--topnav-h)] lg:block"
+    >
       <div
         aria-hidden="true"
         className={`chrome-bar absolute inset-0 transition-opacity duration-[var(--dur-base)] ease-[var(--ease-standard)] ${material ? 'opacity-100' : 'opacity-0'}`}
@@ -211,6 +217,7 @@ export function TopNav({ locale }: { locale: Locale }) {
               <li key={link.key}>
                 <Link
                   href={link.href}
+                  transitionTypes={['tab']}
                   aria-current={active ? 'page' : undefined}
                   className={`flex min-h-11 items-center rounded-full px-3 text-[15px] font-semibold ${active ? 'bg-surface-2/80 text-text' : 'text-muted hover:text-text'}`}
                 >
@@ -254,8 +261,12 @@ function HomePills({ locale, categories }: { locale: Locale; categories: Categor
   const [open, setOpen] = useState(false);
   return (
     <div className="no-scrollbar relative flex gap-2 overflow-x-auto px-4 pb-3">
-      <PillLink href={routes.films(locale)}>{t('films')}</PillLink>
-      <PillLink href={routes.shorts(locale)}>{t('shorts')}</PillLink>
+      <PillLink href={routes.films(locale)} transitionTypes={['push']}>
+        {t('films')}
+      </PillLink>
+      <PillLink href={routes.shorts(locale)} transitionTypes={['push']}>
+        {t('shorts')}
+      </PillLink>
       {categories.length > 0 ? (
         <>
           <button
@@ -301,6 +312,7 @@ export function AppHeader({ locale, categories }: { locale: Locale; categories: 
   const title = useHeaderTitle();
   return (
     <header
+      style={{ viewTransitionName: 'ecine-header' }}
       data-hidden={hidden ? '' : undefined}
       className="sticky top-0 z-30 pt-[env(safe-area-inset-top)] transition-[translate] duration-[var(--dur-base)] ease-[var(--ease-standard)] data-[hidden]:-translate-y-full lg:hidden"
     >

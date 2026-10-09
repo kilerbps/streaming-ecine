@@ -45,6 +45,7 @@ export function PosterTile({
 }) {
   return (
     <Link
+      transitionTypes={['push']}
       href={href}
       aria-label={ariaLabel}
       className={`press group block shrink-0 snap-start ${width}`}
@@ -94,7 +95,11 @@ export function LandscapeTile({
   width?: string;
 }) {
   return (
-    <Link href={href} className={`press group block shrink-0 snap-start ${width}`}>
+    <Link
+      transitionTypes={['push']}
+      href={href}
+      className={`press group block shrink-0 snap-start ${width}`}
+    >
       <div className="relative">
         <MediaImage {...media} ratio="16/9" sizes={sizes} className="rounded-md" />
         {progress !== undefined ? (
@@ -124,6 +129,7 @@ export function Top10Tile({
 }: TileImage & { rank: number; href: string; title: string; ariaLabel: string }) {
   return (
     <Link
+      transitionTypes={['push']}
       href={href}
       aria-label={ariaLabel}
       className="press group flex shrink-0 snap-start items-end"
@@ -156,6 +162,7 @@ export function Portrait({
 }) {
   return (
     <Link
+      transitionTypes={['push']}
       href={href}
       className="press group flex w-[88px] shrink-0 snap-start flex-col items-center text-center lg:w-[112px]"
     >
