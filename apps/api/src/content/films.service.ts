@@ -6,7 +6,14 @@ import { ProblemException } from '../common/problem.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CacheService } from '../redis/cache.service.js';
 import type { Prisma } from '../generated/prisma/client.js';
-import { iso, localesFor, MediaUrls, pickTranslation, visibleWhere } from './content.helpers.js';
+import {
+  isFilmLanguage,
+  iso,
+  localesFor,
+  MediaUrls,
+  pickTranslation,
+  visibleWhere,
+} from './content.helpers.js';
 import { FilmMapper, filmSummaryInclude } from './film.mapper.js';
 
 const listCursor = z.object({ p: z.iso.datetime(), i: z.string() });
@@ -68,6 +75,7 @@ export class FilmsService {
           where: { slug, ...visibleWhere() },
           include: {
             ...filmSummaryInclude(locales),
+            titleImage: true,
             credits: {
               where: { person: { deletedAt: null, state: 'PUBLISHED' } },
               orderBy: [{ position: 'asc' }, { id: 'asc' }],
@@ -87,13 +95,22 @@ export class FilmsService {
         });
         if (!film) throw ProblemException.notFound('Ce film est introuvable.');
         const t = pickTranslation(film.translations, locale);
+        // Film annoncé (« Bientôt ») : sa page est visible, mais il n'est pas lisible avant sa sortie.
+        const upcoming = film.releaseAt !== null && film.releaseAt > new Date();
         return {
           ...this.mapper.summary(film, locale),
           originalTitle: film.originalTitle,
           synopsis: t?.synopsis ?? '',
+          tagline: t?.tagline ?? null,
           ageRating: film.ageRating,
+          audioLanguages: film.audioLanguages.filter(isFilmLanguage),
+          subtitleLanguages: film.subtitleLanguages.filter(isFilmLanguage),
+          filmingLocation: film.filmingLocation,
+          titleImage: this.media.image(film.titleImage),
+          creditsStartSec: film.creditsStartSec,
+          availableUntil: iso(film.availableUntil),
           trailerUrl: film.trailerUrl,
-          videoId: film.videos[0]?.id ?? null,
+          videoId: upcoming ? null : (film.videos[0]?.id ?? null),
           credits: film.credits.map((c) => ({
             role: c.role,
             character: c.character,
@@ -108,7 +125,6 @@ export class FilmsService {
             description: t?.seoDescription ?? null,
             noIndex: film.seoNoIndex,
           },
-          publishedAt: iso(film.publishAt),
           updatedAt: film.updatedAt.toISOString(),
         };
       },

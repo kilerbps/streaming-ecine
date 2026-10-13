@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { FilmSummary } from '@ecine/contracts';
 import type { Prisma } from '../generated/prisma/client.js';
-import { MediaUrls, pickTranslation } from './content.helpers.js';
+import { iso, MediaUrls, pickTranslation } from './content.helpers.js';
 
 export function filmSummaryInclude(locales: string[]) {
   return {
@@ -34,6 +34,8 @@ export class FilmMapper {
         slug: category.slug,
         name: pickTranslation(category.translations, locale)?.name ?? category.slug,
       })),
+      publishedAt: iso(film.publishAt),
+      releaseAt: iso(film.releaseAt),
     };
   }
 }

@@ -3,9 +3,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch, type Control } from 'react-hook-form';
 import {
   creditRoleSchema,
+  FILM_LANGUAGES,
   filmInputSchema,
   filmKindSchema,
   type AdminCategory,
@@ -28,10 +29,18 @@ import {
   useEditorSave,
   useUnsavedWarning,
 } from './editor-kit';
-import { CharCounter, CONTROL, emptyToUndefined, optionalInt, SelectField } from './fields';
+import {
+  CharCounter,
+  CONTROL,
+  DateTimeField,
+  emptyToUndefined,
+  optionalInt,
+  SelectField,
+} from './fields';
+import { formatTimecode, parseTimecode } from '@/lib/format';
 import { slugify } from './format';
 import { ImageUploadField, type AdminImage } from './image-upload-field';
-import { CREDIT_ROLE_LABELS, FILM_KIND_LABELS } from './labels';
+import { CREDIT_ROLE_LABELS, FILM_KIND_LABELS, FILM_LANGUAGE_LABELS } from './labels';
 import { panelPrimaryOp, PublishPanel } from './publish-panel';
 import { SearchPicker } from './search-picker';
 
@@ -52,6 +61,14 @@ function toValues(film: AdminFilm | null): Values {
     year: film?.year ?? undefined,
     runtimeSec: film?.runtimeSec ?? undefined,
     ageRating: film?.ageRating ?? '',
+    tagline: film?.tagline ?? '',
+    audioLanguages: film?.audioLanguages ?? [],
+    subtitleLanguages: film?.subtitleLanguages ?? [],
+    filmingLocation: film?.filmingLocation ?? '',
+    titleImageId: film?.titleImage?.id ?? undefined,
+    creditsStartSec: film?.creditsStartSec ?? undefined,
+    releaseAt: film?.releaseAt ?? undefined,
+    availableUntil: film?.availableUntil ?? undefined,
     trailerUrl: film?.trailerUrl ?? undefined,
     rightsNote: film?.rightsNote ?? '',
     rightsOk: film?.rightsOk ?? false,
@@ -100,9 +117,10 @@ export function FilmEditor({
     formState: { errors, isDirty },
   } = form;
 
-  const [media, setMedia] = useState<Record<string, AdminImage>>(() =>
-    film?.poster ? { [film.poster.id]: film.poster } : {},
-  );
+  const [media, setMedia] = useState<Record<string, AdminImage>>(() => ({
+    ...(film?.poster ? { [film.poster.id]: film.poster } : {}),
+    ...(film?.titleImage ? { [film.titleImage.id]: film.titleImage } : {}),
+  }));
   const [people, setPeople] = useState<Record<string, string>>(() =>
     Object.fromEntries((film?.credits ?? []).map((c) => [c.personId, c.personName])),
   );
@@ -116,11 +134,12 @@ export function FilmEditor({
   const showDraft = draft && JSON.stringify(draft.values) !== JSON.stringify(defaults);
 
   const { fields, append, remove, move } = useFieldArray({ control, name: 'credits' });
-  const [posterId, seoTitle, seoDescription] = useWatch({
+  const [posterId, titleImageId, tagline, seoTitle, seoDescription] = useWatch({
     control,
-    name: ['posterId', 'seoTitle', 'seoDescription'],
+    name: ['posterId', 'titleImageId', 'tagline', 'seoTitle', 'seoDescription'],
   });
   const poster = posterId ? (media[posterId] ?? null) : null;
+  const titleImage = titleImageId ? (media[titleImageId] ?? null) : null;
 
   const { submit, pending, formError } = useEditorSave({
     kind: 'films',
@@ -256,7 +275,7 @@ export function FilmEditor({
             />
             <TextField
               label="Classification d’âge"
-              optional
+              help="Obligatoire pour publier."
               placeholder="Ex. : 12+"
               error={errors.ageRating?.message}
               {...register('ageRating')}
@@ -268,6 +287,17 @@ export function FilmEditor({
             error={errors.synopsis?.message}
             {...register('synopsis')}
           />
+          <div className="flex flex-col gap-1">
+            <TextField
+              label="Phrase d’accroche"
+              optional
+              maxLength={80}
+              help="Une phrase sur l’affiche à la une et dans Découvrir. Obligatoire pour programmer le film à la une."
+              error={errors.tagline?.message}
+              {...register('tagline')}
+            />
+            <CharCounter value={tagline ?? ''} max={80} />
+          </div>
           <TextField
             label="Bande-annonce (URL)"
             optional
@@ -276,6 +306,81 @@ export function FilmEditor({
             placeholder="https://…"
             error={errors.trailerUrl?.message}
             {...register('trailerUrl', { setValueAs: emptyToUndefined })}
+          />
+        </FormSection>
+
+        <FormSection
+          title="Langues, lieu et dates"
+          description="Affichés sur la fiche et l’aperçu rapide. Au moins une langue audio pour publier."
+        >
+          <div className="grid gap-5 md:grid-cols-2">
+            <LanguageChecklist
+              control={control}
+              name="audioLanguages"
+              legend="Langues audio"
+              error={errors.audioLanguages?.message}
+            />
+            <LanguageChecklist
+              control={control}
+              name="subtitleLanguages"
+              legend="Sous-titres disponibles"
+              optional
+            />
+          </div>
+          <TextField
+            label="Lieu de tournage"
+            optional
+            placeholder="Ex. : Kinshasa"
+            error={errors.filmingLocation?.message}
+            {...register('filmingLocation')}
+          />
+          <div className="grid gap-5 md:grid-cols-2">
+            <Controller
+              control={control}
+              name="releaseAt"
+              render={({ field, fieldState }) => (
+                <DateTimeField
+                  label="Sortie annoncée"
+                  optional
+                  help="Avant cette date, le film est « Bientôt » : sa page est visible, avec « Me le rappeler », mais il ne se lit pas encore. Heure de Kinshasa."
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="availableUntil"
+              render={({ field, fieldState }) => (
+                <DateTimeField
+                  label="Fin de disponibilité"
+                  optional
+                  help="Seulement si elle est réelle (fin des droits) : elle est affichée sur la fiche. Heure de Kinshasa."
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error?.message}
+                />
+              )}
+            />
+          </div>
+          <Controller
+            control={control}
+            name="creditsStartSec"
+            render={({ field, fieldState }) => (
+              <TextField
+                label="Début du générique de fin"
+                optional
+                inputMode="numeric"
+                placeholder="mm:ss, ex. 1:32:10 ou 88:40"
+                help="Pour proposer « À suivre » au bon moment. Sans valeur : 30 secondes avant la fin."
+                name={field.name}
+                onBlur={field.onBlur}
+                defaultValue={field.value ? formatTimecode(field.value) : ''}
+                onChange={(event) => field.onChange(parseTimecode(event.target.value))}
+                error={fieldState.error?.message}
+              />
+            )}
           />
         </FormSection>
 
@@ -310,6 +415,17 @@ export function FilmEditor({
             onChange={(image) => {
               if (image) setMedia((m) => ({ ...m, [image.id]: image }));
               setValue('posterId', image?.id, { shouldDirty: true, shouldValidate: true });
+            }}
+          />
+          <ImageUploadField
+            label="Titre dessiné (facultatif)"
+            value={titleImage}
+            allowDecorative={false}
+            error={errors.titleImageId?.message}
+            help="Le titre du film en image (PNG ou WebP transparent) : il remplace le titre écrit sur l’affiche à la une et la fiche. Texte alternatif : le titre."
+            onChange={(image) => {
+              if (image) setMedia((m) => ({ ...m, [image.id]: image }));
+              setValue('titleImageId', image?.id, { shouldDirty: true, shouldValidate: true });
             }}
           />
         </FormSection>
@@ -529,5 +645,58 @@ export function FilmEditor({
         )}
       </aside>
     </>
+  );
+}
+
+/** Cases à cocher des langues d'un film (audio ou sous-titres). */
+function LanguageChecklist({
+  control,
+  name,
+  legend,
+  optional = false,
+  error,
+}: {
+  control: Control<Values, unknown, Output>;
+  name: 'audioLanguages' | 'subtitleLanguages';
+  legend: string;
+  optional?: boolean;
+  error?: string;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => {
+        const selected = field.value ?? [];
+        return (
+          <fieldset aria-invalid={error ? true : undefined}>
+            <legend className="text-sm font-medium">
+              {legend}
+              {optional ? <span className="font-normal text-muted"> (facultatif)</span> : null}
+            </legend>
+            <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1">
+              {FILM_LANGUAGES.map((code) => (
+                <label key={code} className="flex min-h-11 items-center gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    className="size-5 accent-[var(--accent)]"
+                    checked={selected.includes(code)}
+                    onChange={(event) =>
+                      field.onChange(
+                        event.target.checked
+                          ? FILM_LANGUAGES.filter((c) => c === code || selected.includes(c))
+                          : selected.filter((c) => c !== code),
+                      )
+                    }
+                  />
+                  {FILM_LANGUAGE_LABELS[code]}
+                </label>
+              ))}
+            </div>
+            {error ? <p className="mt-1 text-sm text-danger">{error}</p> : null}
+          </fieldset>
+        );
+      }}
+    />
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseSetCookie } from '@/server/set-cookie';
-import { filmMeta, formatRuntime, formatTimecode, truncate } from './format';
+import { filmMeta, formatRuntime, formatTimecode, parseTimecode, truncate } from './format';
 import ecineImageLoader from './image-loader';
 import { parseBlocks } from './markdown';
 import { routes, safeInternalPath } from './routes';
@@ -62,6 +62,16 @@ describe('formats', () => {
   it('formate les timecodes', () => {
     expect(formatTimecode(75)).toBe('1:15');
     expect(formatTimecode(3725)).toBe('1:02:05');
+  });
+
+  it('lit un horodatage saisi en administration', () => {
+    expect(parseTimecode('1:32:10')).toBe(5530);
+    expect(parseTimecode('88:40')).toBe(5320);
+    expect(parseTimecode(' 90 ')).toBe(5400);
+    expect(parseTimecode('')).toBeUndefined();
+    expect(parseTimecode('1:2:3:4')).toBeUndefined();
+    expect(parseTimecode('dix')).toBeUndefined();
+    expect(parseTimecode('0:00')).toBeUndefined();
   });
   it('compose la ligne de métadonnées', () => {
     expect(filmMeta(2026, 840)).toBe('2026 · 14 min');

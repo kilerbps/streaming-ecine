@@ -20,6 +20,9 @@ const readyFilm: FilmPublishFacts = {
   rightsOk: true,
   readyVideos: 1,
   trailerUrl: null,
+  ageRating: '13+',
+  audioLanguages: ['ln'],
+  upcoming: false,
   seoTitle: null,
   seoTitleTaken: false,
 };
@@ -94,11 +97,29 @@ describe('filmPublishIssues', () => {
       rightsOk: false,
       readyVideos: 0,
       trailerUrl: null,
+      ageRating: null,
+      audioLanguages: [],
+      upcoming: false,
       seoTitle: null,
       seoTitleTaken: false,
     });
-    expect(fields(issues)).toEqual(['title', 'synopsis', 'posterId', 'rightsOk', 'videos']);
+    expect(fields(issues)).toEqual([
+      'title',
+      'synopsis',
+      'posterId',
+      'rightsOk',
+      'audioLanguages',
+      'ageRating',
+      'videos',
+    ]);
     expect(toPublishCheck(issues)).toEqual({ ok: false, missing: issues.map((i) => i.message) });
+  });
+
+  it('publie un film annoncé (« Bientôt ») sans vidéo ni bande-annonce', () => {
+    expect(filmPublishIssues({ ...readyFilm, readyVideos: 0, upcoming: true })).toEqual([]);
+    expect(fields(filmPublishIssues({ ...readyFilm, readyVideos: 0, upcoming: false }))).toEqual([
+      'videos',
+    ]);
   });
 });
 

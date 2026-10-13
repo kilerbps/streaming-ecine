@@ -8,7 +8,13 @@ import {
   slugSchema,
   socialsSchema,
 } from './common.js';
-import { articleKindSchema, creditRoleSchema, filmKindSchema } from './content.js';
+import {
+  articleKindSchema,
+  creditRoleSchema,
+  FILM_LANGUAGES,
+  filmKindSchema,
+  filmLanguageSchema,
+} from './content.js';
 
 const seoTitle = z.string().trim().max(60, 'Au plus 60 caractères').optional();
 const seoDescription = z.string().trim().max(160, 'Au plus 160 caractères').optional();
@@ -59,6 +65,19 @@ export const filmInputSchema = z.strictObject({
     .max(60 * 60 * 12)
     .optional(),
   ageRating: z.string().trim().max(10).optional(),
+  tagline: z.string().trim().max(80, 'Phrase d’accroche : 80 caractères au plus').optional(),
+  audioLanguages: z.array(filmLanguageSchema).max(FILM_LANGUAGES.length).default([]),
+  subtitleLanguages: z.array(filmLanguageSchema).max(FILM_LANGUAGES.length).default([]),
+  filmingLocation: z.string().trim().max(120).optional(),
+  titleImageId: idSchema.optional(),
+  creditsStartSec: z
+    .number()
+    .int()
+    .min(1)
+    .max(60 * 60 * 12)
+    .optional(),
+  releaseAt: isoDateSchema.optional(),
+  availableUntil: isoDateSchema.optional(),
   trailerUrl: z.url().optional(),
   rightsNote: z
     .string()
@@ -87,6 +106,14 @@ export const adminFilmSchema = z.object({
   year: z.number().int().nullable(),
   runtimeSec: z.number().int().nullable(),
   ageRating: z.string().nullable(),
+  tagline: z.string().nullable(),
+  audioLanguages: z.array(filmLanguageSchema),
+  subtitleLanguages: z.array(filmLanguageSchema),
+  filmingLocation: z.string().nullable(),
+  titleImage: imageSchema.extend({ id: z.string() }).nullable(),
+  creditsStartSec: z.number().int().nullable(),
+  releaseAt: z.string().nullable(),
+  availableUntil: z.string().nullable(),
   trailerUrl: z.string().nullable(),
   rightsNote: z.string(),
   rightsOk: z.boolean(),

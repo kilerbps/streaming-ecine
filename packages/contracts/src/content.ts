@@ -20,6 +20,14 @@ export const articleKindSchema = z.enum(['NEWS', 'ANNOUNCEMENT', 'EVENT']);
 export type ArticleKind = z.infer<typeof articleKindSchema>;
 
 export const categorySchema = z.object({ slug: z.string(), name: z.string() });
+
+/**
+ * Langues des films (audio et sous-titres) : français, langues nationales de la RDC (lingala,
+ * kiswahili, kikongo, tshiluba) et anglais. Codes ISO 639.
+ */
+export const FILM_LANGUAGES = ['fr', 'ln', 'sw', 'kg', 'lua', 'en'] as const;
+export const filmLanguageSchema = z.enum(FILM_LANGUAGES);
+export type FilmLanguage = z.infer<typeof filmLanguageSchema>;
 export type Category = z.infer<typeof categorySchema>;
 
 /** Tuile film (listes, feed, recherche) : objet allégé. */
@@ -32,6 +40,10 @@ export const filmSummarySchema = z.object({
   runtimeSec: z.number().int().nullable(),
   poster: imageSchema.nullable(),
   categories: z.array(categorySchema),
+  /** Date de mise en ligne (badge « Nouveau » pendant 30 jours). */
+  publishedAt: z.string().nullable(),
+  /** Sortie annoncée : dans le futur, le film est « Bientôt » (rappels, pas de lecture). */
+  releaseAt: z.string().nullable(),
 });
 export type FilmSummary = z.infer<typeof filmSummarySchema>;
 
@@ -45,7 +57,18 @@ export type Credit = z.infer<typeof creditSchema>;
 export const filmDetailSchema = filmSummarySchema.extend({
   originalTitle: z.string().nullable(),
   synopsis: z.string(),
+  /** Phrase d'accroche (80 caractères au plus) : affiche à la une, Découvrir. */
+  tagline: z.string().nullable(),
   ageRating: z.string().nullable(),
+  audioLanguages: z.array(filmLanguageSchema),
+  subtitleLanguages: z.array(filmLanguageSchema),
+  filmingLocation: z.string().nullable(),
+  /** Titre dessiné (PNG ou SVG transparent) qui remplace le titre écrit. */
+  titleImage: imageSchema.nullable(),
+  /** Début du générique (« À suivre » dans le lecteur) ; repli : 30 s avant la fin. */
+  creditsStartSec: z.number().int().nullable(),
+  /** Fin de disponibilité réelle, affichée seulement si elle existe. */
+  availableUntil: z.string().nullable(),
   trailerUrl: z.string().nullable(),
   /** Identifiant de la vidéo lisible (null si aucune vidéo prête). Jamais de chemin de stockage. */
   videoId: z.string().nullable(),
@@ -55,7 +78,6 @@ export const filmDetailSchema = filmSummarySchema.extend({
     description: z.string().nullable(),
     noIndex: z.boolean(),
   }),
-  publishedAt: z.string().nullable(),
   updatedAt: z.string(),
   likeCount: z.number().int().nonnegative(),
 });

@@ -5,7 +5,7 @@ import { PLAYBACK_TOKEN_PARAM, type PlaybackRefresh, type PlaybackSession } from
 import { ENV, type Env } from '../config/env.js';
 import { hashIp, openSecret, randomToken } from '../common/crypto.js';
 import { ProblemException } from '../common/problem.js';
-import { visibleWhere } from '../content/content.helpers.js';
+import { playableWhere } from '../content/content.helpers.js';
 import { storagePaths } from '../media/static.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CacheService } from '../redis/cache.service.js';
@@ -134,11 +134,14 @@ export class PlaybackService {
     return claims;
   }
 
-  /** Vidéo prête et film visible (mis en cache 30 s ; invalidé à chaque action d'administration). */
+  /**
+   * Vidéo prête d'un film visible et déjà sorti (mis en cache 30 s ; invalidé à chaque action
+   * d'administration).
+   */
   private async playable(videoId: string): Promise<PlayableVideo> {
     const video = await this.cache.wrap('playback', videoId, 30, async () => {
       const row = await this.prisma.videoAsset.findFirst({
-        where: { id: videoId, state: 'READY', film: visibleWhere() },
+        where: { id: videoId, state: 'READY', film: playableWhere() },
         select: { id: true, hlsBasePath: true, keyId: true },
       });
       return row?.hlsBasePath

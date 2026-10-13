@@ -13,7 +13,7 @@ import {
 } from '@ecine/contracts';
 import { AuditService } from '../audit/audit.service.js';
 import { ProblemException } from '../common/problem.js';
-import { iso, MediaUrls } from '../content/content.helpers.js';
+import { isFilmLanguage, iso, MediaUrls } from '../content/content.helpers.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ContentEventsService } from '../revalidate/content-events.service.js';
@@ -51,6 +51,7 @@ const KIND_LABELS: Record<FilmKind, string> = {
 const adminFilmInclude = {
   translations: { where: { locale: FR } },
   poster: true,
+  titleImage: true,
   categories: { select: { categoryId: true }, orderBy: { categoryId: 'asc' } },
   credits: {
     orderBy: [{ position: 'asc' }, { id: 'asc' }],
@@ -76,6 +77,13 @@ function filmScalars(input: FilmInput) {
     year: input.year ?? null,
     runtimeSec: input.runtimeSec ?? null,
     ageRating: input.ageRating || null,
+    audioLanguages: [...new Set(input.audioLanguages)],
+    subtitleLanguages: [...new Set(input.subtitleLanguages)],
+    filmingLocation: input.filmingLocation || null,
+    titleImageId: input.titleImageId ?? null,
+    creditsStartSec: input.creditsStartSec ?? null,
+    releaseAt: input.releaseAt ? new Date(input.releaseAt) : null,
+    availableUntil: input.availableUntil ? new Date(input.availableUntil) : null,
     trailerUrl: input.trailerUrl ?? null,
     rightsNote: input.rightsNote,
     rightsOk: input.rightsOk,
@@ -88,6 +96,7 @@ function filmTranslation(input: FilmInput) {
   return {
     title: input.title,
     synopsis: input.synopsis,
+    tagline: input.tagline || null,
     seoTitle: input.seoTitle || null,
     seoDescription: input.seoDescription || null,
   };
@@ -117,6 +126,14 @@ function snapshot(film: AdminFilm): AuditSnapshot {
     year: film.year,
     runtimeSec: film.runtimeSec,
     ageRating: film.ageRating,
+    tagline: film.tagline,
+    audioLanguages: film.audioLanguages.join(','),
+    subtitleLanguages: film.subtitleLanguages.join(','),
+    filmingLocation: film.filmingLocation,
+    titleImageId: film.titleImage?.id ?? null,
+    creditsStartSec: film.creditsStartSec,
+    releaseAt: film.releaseAt,
+    availableUntil: film.availableUntil,
     trailerUrl: film.trailerUrl,
     rightsNote: film.rightsNote,
     rightsOk: film.rightsOk,
@@ -364,6 +381,9 @@ export class AdminFilmsService {
         deletedAt: true,
         rightsOk: true,
         trailerUrl: true,
+        ageRating: true,
+        audioLanguages: true,
+        releaseAt: true,
         translations: {
           where: { locale: FR },
           select: { title: true, synopsis: true, seoTitle: true },
@@ -397,6 +417,9 @@ export class AdminFilmsService {
       rightsOk: film.rightsOk,
       readyVideos: film._count.videos,
       trailerUrl: film.trailerUrl,
+      ageRating: film.ageRating,
+      audioLanguages: film.audioLanguages,
+      upcoming: film.releaseAt !== null && film.releaseAt > new Date(),
       seoTitle,
       seoTitleTaken,
     });
@@ -410,7 +433,14 @@ export class AdminFilmsService {
 
   /** Affiche, catégories et personnes créditées doivent exister (400 avec le champ en cause). */
   private async assertReferences(tx: Prisma.TransactionClient, input: FilmInput): Promise<void> {
-    await assertImages(tx, input.posterId ? [{ id: input.posterId, path: 'posterId' }] : [], false);
+    await assertImages(
+      tx,
+      [
+        ...(input.posterId ? [{ id: input.posterId, path: 'posterId' }] : []),
+        ...(input.titleImageId ? [{ id: input.titleImageId, path: 'titleImageId' }] : []),
+      ],
+      false,
+    );
     const errors: Array<{ path: string; message: string }> = [];
 
     if (input.categoryIds.length > 0) {
@@ -464,6 +494,14 @@ export class AdminFilmsService {
       year: film.year,
       runtimeSec: film.runtimeSec,
       ageRating: film.ageRating,
+      tagline: t?.tagline ?? null,
+      audioLanguages: film.audioLanguages.filter(isFilmLanguage),
+      subtitleLanguages: film.subtitleLanguages.filter(isFilmLanguage),
+      filmingLocation: film.filmingLocation,
+      titleImage: this.media.imageWithId(film.titleImage),
+      creditsStartSec: film.creditsStartSec,
+      releaseAt: iso(film.releaseAt),
+      availableUntil: iso(film.availableUntil),
       trailerUrl: film.trailerUrl,
       rightsNote: film.rightsNote,
       rightsOk: film.rightsOk,

@@ -17,6 +17,19 @@ export function formatTimecode(seconds: number): string {
   return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
 }
 
+/**
+ * Saisie d'un horodatage : « 1:32:10 », « 88:40 » (minutes:secondes) ou « 90 » (minutes) → secondes ;
+ * vide ou illisible → aucune valeur.
+ */
+export function parseTimecode(value: string): number | undefined {
+  const parts = value.trim().split(':');
+  if (parts.length > 3 || parts.some((p) => !/^\d+$/.test(p.trim()))) return undefined;
+  const numbers = parts.map((p) => Number(p.trim()));
+  const seconds =
+    numbers.length === 1 ? numbers[0]! * 60 : numbers.reduce((total, part) => total * 60 + part, 0);
+  return seconds > 0 ? seconds : undefined;
+}
+
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', {
   day: 'numeric',
   month: 'long',

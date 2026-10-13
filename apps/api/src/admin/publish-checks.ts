@@ -43,6 +43,10 @@ export interface FilmPublishFacts {
   rightsOk: boolean;
   readyVideos: number;
   trailerUrl: string | null;
+  ageRating: string | null;
+  audioLanguages: string[];
+  /** Sortie annoncée dans le futur : film « Bientôt », publiable sans vidéo. */
+  upcoming: boolean;
   seoTitle: string | null | undefined;
   /** Vrai si le titre SEO est déjà utilisé par un autre film (non supprimé). */
   seoTitleTaken: boolean;
@@ -62,7 +66,11 @@ export function filmPublishIssues(film: FilmPublishFacts): PublishIssue[] {
   }
   if (film.rightsOk !== true)
     issues.push({ field: 'rightsOk', message: 'Confirmez les droits de diffusion.' });
-  if (film.readyVideos < 1 && !filled(film.trailerUrl)) {
+  if (film.audioLanguages.length === 0)
+    issues.push({ field: 'audioLanguages', message: 'Indiquez au moins une langue audio.' });
+  if (!filled(film.ageRating))
+    issues.push({ field: 'ageRating', message: 'Indiquez la classification d’âge.' });
+  if (!film.upcoming && film.readyVideos < 1 && !filled(film.trailerUrl)) {
     issues.push({
       field: 'videos',
       message: 'Ajoutez une vidéo prête (transcodage terminé) ou une bande-annonce.',

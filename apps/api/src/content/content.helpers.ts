@@ -1,5 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DEFAULT_LOCALE, imageCropsSchema, type Image } from '@ecine/contracts';
+import {
+  DEFAULT_LOCALE,
+  FILM_LANGUAGES,
+  imageCropsSchema,
+  type FilmLanguage,
+  type Image,
+} from '@ecine/contracts';
 import { ENV, type Env } from '../config/env.js';
 import type { Media } from '../generated/prisma/client.js';
 
@@ -9,6 +15,17 @@ export function visibleWhere(now = new Date()) {
     deletedAt: null,
     state: { in: ['PUBLISHED' as const, 'SCHEDULED' as const] },
     publishAt: { lte: now },
+  };
+}
+
+/**
+ * Film lisible : visible et déjà sorti. Un film annoncé (« Bientôt », sortie future) a une page
+ * publique mais aucune lecture avant sa sortie (ADR-0012).
+ */
+export function playableWhere(now = new Date()) {
+  return {
+    ...visibleWhere(now),
+    OR: [{ releaseAt: null }, { releaseAt: { lte: now } }],
   };
 }
 
@@ -22,6 +39,10 @@ export function pickTranslation<T extends { locale: string }>(
     translations.find((t) => t.locale === DEFAULT_LOCALE)
   );
 }
+
+/** Langue de film connue (les codes inconnus d'anciennes saisies sont ignorés). */
+export const isFilmLanguage = (code: string): code is FilmLanguage =>
+  (FILM_LANGUAGES as readonly string[]).includes(code);
 
 /** Langues à charger pour une requête (demandée + repli). */
 export function localesFor(locale: string): string[] {

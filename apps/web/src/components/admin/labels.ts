@@ -1,4 +1,11 @@
-import type { ArticleKind, CreditRole, FilmKind, PublishState, Role } from '@ecine/contracts';
+import type {
+  ArticleKind,
+  CreditRole,
+  FilmKind,
+  FilmLanguage,
+  PublishState,
+  Role,
+} from '@ecine/contracts';
 
 /** Libellés français de l'administration (interface en français uniquement). */
 
@@ -7,6 +14,16 @@ export const STATE_LABELS: Record<PublishState, string> = {
   SCHEDULED: 'Planifié',
   PUBLISHED: 'Publié',
   ARCHIVED: 'Archivé',
+};
+
+/** Langues des films (audio et sous-titres), dans l'ordre de FILM_LANGUAGES. */
+export const FILM_LANGUAGE_LABELS: Record<FilmLanguage, string> = {
+  fr: 'Français',
+  ln: 'Lingala',
+  sw: 'Kiswahili',
+  kg: 'Kikongo',
+  lua: 'Tshiluba',
+  en: 'Anglais',
 };
 
 export const FILM_KIND_LABELS: Record<FilmKind, string> = {
