@@ -9,8 +9,10 @@ services:
       POSTGRES_USER: ecine
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ecine_dev_local}
       POSTGRES_DB: ecine
+    # Port de l'hôte réglable (infra/.env, non versionné) : Windows réserve parfois des plages de la
+    # zone dynamique (49152 et plus) au démarrage, et un autre projet peut occuper le port.
     ports:
-      - '127.0.0.1:55432:5432'
+      - '127.0.0.1:${ECINE_PG_PORT:-55432}:5432'
     volumes:
       - pgdata:/var/lib/postgresql
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
@@ -32,8 +34,9 @@ services:
         '--maxmemory-policy',
         'noeviction',
       ]
+    # Port de l'hôte réglable (infra/.env, non versionné) si 56379 est déjà pris sur le poste.
     ports:
-      - '127.0.0.1:56379:6379'
+      - '127.0.0.1:${ECINE_REDIS_PORT:-56379}:6379'
     healthcheck:
       test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-ecine_dev_local}', 'ping']
       interval: 5s
