@@ -4,9 +4,18 @@ import { useTranslations } from 'next-intl';
 import { usePreferences } from '@/components/providers/preferences';
 import { useToast } from '@/components/providers/toast';
 import { Icon } from '@/components/ui/icon';
+import { IconButton } from '@/components/ui/icon-button';
 
-/** Partage natif (mobile) ou copie du lien. */
-export function ShareButton({ title, path }: { title: string; path: string }) {
+/** Partage natif (mobile) ou copie du lien. `action` : bouton rond à libellé visible. */
+export function ShareButton({
+  title,
+  path,
+  variant = 'inline',
+}: {
+  title: string;
+  path: string;
+  variant?: 'inline' | 'action';
+}) {
   const t = useTranslations('common');
   const toast = useToast();
   const { feedback } = usePreferences();
@@ -25,6 +34,9 @@ export function ShareButton({ title, path }: { title: string; path: string }) {
     await navigator.clipboard.writeText(url);
     toast(t('copied'), 'success');
   };
+  if (variant === 'action') {
+    return <IconButton icon="share" label={t('share')} showLabel tone="surface" onClick={share} />;
+  }
   return (
     <button
       type="button"

@@ -1,13 +1,14 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { Category, FilmSummary, Locale, Page } from '@ecine/contracts';
+import { LargeTitle } from '@/components/layout/header-title';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LinkButton } from '@/components/ui/link-button';
+import { PillLink } from '@/components/ui/pill';
 import { FilmTile, TileGrid } from './film-tile';
 
 /**
- * Catalogue : en-tête éditorial, filtres par catégorie (liens, pas de JavaScript requis),
- * grille de tuiles et pagination « Voir plus » par curseur rendue côté serveur.
+ * Catalogue (Films, Courts-métrages, catégorie) : grand titre, pastilles de catégories (liens, sans
+ * JavaScript), grille d'affiches 3 / 4 / 6–7 colonnes et « Voir plus » par curseur rendu côté serveur.
  */
 export async function FilmCatalog({
   locale,
@@ -28,30 +29,28 @@ export async function FilmCatalog({
   basePath: string;
   categoryHref: (slug: string) => string;
 }) {
-  const t = await getTranslations('film');
-  const tc = await getTranslations('common');
+  const [t, tc] = await Promise.all([getTranslations('film'), getTranslations('common')]);
   return (
-    <div className="container-page pt-8 md:pt-12">
-      <header className="mb-8 grid gap-3 md:mb-12 md:grid-cols-[1fr_auto] md:items-end">
-        <h1 className="font-serif text-4xl md:text-6xl">{title}</h1>
-        <p className="max-w-sm text-muted md:text-right">{intro}</p>
+    <div className="container-page pt-6 md:pt-10">
+      <header className="mb-5 flex flex-col gap-2 md:mb-6">
+        <LargeTitle>{title}</LargeTitle>
+        <p className="max-w-[60ch] text-[15px] leading-5 text-muted md:text-base md:leading-6">
+          {intro}
+        </p>
       </header>
       {categories.length > 0 ? (
-        <nav
-          aria-label="Catégories"
-          className="no-scrollbar -mx-4 mb-10 overflow-x-auto px-4 md:mx-0 md:px-0"
-        >
-          <ul className="flex gap-2">
+        <nav aria-label={t('categoriesNav')} className="-mx-4 mb-6 md:-mx-8 lg:mx-0 lg:mb-8">
+          <ul className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-1 md:px-8 lg:flex-wrap lg:px-0">
             <li>
-              <CategoryLink href={basePath} active={!activeCategory} label={t('allCategories')} />
+              <PillLink href={basePath} selected={!activeCategory}>
+                {t('allCategories')}
+              </PillLink>
             </li>
             {categories.map((c) => (
               <li key={c.slug}>
-                <CategoryLink
-                  href={categoryHref(c.slug)}
-                  active={activeCategory === c.slug}
-                  label={c.name}
-                />
+                <PillLink href={categoryHref(c.slug)} selected={activeCategory === c.slug}>
+                  {c.name}
+                </PillLink>
               </li>
             ))}
           </ul>
@@ -62,12 +61,12 @@ export async function FilmCatalog({
       ) : (
         <TileGrid>
           {page.items.map((film, index) => (
-            <FilmTile key={film.id} film={film} locale={locale} eager={index < 2} />
+            <FilmTile key={film.id} film={film} locale={locale} eager={index < 3} />
           ))}
         </TileGrid>
       )}
       {page.nextCursor ? (
-        <div className="mt-12 flex justify-center">
+        <div className="mt-10 flex justify-center">
           <LinkButton
             href={`${basePath}?apres=${encodeURIComponent(page.nextCursor)}`}
             variant="secondary"
@@ -78,21 +77,5 @@ export async function FilmCatalog({
         </div>
       ) : null}
     </div>
-  );
-}
-
-function CategoryLink({ href, active, label }: { href: string; active: boolean; label: string }) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? 'page' : undefined}
-      className={`eyebrow inline-flex min-h-11 items-center whitespace-nowrap border px-4 ${
-        active
-          ? 'border-accent bg-accent text-on-accent'
-          : 'border-border-strong text-text hover:bg-surface-2'
-      }`}
-    >
-      {label}
-    </Link>
   );
 }

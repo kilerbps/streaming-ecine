@@ -2,17 +2,23 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { CreditRole, FilmDetail, Locale } from '@ecine/contracts';
-import { FilmTile, TileGrid } from '@/components/features/content/film-tile';
-import { Poster } from '@/components/features/content/poster';
+import { FilmStage } from '@/components/features/content/film-stage';
+import { FilmTile } from '@/components/features/content/film-tile';
 import { BookmarkButton } from '@/components/features/interactions/bookmark-button';
 import { LikeButton } from '@/components/features/interactions/like-button';
 import { ReportButton } from '@/components/features/interactions/report-button';
 import { ShareButton } from '@/components/features/interactions/share-button';
-import { Player } from '@/components/features/player/player';
+import { HeroTitle } from '@/components/layout/header-title';
 import { Breadcrumbs } from '@/components/seo/breadcrumbs';
 import { JsonLd } from '@/components/seo/json-ld';
+import { Badge } from '@/components/ui/badge';
+import { ExpandableText } from '@/components/ui/expandable-text';
+import { ActionLink } from '@/components/ui/icon-button';
+import { MediaImage } from '@/components/ui/media-image';
+import { Row } from '@/components/ui/row';
 import { Tag } from '@/components/ui/tag';
-import { formatRuntime } from '@/lib/format';
+import { Portrait } from '@/components/ui/tiles';
+import { formatDate, formatRuntime } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { getFilm, getFilms, getFilmViewerState } from '@/server/data';
 import { loadOrNotFound } from '@/server/not-found';
@@ -35,6 +41,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const CAST: CreditRole[] = ['ACTOR'];
+/** « Vous aimerez aussi » : 10 titres de la même catégorie. */
+const RELATED_COUNT = 10;
 
 function movieJsonLd(film: FilmDetail, locale: Locale) {
   const people = (role: CreditRole) =>
@@ -60,187 +68,267 @@ function movieJsonLd(film: FilmDetail, locale: Locale) {
     director: people('DIRECTOR'),
     actor: people('ACTOR'),
     producer: people('PRODUCER'),
-    inLanguage: 'fr',
+    inLanguage: film.audioLanguages[0] ?? 'fr',
   };
 }
 
+/** Équipe regroupée par rôle, dans l'ordre du générique. */
+function crewByRole(credits: FilmDetail['credits']) {
+  const groups = new Map<CreditRole, FilmDetail['credits']>();
+  for (const credit of credits) {
+    groups.set(credit.role, [...(groups.get(credit.role) ?? []), credit]);
+  }
+  return [...groups.entries()];
+}
+
+/**
+ * Fiche film (docs/design/04, Fiche film) : scène immersive et bouton unique Regarder / Reprendre,
+ * rangée d'actions (Ma liste, J'aime, Bande-annonce, Partager), synopsis, langues et lieu de
+ * tournage, distribution en portraits, « Vous aimerez aussi », puis les détails et Signaler.
+ */
 export default async function FilmPage({ params, searchParams }: Props) {
   const { locale: rawLocale, slug } = await params;
   const locale = rawLocale as Locale;
   const resume = (await searchParams).reprendre === '1';
   const film = await loadOrNotFound(() => getFilm(slug), `/${locale}/films/${slug}`);
-  const [t, tk, tr, state, related] = await Promise.all([
+  const [t, tr, tl, tt, state, related] = await Promise.all([
     getTranslations('film'),
-    getTranslations('kinds'),
     getTranslations('roles'),
+    getTranslations('languages'),
+    getTranslations('tiles'),
     getFilmViewerState(film.id),
     film.categories[0]
-      ? getFilms({ category: film.categories[0].slug, limit: 6 }).catch(() => null)
+      ? getFilms({ category: film.categories[0].slug, limit: RELATED_COUNT + 1 }).catch(() => null)
       : Promise.resolve(null),
   ]);
   const cast = film.credits.filter((c) => CAST.includes(c.role));
-  const crew = film.credits.filter((c) => !CAST.includes(c.role));
-  const meta = [film.year, formatRuntime(film.runtimeSec), film.ageRating]
-    .filter(Boolean)
-    .join(' · ');
-  const others = (related?.items ?? []).filter((f) => f.id !== film.id).slice(0, 5);
+  const crew = crewByRole(film.credits.filter((c) => !CAST.includes(c.role)));
+  const others = (related?.items ?? []).filter((f) => f.id !== film.id).slice(0, RELATED_COUNT);
+  const upcoming = film.releaseAt !== null && new Date(film.releaseAt) > new Date();
+  const facts = [film.year, formatRuntime(film.runtimeSec), film.categories[0]?.name].filter(
+    Boolean,
+  );
+  const languages = [
+    film.audioLanguages.length > 0
+      ? t('audio', { languages: film.audioLanguages.map((l) => tl(l)).join(', ') })
+      : null,
+    film.subtitleLanguages.length > 0
+      ? t('subtitlesLine', { languages: film.subtitleLanguages.map((l) => tl(l)).join(', ') })
+      : null,
+    film.filmingLocation ? t('filmedIn', { place: film.filmingLocation }) : null,
+  ].filter(Boolean);
+  const listHref = film.kind === 'SHORT' ? routes.shorts(locale) : routes.films(locale);
 
   return (
     <article className="pb-12">
-      <div className="mx-auto max-w-6xl md:px-8 md:pt-8">
-        {film.videoId ? (
-          <Player
-            filmId={film.id}
-            videoId={film.videoId}
-            title={film.title}
-            poster={film.poster}
-            serverPosition={state?.positionSec ?? null}
-            runtimeSec={film.runtimeSec}
-            locale={locale}
-            autoStart={resume}
+      <FilmStage
+        player={
+          film.videoId
+            ? {
+                filmId: film.id,
+                videoId: film.videoId,
+                title: film.title,
+                poster: film.poster,
+                serverPosition: state?.positionSec ?? null,
+                runtimeSec: film.runtimeSec,
+                locale,
+                autoStart: resume,
+              }
+            : null
+        }
+        image={
+          <MediaImage
+            image={film.poster}
+            ratio={null}
+            crop={{ base: '4:5', lg: '16:9' }}
+            sizes="100vw"
+            preload
+            className="aspect-[4/5] md:aspect-video lg:max-h-[80dvh]"
           />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-[1fr_2fr]">
-            <Poster image={film.poster} sizes="(min-width: 672px) 33vw, 100vw" preload />
-            <p className="self-end border-l-2 border-signal px-4 text-muted">{t('noVideo')}</p>
-          </div>
-        )}
-      </div>
-
-      <div className="container-page mt-8 max-w-6xl md:mt-12">
-        <Breadcrumbs
-          items={[
-            {
-              label: t('listTitle'),
-              href: film.kind === 'SHORT' ? routes.shorts(locale) : routes.films(locale),
-            },
-            { label: film.title, href: routes.film(locale, film.slug) },
-          ]}
-        />
-        <div className="grid gap-10 lg:grid-cols-[7fr_5fr] lg:gap-16">
-          <div>
-            <div className="flex flex-wrap gap-2">
-              <Tag tone="highlight">{tk(film.kind)}</Tag>
-              {film.categories.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={routes.category(locale, c.slug)}
-                  className="eyebrow border border-border px-2 py-0.5 text-muted hover:text-text"
-                >
-                  {c.name}
-                </Link>
-              ))}
-            </div>
-            <h1 className="mt-4 font-serif text-4xl md:text-6xl">{film.title}</h1>
-            {film.originalTitle && film.originalTitle !== film.title ? (
-              <p className="mt-2 font-serif italic text-muted">
-                {t('originalTitle')} : {film.originalTitle}
-              </p>
-            ) : null}
-            <p className="meta mt-4">{meta}</p>
-            <div className="-ml-2 mt-4 flex items-center gap-1">
-              <LikeButton
-                targetType="FILM"
-                targetId={film.id}
-                initialLiked={state?.liked ?? false}
-                initialCount={film.likeCount}
+        }
+        fallback={
+          upcoming && film.releaseAt ? (
+            <p className="flex flex-wrap items-center gap-2 text-[15px] leading-5">
+              <Badge tone="accent">{tt('soon')}</Badge>
+              {t('releaseOn', { date: formatDate(film.releaseAt) })}
+            </p>
+          ) : (
+            <p className="text-[15px] leading-5 text-muted">{t('noVideo')}</p>
+          )
+        }
+      >
+        <HeroTitle
+          title={film.title}
+          className="font-display text-[34px] font-extrabold leading-[38px] tracking-[-0.02em] text-balance lg:text-[56px] lg:leading-[60px]"
+        >
+          {film.titleImage ? (
+            <>
+              <span className="sr-only">{film.title}</span>
+              <MediaImage
+                image={{ ...film.titleImage, alt: '' }}
+                ratio="3/2"
+                sizes="(min-width: 1056px) 30vw, 60vw"
+                className="max-w-[60%] bg-transparent lg:max-w-[70%]"
+                imageClassName="object-contain object-left-bottom"
               />
-              <BookmarkButton filmId={film.id} initial={state?.bookmarked ?? false} withLabel />
-              <ShareButton title={film.title} path={routes.film(locale, film.slug)} />
-              <ReportButton targetType="FILM" targetId={film.id} />
-            </div>
-            <section aria-labelledby="resume" className="mt-8">
-              <h2 id="resume" className="eyebrow text-muted">
-                {t('synopsis')}
-              </h2>
-              <p className="mt-3 max-w-prose whitespace-pre-line text-lg leading-relaxed">
-                {film.synopsis}
-              </p>
-            </section>
+            </>
+          ) : (
+            film.title
+          )}
+        </HeroTitle>
+        {film.tagline ? (
+          <p className="text-[15px] leading-5 text-muted lg:text-[17px] lg:leading-[22px]">
+            {film.tagline}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] leading-5 text-muted">
+          {facts.map((fact) => (
+            <span key={String(fact)}>{fact}</span>
+          ))}
+          {film.ageRating ? <Tag>{film.ageRating}</Tag> : null}
+        </div>
+      </FilmStage>
+
+      {/* Mobile : une colonne (actions, synopsis, Avec, Vous aimerez aussi, Détails). PC : les détails
+          passent à droite du synopsis, les rangées gardent toute la largeur. */}
+      <div className="container-page mt-5 grid gap-y-8 lg:mt-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-16 lg:gap-y-10">
+        <div className="flex flex-col gap-6 lg:col-start-1 lg:row-start-1">
+          <div className="hidden lg:block [&_nav]:mb-0">
+            <Breadcrumbs
+              items={[
+                {
+                  label: film.kind === 'SHORT' ? t('shortsTitle') : t('listTitle'),
+                  href: listHref,
+                },
+                { label: film.title, href: routes.film(locale, film.slug) },
+              ]}
+            />
+          </div>
+          <div className="flex gap-3 md:gap-5">
+            <BookmarkButton
+              filmId={film.id}
+              initial={state?.bookmarked ?? false}
+              variant="action"
+            />
+            <LikeButton
+              targetType="FILM"
+              targetId={film.id}
+              initialLiked={state?.liked ?? false}
+              initialCount={film.likeCount}
+              variant="action"
+            />
             {film.trailerUrl ? (
-              <p className="mt-6">
-                <a
-                  href={film.trailerUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                  className="text-accent-text underline underline-offset-4"
-                >
-                  {t('trailer')}
-                </a>
-              </p>
+              <ActionLink
+                href={film.trailerUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+                icon="play"
+                label={t('trailer')}
+              >
+                <span className="sr-only">{t('newTab')}</span>
+              </ActionLink>
             ) : null}
+            <ShareButton
+              title={film.title}
+              path={routes.film(locale, film.slug)}
+              variant="action"
+            />
           </div>
-
-          <aside className="flex flex-col gap-10">
-            {cast.length > 0 ? (
-              <CreditList
-                title={t('cast')}
-                credits={cast}
-                locale={locale}
-                roleLabel={(c) => (c.character ? t('as', { character: c.character }) : tr(c.role))}
-              />
-            ) : null}
-            {crew.length > 0 ? (
-              <CreditList
-                title={t('crew')}
-                credits={crew}
-                locale={locale}
-                roleLabel={(c) => tr(c.role)}
-              />
-            ) : null}
-          </aside>
+          {film.synopsis ? (
+            <section aria-label={t('synopsis')} className="max-w-[68ch]">
+              <ExpandableText
+                moreLabel={t('more')}
+                className="text-[15px] leading-[22px] md:text-[17px] md:leading-[26px]"
+              >
+                {film.synopsis}
+              </ExpandableText>
+            </section>
+          ) : null}
+          {languages.length > 0 ? (
+            <p className="max-w-[68ch] text-[15px] leading-5 text-muted">{languages.join(' · ')}</p>
+          ) : null}
         </div>
 
-        {others.length > 0 ? (
-          <section aria-labelledby="similaires" className="mt-20">
-            <h2 id="similaires" className="mb-6 font-serif text-2xl">
-              {t('related')}
-            </h2>
-            <TileGrid>
-              {others.map((f) => (
-                <FilmTile key={f.id} film={f} locale={locale} />
+        {cast.length > 0 ? (
+          <div className="bleed lg:col-span-2">
+            <Row id="avec" title={t('castRow')}>
+              {cast.map((credit) => (
+                <Portrait
+                  key={`${credit.person.slug}-${credit.character ?? ''}`}
+                  href={routes.person(locale, credit.person.slug)}
+                  name={credit.person.name}
+                  role={credit.character ?? tr(credit.role)}
+                  image={credit.person.photo}
+                />
               ))}
-            </TileGrid>
-          </section>
+            </Row>
+          </div>
         ) : null}
+
+        {others.length > 0 ? (
+          <div className="bleed lg:col-span-2">
+            <Row id="similaires" title={t('related')}>
+              {others.map((f) => (
+                <FilmTile key={f.id} film={f} locale={locale} layout="row" />
+              ))}
+            </Row>
+          </div>
+        ) : null}
+
+        <section aria-labelledby="details" className="mt-2 lg:col-start-2 lg:row-start-1 lg:mt-0">
+          <h2 id="details" className="text-xl leading-[25px] lg:text-[17px] lg:leading-[22px]">
+            {t('details')}
+          </h2>
+          <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-[15px] leading-5">
+            {film.originalTitle && film.originalTitle !== film.title ? (
+              <>
+                <dt className="text-muted">{t('originalTitle')}</dt>
+                <dd>{film.originalTitle}</dd>
+              </>
+            ) : null}
+            {crew.map(([role, credits]) => (
+              <div key={role} className="contents">
+                <dt className="text-muted">{tr(role)}</dt>
+                <dd>
+                  {credits.map((credit, index) => (
+                    <span key={credit.person.slug}>
+                      {index > 0 ? ', ' : null}
+                      <Link
+                        href={routes.person(locale, credit.person.slug)}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {credit.person.name}
+                      </Link>
+                    </span>
+                  ))}
+                </dd>
+              </div>
+            ))}
+            {film.categories.length > 0 ? (
+              <>
+                <dt className="text-muted">{t('categoriesLabel')}</dt>
+                <dd>
+                  {film.categories.map((category, index) => (
+                    <span key={category.slug}>
+                      {index > 0 ? ', ' : null}
+                      <Link
+                        href={routes.category(locale, category.slug)}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {category.name}
+                      </Link>
+                    </span>
+                  ))}
+                </dd>
+              </>
+            ) : null}
+          </dl>
+          <div className="-ml-2 mt-4">
+            <ReportButton targetType="FILM" targetId={film.id} withLabel />
+          </div>
+        </section>
       </div>
       <JsonLd data={movieJsonLd(film, locale)} />
     </article>
-  );
-}
-
-function CreditList({
-  title,
-  credits,
-  locale,
-  roleLabel,
-}: {
-  title: string;
-  credits: FilmDetail['credits'];
-  locale: Locale;
-  roleLabel: (credit: FilmDetail['credits'][number]) => string;
-}) {
-  return (
-    <section>
-      <h2 className="eyebrow mb-3 text-muted">{title}</h2>
-      <ul className="divide-y divide-border border-y border-border">
-        {credits.map((credit) => (
-          <li key={`${credit.person.slug}-${credit.role}-${credit.character ?? ''}`}>
-            <Link
-              href={routes.person(locale, credit.person.slug)}
-              className="flex min-h-14 items-center gap-4 py-2 hover:bg-surface-1"
-            >
-              <div className="w-11 shrink-0">
-                <Poster image={credit.person.photo} ratio="1/1" sizes="44px" />
-              </div>
-              <div>
-                <p className="font-medium">{credit.person.name}</p>
-                <p className="text-sm text-muted">{roleLabel(credit)}</p>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }

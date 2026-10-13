@@ -21,7 +21,7 @@ export default async function SettingsPage() {
         <PreferencesPanel />
       </section>
       {me ? (
-        <div className="mt-10 max-w-xl">
+        <div id="compte" className="mt-10 max-w-xl scroll-mt-20">
           <AccountSettings me={me} />
         </div>
       ) : null}

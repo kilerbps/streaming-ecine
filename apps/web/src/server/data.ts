@@ -4,7 +4,7 @@ import { cookies, headers } from 'next/headers';
 import {
   articleDetailSchema,
   articleSummarySchema,
-  categorySchema,
+  categoryOverviewSchema,
   continueWatchingItemSchema,
   feedPageSchema,
   filmDetailSchema,
@@ -57,7 +57,7 @@ export const getFilm = cache((slug: string) =>
 );
 
 export function getCategories() {
-  return publicGet(z.array(categorySchema), '/categories', {
+  return publicGet(z.array(categoryOverviewSchema), '/categories', {
     tags: ['categories'],
     revalidate: 600,
   });

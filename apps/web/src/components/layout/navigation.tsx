@@ -12,6 +12,7 @@ import { Logo } from '@/components/ui/logo';
 import { pillClasses, PillLink } from '@/components/ui/pill';
 import { SearchField } from '@/components/ui/search-field';
 import { Sheet, SheetLink } from '@/components/ui/sheet';
+import { initials } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { scrollToTop, useScroll } from '@/lib/scroll-state';
 import { ensureNewsBaseline, markNewsSeen, useNewsSeen } from '@/lib/news-seen';
@@ -189,16 +190,6 @@ export function TabBar({ locale, whatsNewDot }: { locale: Locale; whatsNewDot: b
       </Link>
     </nav>
   );
-}
-
-/** Initiales du nom affiché (avatar de la navigation PC). */
-function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
 }
 
 /**

@@ -68,3 +68,13 @@ export function truncate(text: string, max: number): string {
   const cut = clean.slice(0, max - 1);
   return `${cut.slice(0, cut.lastIndexOf(' ') > max * 0.6 ? cut.lastIndexOf(' ') : cut.length)}…`;
 }
+
+/** Initiales du nom affiché (avatars à initiales). */
+export function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+}

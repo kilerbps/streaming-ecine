@@ -7,13 +7,15 @@ import { useAuth } from '@/components/providers/auth';
 import { usePreferences } from '@/components/providers/preferences';
 import { useToast } from '@/components/providers/toast';
 import { Icon } from '@/components/ui/icon';
+import { IconButton } from '@/components/ui/icon-button';
 import { track } from '@/lib/analytics';
 import { setLikeAction } from '@/server/actions/interactions';
 
 /**
  * J'aime : affichage immédiat (optimiste), confirmation par le serveur, retour en arrière explicite
  * en cas d'échec. Anonyme → feuille de connexion puis reprise automatique de l'action.
- * Compteur discret (preuve sociale mesurée, pas de classement).
+ * Compteur discret (preuve sociale mesurée, pas de classement). `action` : bouton rond de 44 à libellé
+ * visible, pour la rangée d'actions d'une fiche.
  */
 export function LikeButton({
   targetType,
@@ -21,12 +23,14 @@ export function LikeButton({
   initialLiked,
   initialCount,
   compact = false,
+  variant = 'inline',
 }: {
   targetType: LikeTargetType;
   targetId: string;
   initialLiked: boolean;
   initialCount: number;
   compact?: boolean;
+  variant?: 'inline' | 'action';
 }) {
   const t = useTranslations('actions');
   const { requireAuth, sessionExpired } = useAuth();
@@ -62,6 +66,19 @@ export function LikeButton({
     }
   };
 
+  if (variant === 'action') {
+    return (
+      <IconButton
+        icon="heart"
+        label={t('like')}
+        showLabel
+        tone="surface"
+        pressed={liked}
+        activeClassName="text-signal-text"
+        onClick={() => requireAuth(() => toggle(!liked), 'like')}
+      />
+    );
+  }
   return (
     <button
       type="button"

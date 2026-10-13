@@ -109,7 +109,7 @@
     "crew": "Équipe",
     "as": "dans le rôle de {character}",
     "noVideo": "Ce film sera bientôt disponible en streaming.",
-    "related": "Dans la même catégorie",
+    "related": "Vous aimerez aussi",
     "originalTitle": "Titre original",
     "ageRating": "Public",
     "listTitle": "Films",
@@ -117,7 +117,18 @@
     "shortsTitle": "Courts-métrages",
     "shortsIntro": "Des histoires courtes, souvent des premiers films.",
     "allCategories": "Toutes",
-    "emptyList": "Aucun film dans cette sélection pour le moment."
+    "categoriesNav": "Catégories",
+    "emptyList": "Aucun film dans cette sélection pour le moment.",
+    "resumeRemaining": "Reprendre · {minutes, plural, one {# min restante} other {# min restantes}}",
+    "releaseOn": "Sortie le {date}",
+    "audio": "Langue : {languages}",
+    "subtitlesLine": "Sous-titres : {languages}",
+    "filmedIn": "Tourné à {place}",
+    "more": "plus",
+    "newTab": "(s'ouvre dans un nouvel onglet)",
+    "castRow": "Avec",
+    "details": "Détails",
+    "categoriesLabel": "Catégories"
   },
   "player": {
     "play": "Lecture",
@@ -169,7 +180,8 @@
     "reasonOTHER": "Autre",
     "reportDetails": "Précisions",
     "reportSend": "Envoyer le signalement",
-    "reportThanks": "Merci, l'équipe va examiner ce contenu."
+    "reportThanks": "Merci, l'équipe va examiner ce contenu.",
+    "myList": "Ma liste"
   },
   "person": {
     "filmography": "Filmographie",
@@ -190,7 +202,8 @@
     "eventAt": "à {place}",
     "readMore": "Lire la suite",
     "empty": "Aucune actualité pour le moment.",
-    "all": "Tout"
+    "all": "Tout",
+    "kindsNav": "Types d'actualités"
   },
   "search": {
     "title": "Rechercher",
@@ -201,9 +214,20 @@
     "people": "Talents",
     "articles": "Actualités",
     "categories": "Catégories",
-    "noResult": "Aucun résultat pour « {q} ». Vérifiez l'orthographe ou essayez un autre mot.",
+    "noResult": "Aucun résultat pour « {q} ». Essayez le nom d'un acteur ou un genre.",
     "hint": "Tapez au moins 2 caractères.",
-    "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}"
+    "results": "{count, plural, =0 {Aucun résultat} one {# résultat} other {# résultats}}",
+    "suggestions": "Suggestions",
+    "film": "Film",
+    "person": "Talent",
+    "category": "Catégorie",
+    "recent": "Recherches récentes",
+    "exploreCategories": "Explorer par catégorie",
+    "titleCount": "{count, plural, one {# titre} other {# titres}}",
+    "seeAllPeople": "Tout voir : Talents",
+    "browse": "Parcourir le catalogue",
+    "browseShorts": "Courts-métrages",
+    "browseFilms": "Tous les films"
   },
   "auth": {
     "sheetTitle": "Connectez-vous pour continuer",
@@ -239,9 +263,9 @@
   "me": {
     "title": "Mon espace",
     "guestTitle": "Votre espace",
-    "guestBody": "Connectez-vous pour retrouver vos j'aime, votre liste et reprendre vos films là où vous les avez laissés.",
+    "guestBody": "Connectez-vous pour retrouver Ma liste et vos reprises sur tous vos appareils.",
     "myList": "Ma liste",
-    "myListEmpty": "Votre liste est vide. Ajoutez un film avec le bouton « Ajouter à Ma liste ».",
+    "myListEmpty": "Votre liste est vide. Touchez « Ma liste » sur la fiche d'un film pour l'y ajouter.",
     "continue": "Reprendre la lecture",
     "continueEmpty": "Aucun film en cours.",
     "settings": "Réglages",
@@ -267,7 +291,12 @@
     "deleteConfirm": "Je confirme vouloir supprimer mon compte",
     "verifyEmailBanner": "Confirmez votre adresse e-mail pour sécuriser votre compte.",
     "resendVerification": "Renvoyer l'e-mail",
-    "verificationSent": "E-mail envoyé. Pensez à vérifier les indésirables."
+    "verificationSent": "E-mail envoyé. Pensez à vérifier les indésirables.",
+    "menu": "Mon espace",
+    "hello": "Bonjour, {name}",
+    "accountSecurity": "Compte et sécurité",
+    "help": "Aide et contact",
+    "legal": "Mentions légales et confidentialité"
   },
   "contact": {
     "title": "Contact",
@@ -476,5 +505,21 @@
     "iosStep3": "Touchez « Ajouter » : E-Ciné rejoint vos apps.",
     "updateAvailable": "Nouvelle version disponible.",
     "update": "Mettre à jour"
+  },
+  "tiles": {
+    "new": "Nouveau",
+    "soon": "Bientôt",
+    "short": "Court-métrage",
+    "top10": "TOP 10",
+    "continueWatching": "Reprendre",
+    "remaining": "{minutes, plural, one {# min restante} other {# min restantes}}"
+  },
+  "languages": {
+    "fr": "français",
+    "ln": "lingala",
+    "sw": "kiswahili",
+    "kg": "kikongo",
+    "lua": "tshiluba",
+    "en": "anglais"
   }
 }

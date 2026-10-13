@@ -4,19 +4,27 @@ import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@ecine/contracts';
 import { VerifyEmailBanner } from '@/components/features/account/account-settings';
 import { LogoutButton } from '@/components/features/account/logout-button';
-import { PreferencesPanel } from '@/components/features/account/preferences-panel';
 import { ContinueWatching } from '@/components/features/content/continue-watching';
-import { FilmTile, TileGrid } from '@/components/features/content/film-tile';
-import { EmptyState } from '@/components/ui/empty-state';
-import { Icon } from '@/components/ui/icon';
+import { FilmTile } from '@/components/features/content/film-tile';
+import { CookiePreferencesRow } from '@/components/layout/cookie-banner';
+import { LargeTitle } from '@/components/layout/header-title';
+import { InstallAppRow } from '@/components/pwa/install-prompt';
 import { LinkButton } from '@/components/ui/link-button';
+import { LIST_GROUP, ListLink } from '@/components/ui/list-row';
+import { Row } from '@/components/ui/row';
+import { initials } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { getBookmarks, getContinueWatching, getViewer } from '@/server/data';
-import { LargeTitle } from '@/components/layout/header-title';
-import { InstallAppButton } from '@/components/pwa/install-prompt';
 
 export const metadata: Metadata = { title: 'Mon espace' };
 
+const SECTION_TITLE = 'mb-3 text-xl leading-[25px] lg:text-2xl lg:leading-[30px]';
+
+/**
+ * Moi (docs/design/04, Moi) : l'espace de la personne et le seul endroit des réglages, utile même
+ * sans compte. Membre : avatar à initiales, rangées Reprendre et Ma liste, puis la liste des entrées
+ * (lignes de 52 px). Visiteur : un seul bouton principal, Se connecter.
+ */
 export default async function MePage({ params }: PageProps<'/[locale]/moi'>) {
   const { locale: raw } = await params;
   const locale = raw as Locale;
@@ -28,97 +36,110 @@ export default async function MePage({ params }: PageProps<'/[locale]/moi'>) {
     getViewer(),
   ]);
 
+  const menu = (member: { isTeam: boolean } | null) => (
+    <nav aria-label={t('menu')} className="mt-10 flex flex-col gap-6 lg:max-w-2xl">
+      <ul className={LIST_GROUP}>
+        <ListLink href={routes.settings(locale)} icon="settings" label={t('settings')} />
+        {member ? (
+          <ListLink
+            href={`${routes.settings(locale)}#compte`}
+            icon="user"
+            label={t('accountSecurity')}
+          />
+        ) : null}
+        <InstallAppRow />
+      </ul>
+      <ul className={LIST_GROUP}>
+        <ListLink href={routes.contact(locale)} icon="mail" label={t('help')} />
+        <ListLink href={routes.about(locale)} icon="film" label={tn('about')} />
+        <ListLink href={routes.legal(locale)} icon="document" label={t('legal')} />
+        <CookiePreferencesRow />
+      </ul>
+      {member ? (
+        <ul className={LIST_GROUP}>
+          {member.isTeam ? <ListLink href="/admin" icon="dashboard" label={tn('admin')} /> : null}
+          <li>
+            <LogoutButton variant="row" />
+          </li>
+        </ul>
+      ) : null}
+    </nav>
+  );
+
   if (!viewer) {
     return (
       <>
-        <LargeTitle>{t('guestTitle')}</LargeTitle>
-        <p className="mt-4 max-w-xl text-lg text-muted">{t('guestBody')}</p>
-        <div className="mt-8 flex flex-wrap items-center gap-4">
-          <LinkButton
-            href={`${routes.login(locale)}?retour=${encodeURIComponent(routes.me(locale))}`}
-            variant="primary"
-            size="lg"
-          >
-            {ta('login')}
-          </LinkButton>
-          <Link
-            href={routes.register(locale)}
-            className="inline-flex min-h-11 items-center underline underline-offset-4"
-          >
-            {ta('register')}
-          </Link>
-        </div>
-        <section className="mt-16 max-w-xl">
-          <h2 className="mb-4 font-serif text-2xl">{t('settings')}</h2>
-          <PreferencesPanel />
-        </section>
-        <div className="mt-10">
-          <InstallAppButton />
-        </div>
+        <header className="flex flex-col gap-3">
+          <LargeTitle>{t('guestTitle')}</LargeTitle>
+          <p className="max-w-xl text-[15px] leading-5 text-muted md:text-[17px] md:leading-[22px]">
+            {t('guestBody')}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <LinkButton
+              href={`${routes.login(locale)}?retour=${encodeURIComponent(routes.me(locale))}`}
+              variant="primary"
+              size="lg"
+            >
+              {ta('login')}
+            </LinkButton>
+            <Link
+              href={routes.register(locale)}
+              className="inline-flex min-h-11 items-center text-[17px] font-semibold underline-offset-4 hover:underline"
+            >
+              {ta('register')}
+            </Link>
+          </div>
+        </header>
+        {menu(null)}
       </>
     );
   }
 
   const [continueWatching, bookmarks] = await Promise.all([getContinueWatching(), getBookmarks()]);
   const isTeam = viewer.role !== 'MEMBER' && viewer.role !== 'CREATOR';
+  const firstName = viewer.displayName.split(/\s+/)[0] ?? viewer.displayName;
   return (
     <>
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <LargeTitle>{ta('welcome', { name: viewer.displayName })}</LargeTitle>
-        <Link
-          href={routes.settings(locale)}
-          className="inline-flex min-h-11 items-center gap-2 underline-offset-4 hover:underline"
+      <header className="flex items-center gap-4">
+        <span
+          aria-hidden="true"
+          className="grid size-16 shrink-0 place-items-center rounded-full bg-surface-3 text-xl font-semibold text-text lg:size-20 lg:text-2xl"
         >
-          <Icon name="settings" size={20} />
-          {t('settings')}
-        </Link>
+          {initials(viewer.displayName)}
+        </span>
+        <LargeTitle>{t('hello', { name: firstName })}</LargeTitle>
       </header>
       {!viewer.emailVerified ? (
         <div className="mt-6">
           <VerifyEmailBanner />
         </div>
       ) : null}
-      <div className="mt-10">
-        <ContinueWatching items={continueWatching} locale={locale} />
-      </div>
-      <section aria-labelledby="ma-liste" className="mt-6">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 id="ma-liste" className="font-serif text-3xl">
+      {continueWatching.length > 0 ? (
+        <div className="bleed mt-8">
+          <ContinueWatching items={continueWatching} locale={locale} />
+        </div>
+      ) : null}
+      {bookmarks.items.length > 0 ? (
+        <div className="bleed mt-8">
+          <Row
+            id="ma-liste"
+            title={t('myList')}
+            seeAll={{ href: routes.myList(locale), label: `${tc('seeAll')} : ${t('myList')}` }}
+          >
+            {bookmarks.items.slice(0, 12).map((film) => (
+              <FilmTile key={film.id} film={film} locale={locale} layout="row" />
+            ))}
+          </Row>
+        </div>
+      ) : (
+        <section aria-labelledby="ma-liste" className="mt-8">
+          <h2 id="ma-liste" className={SECTION_TITLE}>
             {t('myList')}
           </h2>
-          {bookmarks.items.length > 0 ? (
-            <Link href={routes.myList(locale)} className="meta hover:text-text">
-              {tc('seeAll')}
-            </Link>
-          ) : null}
-        </div>
-        {bookmarks.items.length === 0 ? (
-          <EmptyState title={t('myListEmpty')} />
-        ) : (
-          <TileGrid>
-            {bookmarks.items.slice(0, 10).map((film) => (
-              <FilmTile key={film.id} film={film} locale={locale} />
-            ))}
-          </TileGrid>
-        )}
-      </section>
-      {isTeam ? (
-        <p className="mt-12">
-          <Link
-            href="/admin"
-            className="inline-flex min-h-11 items-center gap-2 underline underline-offset-4"
-          >
-            <Icon name="settings" size={20} />
-            {tn('admin')}
-          </Link>
-        </p>
-      ) : null}
-      <div className="mt-12">
-        <InstallAppButton />
-      </div>
-      <div className="mt-16 border-t border-border pt-8">
-        <LogoutButton />
-      </div>
+          <p className="max-w-xl text-[15px] leading-5 text-muted">{t('myListEmpty')}</p>
+        </section>
+      )}
+      {menu({ isTeam })}
     </>
   );
 }

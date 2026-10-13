@@ -1,50 +1,61 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import type { FilmSummary, Locale } from '@ecine/contracts';
-import { filmMeta } from '@/lib/format';
+import { Badge } from '@/components/ui/badge';
+import { POSTER_SIZES, PosterTile } from '@/components/ui/tiles';
+import { filmBadges, type FilmBadge } from '@/lib/film-badges';
 import { routes } from '@/lib/routes';
-import { Poster } from './poster';
 
-/** Tuile film : affiche 2:3, titre en serif, métadonnées en mono. Toute la tuile est un lien. */
+/** Largeur d'une affiche dans la grille (3 colonnes mobile, 4 tablette, 6 puis 7 sur PC). */
+export const GRID_SIZES =
+  '(min-width: 1312px) 15vw, (min-width: 1056px) 17vw, (min-width: 672px) 24vw, 32vw';
+
+const BADGE_TONES = { soon: 'accent', new: 'signal', short: 'neutral' } as const;
+
+/**
+ * Tuile film v2 (charte, Tuile affiche) : affiche 2:3, titre sur 2 lignes dessous, badges en haut à
+ * gauche. Toute la tuile est le lien. En rangée, largeur fixe (`.tile-size`) ; en grille, pleine
+ * largeur de la colonne.
+ */
 export async function FilmTile({
   film,
   locale,
-  sizes = '(min-width: 1056px) 20vw, (min-width: 672px) 30vw, 46vw',
+  layout = 'grid',
   eager = false,
 }: {
   film: FilmSummary;
   locale: Locale;
-  sizes?: string;
+  layout?: 'grid' | 'row';
   /** Première rangée visible : chargement prioritaire (LCP). */
   eager?: boolean;
 }) {
-  const t = await getTranslations('kinds');
+  const t = await getTranslations('tiles');
+  const badges = filmBadges(film, new Date());
   return (
-    <Link
-      transitionTypes={['push']}
+    <PosterTile
       href={routes.film(locale, film.slug)}
-      className="group block focus-visible:outline-offset-4"
-    >
-      <Poster
-        image={film.poster}
-        sizes={sizes}
-        preload={eager}
-        className="border border-transparent group-hover:border-border-strong"
-      />
-      <p className="eyebrow mt-3 text-signal-text">{t(film.kind)}</p>
-      <h3 className="mt-1 font-serif text-lg leading-tight underline-offset-4 group-hover:underline">
-        {film.title}
-      </h3>
-      <p className="meta mt-1">{filmMeta(film.year, film.runtimeSec)}</p>
-    </Link>
+      title={film.title}
+      image={film.poster}
+      preload={eager}
+      sizes={layout === 'grid' ? GRID_SIZES : POSTER_SIZES}
+      width={layout === 'grid' ? 'w-full' : undefined}
+      badge={
+        badges.length > 0
+          ? badges.map((badge: FilmBadge) => (
+              <Badge key={badge} tone={BADGE_TONES[badge]}>
+                {t(badge)}
+              </Badge>
+            ))
+          : undefined
+      }
+    />
   );
 }
 
-/** Grille éditoriale de tuiles (2 colonnes mobile, 3 tablette, 4–5 PC). */
+/** Grille de tuiles des catalogues : 3 colonnes mobile, 4 tablette, 6 puis 7 sur PC. */
 export function TileGrid({ children }: { children: ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid grid-cols-3 gap-x-2 gap-y-5 md:grid-cols-4 md:gap-x-3 lg:grid-cols-6 lg:gap-x-4 lg:gap-y-7 xl:grid-cols-7">
       {children}
     </div>
   );

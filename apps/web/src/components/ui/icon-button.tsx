@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react';
+import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes } from 'react';
 import { Icon, type IconName } from './icon';
 
 type Tone = 'plain' | 'surface' | 'on-image';
@@ -75,3 +75,27 @@ export const IconButton = forwardRef<
     </button>
   );
 });
+
+/** Lien en forme de bouton d'action (rond de 44, libellé visible dessous), ex. bande-annonce externe. */
+export function ActionLink({
+  icon,
+  label,
+  className = '',
+  children,
+  ...rest
+}: AnchorHTMLAttributes<HTMLAnchorElement> & { icon: IconName; label: string }) {
+  return (
+    <a
+      className={`group inline-flex min-w-16 flex-col items-center gap-1 text-[13px] leading-[18px] text-muted ${className}`}
+      {...rest}
+    >
+      <span
+        className={`press-icon grid size-11 shrink-0 place-items-center rounded-full ${TONES.surface.surface} ${TONES.surface.ink}`}
+      >
+        <Icon name={icon} />
+      </span>
+      <span>{label}</span>
+      {children}
+    </a>
+  );
+}

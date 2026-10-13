@@ -28,7 +28,9 @@ export async function DiscoverFeed({ locale }: { locale: Locale }) {
         </h1>
         <p className="max-w-sm text-muted md:text-right">{t('intro')}</p>
       </header>
-      <ContinueWatching items={continueWatching} locale={locale} />
+      <div className="bleed mb-10">
+        <ContinueWatching items={continueWatching} locale={locale} />
+      </div>
       <FeedList
         locale={locale}
         initialItems={feed.items}

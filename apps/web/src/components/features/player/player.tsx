@@ -60,6 +60,25 @@ function readLocalPosition(filmId: string): number {
 }
 
 /**
+ * Position de reprise : celle du serveur pour un membre, celle de l'appareil pour un visiteur (FR-004).
+ * `null` quand il n'y a rien à reprendre (moins de 10 s, ou film presque fini). 0 au rendu serveur.
+ */
+export function useResumePosition(
+  filmId: string,
+  serverPosition: number | null,
+  runtimeSec: number | null,
+): number | null {
+  const { viewer } = useAuth();
+  const localPosition = useSyncExternalStore(
+    subscribeStorage,
+    () => readLocalPosition(filmId),
+    () => 0,
+  );
+  const position = serverPosition ?? (viewer ? 0 : localPosition);
+  return position > 10 && (!runtimeSec || position < runtimeSec * 0.95) ? position : null;
+}
+
+/**
  * Lecteur du film : l'écran porte un seul CTA (« Regarder » / « Reprendre »). La vidéo n'est jamais
  * téléchargeable par lien direct (HLS chiffré + jetons) ; les réglages de l'interface ci-dessous
  * (`nodownload`, menu contextuel désactivé) relèvent du confort, pas de la sécurité.
@@ -137,15 +156,9 @@ export function Player({
     setSlowNetwork(false);
   };
   useEffect(() => () => bufferingTimers.current.forEach((id) => window.clearTimeout(id)), []);
-  // Visiteur anonyme : position mémorisée localement (FR-004) ; 0 au rendu serveur (pas d'écart d'hydratation).
-  const localPosition = useSyncExternalStore(
-    subscribeStorage,
-    () => readLocalPosition(filmId),
-    () => 0,
-  );
-  const resumeAt = serverPosition ?? (viewer ? 0 : localPosition);
-
-  const canResume = resumeAt > 10 && (!runtimeSec || resumeAt < runtimeSec * 0.95);
+  const resumePosition = useResumePosition(filmId, serverPosition, runtimeSec);
+  const canResume = resumePosition !== null;
+  const resumeAt = resumePosition ?? 0;
 
   const persist = useCallback(
     (position: number, force = false) => {

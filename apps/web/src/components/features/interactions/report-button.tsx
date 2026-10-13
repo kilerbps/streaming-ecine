@@ -16,9 +16,12 @@ import { reportAction } from '@/server/actions/interactions';
 export function ReportButton({
   targetType,
   targetId,
+  withLabel = false,
 }: {
   targetType: ReportInput['targetType'];
   targetId: string;
+  /** Libellé visible à côté du drapeau (section Détails d'une fiche). */
+  withLabel?: boolean;
 }) {
   const t = useTranslations('actions');
   const { requireAuth, sessionExpired } = useAuth();
@@ -57,10 +60,11 @@ export function ReportButton({
       <button
         type="button"
         onClick={() => requireAuth(() => setOpen(true), 'report')}
-        className="inline-flex min-h-11 items-center gap-2 px-2 text-muted hover:bg-surface-2 hover:text-text"
-        aria-label={t('report')}
+        className="inline-flex min-h-11 items-center gap-2 rounded-full px-2 text-muted hover:bg-surface-2 hover:text-text"
+        aria-label={withLabel ? undefined : t('report')}
       >
-        <Icon name="flag" />
+        <Icon name="flag" size={withLabel ? 20 : 24} />
+        {withLabel ? <span className="text-[15px]">{t('report')}</span> : null}
       </button>
       <Sheet open={open} onOpenChange={setOpen} title={t('reportTitle')}>
         <form

@@ -7,11 +7,9 @@ import { ProgressBar } from './progress-bar';
 /** Tailles d'affiche en rangée (112 / 148 / 184 px, voir `.tile-size`). */
 export const POSTER_SIZES = '(min-width: 1056px) 184px, (min-width: 672px) 148px, 112px';
 
+/** Image de la tuile : couleur dominante, aperçu flou et cadrage viennent de l'image elle-même. */
 interface TileImage {
   image: ImageData | null;
-  color?: string | null;
-  blurDataUrl?: string | null;
-  focal?: string | null;
 }
 
 /**
@@ -26,6 +24,7 @@ export function PosterTile({
   progress,
   progressLabel,
   showTitle = true,
+  meta,
   sizes = POSTER_SIZES,
   preload,
   width = 'w-[var(--tile-w)]',
@@ -33,6 +32,8 @@ export function PosterTile({
 }: TileImage & {
   href: string;
   title: string;
+  /** Ligne secondaire sous le titre (ex. rôle dans une filmographie). */
+  meta?: string;
   /** Libellé complet pour les lecteurs d'écran (ex. rang du Top 10). */
   ariaLabel?: string;
   badge?: ReactNode;
@@ -71,6 +72,7 @@ export function PosterTile({
       {showTitle ? (
         <p className="mt-2 line-clamp-2 text-[13px] leading-[18px] text-text">{title}</p>
       ) : null}
+      {meta ? <p className="line-clamp-1 text-xs leading-4 text-subtle">{meta}</p> : null}
     </Link>
   );
 }
@@ -166,12 +168,14 @@ export function Portrait({
       href={href}
       className="press group flex w-[88px] shrink-0 snap-start flex-col items-center text-center lg:w-[112px]"
     >
-      <MediaImage
-        image={image}
-        ratio="1/1"
-        sizes="(min-width: 1056px) 96px, 72px"
-        className="size-[72px] rounded-full lg:size-24"
-      />
+      <div className="w-[72px] lg:w-24">
+        <MediaImage
+          image={image}
+          ratio="1/1"
+          sizes="(min-width: 1056px) 96px, 72px"
+          className="rounded-full"
+        />
+      </div>
       <p className="mt-2 line-clamp-2 text-[13px] leading-[18px] text-text">{name}</p>
       {role ? <p className="line-clamp-1 text-xs leading-4 text-subtle">{role}</p> : null}
     </Link>

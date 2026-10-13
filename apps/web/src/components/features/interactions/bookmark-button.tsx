@@ -6,6 +6,7 @@ import { useAuth } from '@/components/providers/auth';
 import { usePreferences } from '@/components/providers/preferences';
 import { useToast } from '@/components/providers/toast';
 import { Icon } from '@/components/ui/icon';
+import { IconButton } from '@/components/ui/icon-button';
 import { track } from '@/lib/analytics';
 import { setBookmarkAction } from '@/server/actions/interactions';
 
@@ -14,10 +15,13 @@ export function BookmarkButton({
   filmId,
   initial,
   withLabel = false,
+  variant = 'inline',
 }: {
   filmId: string;
   initial: boolean;
   withLabel?: boolean;
+  /** `action` : bouton rond de 44 à libellé visible (rangée d'actions d'une fiche). */
+  variant?: 'inline' | 'action';
 }) {
   const t = useTranslations('actions');
   const { requireAuth, sessionExpired } = useAuth();
@@ -48,6 +52,18 @@ export function BookmarkButton({
   };
 
   const label = saved ? t('unbookmark') : t('bookmark');
+  if (variant === 'action') {
+    return (
+      <IconButton
+        icon="bookmark"
+        label={t('myList')}
+        showLabel
+        tone="surface"
+        pressed={saved}
+        onClick={() => requireAuth(() => toggle(!saved), 'list')}
+      />
+    );
+  }
   return (
     <button
       type="button"

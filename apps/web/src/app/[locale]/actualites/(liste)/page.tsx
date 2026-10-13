@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { articleKindSchema, type Locale } from '@ecine/contracts';
-import { Poster } from '@/components/features/content/poster';
+import { ArticleCard } from '@/components/features/content/article-card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LinkButton } from '@/components/ui/link-button';
-import { formatDate } from '@/lib/format';
+import { PillLink } from '@/components/ui/pill';
 import { routes } from '@/lib/routes';
 import { getArticles } from '@/server/data';
 import { pageMetadata } from '@/server/seo';
@@ -53,70 +52,44 @@ export default async function NewsPage({ params, searchParams }: Props) {
   return (
     <div className="container-page pt-8 md:pt-12">
       <PullToRefresh />
-      <header className="mb-8 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+      <header className="mb-5 flex flex-col gap-2 md:mb-6">
         <LargeTitle>{t('listTitle')}</LargeTitle>
-        <p className="max-w-sm text-muted md:text-right">{t('listIntro')}</p>
+        <p className="max-w-[60ch] text-[15px] leading-5 text-muted md:text-base md:leading-6">
+          {t('listIntro')}
+        </p>
       </header>
-      <nav aria-label="Types d'actualités" className="mb-10 flex flex-wrap gap-2">
-        {filters.map((f) => (
-          <Link
-            key={f.href}
-            href={f.href}
-            aria-current={f.active ? 'page' : undefined}
-            className={`eyebrow inline-flex min-h-11 items-center border px-4 ${f.active ? 'border-accent bg-accent text-on-accent' : 'border-border-strong hover:bg-surface-2'}`}
-          >
-            {f.label}
-          </Link>
-        ))}
+      <nav aria-label={t('kindsNav')} className="-mx-4 mb-6 md:-mx-8 lg:mx-0 lg:mb-8">
+        <ul className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-1 md:px-8 lg:px-0">
+          {filters.map((f) => (
+            <li key={f.href}>
+              <PillLink href={f.href} selected={f.active}>
+                {f.label}
+              </PillLink>
+            </li>
+          ))}
+        </ul>
       </nav>
       {!lead ? (
         <EmptyState title={t('empty')} />
       ) : (
         <>
-          {/* Composition asymétrique : un article principal, puis une liste éditoriale. */}
-          <Link
-            href={routes.article(locale, lead.slug)}
-            className="group grid gap-6 border-b border-border pb-10 md:grid-cols-[7fr_5fr] md:gap-10"
-          >
-            <Poster image={lead.cover} ratio="3/2" sizes="(min-width: 672px) 58vw, 100vw" preload />
-            <div className="flex flex-col justify-end gap-3">
-              <p className="eyebrow text-signal-text">
-                {tk(lead.kind)} · <span className="text-muted">{formatDate(lead.publishedAt)}</span>
-              </p>
-              <h2 className="font-serif text-3xl md:text-4xl group-hover:underline underline-offset-4">
-                {lead.title}
-              </h2>
-              <p className="text-muted">{lead.excerpt}</p>
-            </div>
-          </Link>
-          <ul className="divide-y divide-border">
-            {rest.map((article) => (
-              <li key={article.id}>
-                <Link
-                  href={routes.article(locale, article.slug)}
-                  className="group grid grid-cols-[1fr_96px] gap-4 py-6 md:grid-cols-[160px_1fr_200px] md:gap-8"
-                >
-                  <p className="meta order-last col-span-2 md:order-none md:col-span-1">
-                    {tk(article.kind)}
-                    <br className="hidden md:block" /> {formatDate(article.publishedAt)}
-                  </p>
-                  <div>
-                    <h2 className="font-serif text-2xl group-hover:underline underline-offset-4">
-                      {article.title}
-                    </h2>
-                    <p className="mt-2 line-clamp-2 text-muted">{article.excerpt}</p>
-                  </div>
-                  <Poster image={article.cover} ratio="3/2" sizes="200px" />
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <ArticleCard article={lead} locale={locale} variant="lead" eager />
+          {rest.length > 0 ? (
+            <ul className="mt-8 flex flex-col gap-6 border-t border-border pt-6 md:grid md:grid-cols-2 md:gap-x-4 md:gap-y-8 lg:grid-cols-3 lg:gap-x-6">
+              {rest.map((article) => (
+                <li key={article.id}>
+                  <ArticleCard article={article} locale={locale} />
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </>
       )}
       {page.nextCursor ? (
         <div className="mt-12 flex justify-center">
           <LinkButton
             href={`${base}?${kind ? `type=${kind}&` : ''}apres=${encodeURIComponent(page.nextCursor)}`}
+            variant="secondary"
             rel="next"
           >
             {tc('seeMore')}

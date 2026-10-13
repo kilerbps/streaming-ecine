@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { LIST_ROW, ListRowContent } from '@/components/ui/list-row';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { Logo } from '@/components/ui/logo';
 import { Sheet } from '@/components/ui/sheet';
@@ -128,6 +129,21 @@ export function InstallPrompt() {
 }
 
 /** Ligne « Installer l'application » de l'espace Moi, tant que l'app n'est pas installée. */
+/** Ligne « Installer l'application » de Moi, tant qu'elle n'est pas installée. */
+export function InstallAppRow() {
+  const t = useTranslations('pwa');
+  const { install, start, iosOpen, setIosOpen } = useInstallAction();
+  if (install.installed || !(install.canPrompt || install.ios)) return null;
+  return (
+    <li>
+      <button type="button" className={LIST_ROW} onClick={() => void start()}>
+        <ListRowContent icon="download" label={t('installApp')} />
+      </button>
+      <IosInstallSheet open={iosOpen} onOpenChange={setIosOpen} />
+    </li>
+  );
+}
+
 export function InstallAppButton() {
   const t = useTranslations('pwa');
   const { install, start, iosOpen, setIosOpen } = useInstallAction();

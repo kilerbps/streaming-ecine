@@ -1,14 +1,14 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { FeedItem, Locale } from '@ecine/contracts';
 import { LikeButton } from '@/components/features/interactions/like-button';
-import { Poster } from '@/components/features/content/poster';
 import { Icon } from '@/components/ui/icon';
+import { LinkButton } from '@/components/ui/link-button';
+import { MediaImage } from '@/components/ui/media-image';
 import { Tag } from '@/components/ui/tag';
-import { filmMeta, formatDate } from '@/lib/format';
+import { filmMeta, formatDate, formatDateTime } from '@/lib/format';
 import { routes } from '@/lib/routes';
 
 function Badges({ item }: { item: FeedItem }) {
@@ -31,7 +31,12 @@ function Badges({ item }: { item: FeedItem }) {
   );
 }
 
-/** Film / court-métrage : grande image, titre serif, méta mono ; toute la carte mène au film. */
+/** Titre de carte du fil : Archivo, 28 puis 34 px. */
+const CARD_TITLE =
+  'font-display text-[28px] font-extrabold leading-8 tracking-[-0.01em] text-balance lg:text-[34px] lg:leading-[38px]';
+const CARD_META = 'text-[15px] leading-5 text-muted';
+
+/** Film / court-métrage : image 4:5 rayon 16, titre Archivo, informations, « Voir le film ». */
 export function FilmCard({
   item,
   locale,
@@ -46,45 +51,58 @@ export function FilmCard({
   const href = routes.film(locale, film.slug);
   return (
     <article
-      className="grid gap-5 md:grid-cols-[5fr_7fr] md:gap-8"
+      className="grid gap-4 md:grid-cols-[5fr_7fr] md:items-end md:gap-8"
       aria-labelledby={`t-${item.key}`}
     >
-      <Link href={href} tabIndex={-1} aria-hidden="true" className="block">
-        <Poster
+      <Link
+        transitionTypes={['push']}
+        href={href}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="press group block"
+      >
+        <MediaImage
           image={film.poster}
           ratio="4/5"
-          sizes="(min-width: 1056px) 360px, (min-width: 672px) 40vw, 100vw"
+          sizes="(min-width: 1056px) 400px, (min-width: 672px) 40vw, 100vw"
           preload={eager}
+          className="rounded-lg"
+          imageClassName="transition-transform duration-[var(--dur-base)] ease-[var(--ease-standard)] lg:group-hover:scale-[1.03]"
         />
       </Link>
-      <div className="flex flex-col justify-end gap-3 md:py-2">
+      <div className="flex flex-col gap-3 md:pb-2">
         <div className="flex flex-wrap items-center gap-2">
           <Tag tone={film.kind === 'SHORT' ? 'highlight' : 'neutral'}>
             {t(`kinds.${film.kind}`)}
           </Tag>
           <Badges item={item} />
         </div>
-        {item.surprise ? <p className="text-sm text-muted">{t('feed.surpriseHint')}</p> : null}
-        <h2 id={`t-${item.key}`} className="font-serif text-3xl md:text-4xl">
-          <Link href={href} className="underline-offset-4 hover:underline">
+        {item.surprise ? <p className={CARD_META}>{t('feed.surpriseHint')}</p> : null}
+        <h2 id={`t-${item.key}`} className={CARD_TITLE}>
+          <Link
+            transitionTypes={['push']}
+            href={href}
+            className="underline-offset-4 hover:underline"
+          >
             {film.title}
           </Link>
         </h2>
-        <p className="meta">
+        <p className={CARD_META}>
           {[filmMeta(film.year, film.runtimeSec), ...film.categories.map((c) => c.name)]
             .filter(Boolean)
             .join(' · ')}
         </p>
-        <p className="line-clamp-3 max-w-prose text-muted">{film.synopsis}</p>
-        <div className="mt-1 flex items-center gap-1 -ml-2">
-          <Link
-            href={href}
-            className="inline-flex min-h-11 items-center gap-2 px-2 font-medium text-accent-text hover:underline underline-offset-4"
-          >
-            {t('feed.openFilm')}
-            <Icon name="arrowRight" size={20} />
-          </Link>
-        </div>
+        <p className="line-clamp-3 max-w-prose text-[15px] leading-[22px]">{film.synopsis}</p>
+        <LinkButton
+          transitionTypes={['push']}
+          href={href}
+          icon="play"
+          className="mt-1 self-start"
+          tabIndex={-1}
+          aria-hidden="true"
+        >
+          {t('feed.openFilm')}
+        </LinkButton>
       </div>
     </article>
   );
@@ -107,7 +125,9 @@ export function PostCard({
       <div className="flex flex-wrap items-center gap-2">
         <Tag>{t('kinds.POST')}</Tag>
         <Badges item={item} />
-        <span className="meta">{formatDate(post.publishedAt)}</span>
+        <span className="text-[13px] leading-[18px] text-muted">
+          {formatDate(post.publishedAt)}
+        </span>
       </div>
       <ul
         // Zone défilante atteignable au clavier (flèches) : WCAG 2.1.1.
@@ -116,20 +136,20 @@ export function PostCard({
         aria-label={`${post.images.length} image(s)`}
       >
         {post.images.map((image, index) => (
-          <li key={`${image.src}-${index}`} className="w-[85%] shrink-0 snap-start md:w-[70%]">
-            <div className="relative w-full bg-surface-2" style={{ aspectRatio: '4/5' }}>
-              <Image
-                src={image.src}
-                alt={image.alt}
-                fill
-                sizes="(min-width: 672px) 420px, 85vw"
-                className="object-cover"
-              />
-            </div>
+          <li
+            key={`${image.src}-${index}`}
+            className="w-[85%] shrink-0 snap-start md:w-[44%] lg:w-[36%]"
+          >
+            <MediaImage
+              image={image}
+              ratio="4/5"
+              sizes="(min-width: 1056px) 360px, (min-width: 672px) 44vw, 85vw"
+              className="rounded-lg"
+            />
           </li>
         ))}
       </ul>
-      <p className="max-w-prose whitespace-pre-line">{post.caption}</p>
+      <p className="max-w-prose whitespace-pre-line text-[15px] leading-[22px]">{post.caption}</p>
       <div className="-ml-2 flex items-center">
         <LikeButton
           targetType="POST"
@@ -137,7 +157,10 @@ export function PostCard({
           initialLiked={liked}
           initialCount={post.likeCount}
         />
-        <Link href={routes.post(locale, post.id)} className="meta ml-2 hover:text-text">
+        <Link
+          href={routes.post(locale, post.id)}
+          className="ml-2 inline-flex min-h-11 items-center text-[15px] font-semibold text-muted hover:text-text"
+        >
           {t('common.seeMore')}
         </Link>
       </div>
@@ -158,41 +181,58 @@ export function ArticleCard({
   const href = routes.article(locale, article.slug);
   return (
     <article
-      className="grid gap-5 border-l-2 border-signal pl-4 md:grid-cols-[7fr_5fr] md:gap-8"
+      className="grid gap-4 md:grid-cols-[7fr_5fr] md:items-center md:gap-8"
       aria-labelledby={`t-${item.key}`}
     >
+      {article.cover ? (
+        <Link
+          transitionTypes={['push']}
+          href={href}
+          tabIndex={-1}
+          aria-hidden="true"
+          className="press block md:order-last"
+        >
+          <MediaImage
+            image={article.cover}
+            ratio="16/9"
+            sizes="(min-width: 672px) 400px, 100vw"
+            className="rounded-md"
+          />
+        </Link>
+      ) : null}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Tag tone="highlight">{t(`kinds.${article.kind}`)}</Tag>
+          <Tag tone={article.kind === 'EVENT' ? 'highlight' : 'neutral'}>
+            {t(`kinds.${article.kind}`)}
+          </Tag>
           <Badges item={item} />
-          <span className="meta">{formatDate(article.publishedAt)}</span>
+          <span className="text-[13px] leading-[18px] text-muted">
+            {formatDate(article.publishedAt)}
+          </span>
         </div>
-        <h2 id={`t-${item.key}`} className="font-serif text-2xl md:text-3xl">
-          <Link href={href} className="underline-offset-4 hover:underline">
+        <h2
+          id={`t-${item.key}`}
+          className="font-display text-2xl font-extrabold leading-[30px] tracking-[-0.01em] text-balance"
+        >
+          <Link
+            transitionTypes={['push']}
+            href={href}
+            className="underline-offset-4 hover:underline"
+          >
             {article.title}
           </Link>
         </h2>
         {article.eventStart ? (
-          <p className="meta flex items-center gap-2 text-text">
-            <Icon name="calendar" size={16} />
-            {formatDate(article.eventStart)}
-            {article.eventPlace ? ` · ${article.eventPlace}` : ''}
+          <p className="flex items-center gap-2 text-[15px] leading-5">
+            <Icon name="calendar" size={20} className="text-muted" />
+            {formatDateTime(article.eventStart)}
+            {article.eventPlace ? `, ${article.eventPlace}` : ''}
           </p>
         ) : null}
-        <p className="line-clamp-3 max-w-prose text-muted">{article.excerpt}</p>
-        <Link
-          href={href}
-          className="inline-flex min-h-11 items-center gap-2 self-start font-medium text-accent-text hover:underline underline-offset-4"
-        >
-          {t('feed.readArticle')}
-          <Icon name="arrowRight" size={20} />
-        </Link>
+        <p className="line-clamp-3 max-w-prose text-[15px] leading-[22px] text-muted">
+          {article.excerpt}
+        </p>
       </div>
-      {article.cover ? (
-        <Link href={href} tabIndex={-1} aria-hidden="true">
-          <Poster image={article.cover} ratio="3/2" sizes="(min-width: 672px) 320px, 100vw" />
-        </Link>
-      ) : null}
     </article>
   );
 }

@@ -24,7 +24,7 @@ export default async function MyListPage({
   const page = await getBookmarks(typeof cursor === 'string' ? cursor : undefined);
   return (
     <>
-      <LargeTitle className="mb-10">{t('myList')}</LargeTitle>
+      <LargeTitle className="mb-6 md:mb-8">{t('myList')}</LargeTitle>
       {page.items.length === 0 ? (
         <EmptyState title={t('myListEmpty')} />
       ) : (

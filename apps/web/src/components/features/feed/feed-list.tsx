@@ -140,7 +140,7 @@ export function FeedList({
           // Cartes hors écran ignorées par la mise en page (défilement, ouverture d'une feuille).
           <li
             key={item.key}
-            className="border-b border-border py-10 [contain-intrinsic-size:auto_640px] [content-visibility:auto] first:pt-2 md:py-14"
+            className="py-8 [contain-intrinsic-size:auto_640px] [content-visibility:auto] first:pt-2 md:py-12"
           >
             {item.type === 'film' ? (
               <FilmCard item={item} locale={locale} eager={index === 0} />
@@ -159,9 +159,9 @@ export function FeedList({
         </div>
       ) : null}
       {cursor && !autoAllowed && !loading ? (
-        <section className="my-12 border border-border p-6 text-center">
-          <h2 className="font-serif text-2xl">{t('pauseTitle')}</h2>
-          <p className="mx-auto mt-2 max-w-md text-muted">{t('pauseBody')}</p>
+        <section className="my-12 rounded-lg bg-surface-1 p-6 text-center">
+          <h2 className="text-xl leading-[25px]">{t('pauseTitle')}</h2>
+          <p className="mx-auto mt-2 max-w-md text-[15px] leading-5 text-muted">{t('pauseBody')}</p>
           <Button
             className="mt-5"
             variant="secondary"

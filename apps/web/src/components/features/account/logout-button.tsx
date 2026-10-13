@@ -7,6 +7,7 @@ import { useAuth } from '@/components/providers/auth';
 import { usePreferences } from '@/components/providers/preferences';
 import { useToast } from '@/components/providers/toast';
 import { Button } from '@/components/ui/button';
+import { LIST_ROW, ListRowContent } from '@/components/ui/list-row';
 import { routes } from '@/lib/routes';
 import { logoutAction } from '@/server/actions/auth';
 
@@ -32,30 +33,32 @@ async function purgePrivateData(): Promise<void> {
 }
 
 /** Déconnexion en un geste : session révoquée côté serveur, données privées effacées localement. */
-export function LogoutButton() {
+export function LogoutButton({ variant = 'button' }: { variant?: 'button' | 'row' }) {
   const t = useTranslations('auth');
   const router = useRouter();
   const toast = useToast();
   const { setViewer } = useAuth();
   const { feedback } = usePreferences();
   const [pending, startTransition] = useTransition();
+  const logout = () =>
+    startTransition(async () => {
+      await logoutAction();
+      await purgePrivateData();
+      setViewer(null);
+      feedback('success');
+      toast(t('loggedOut'), 'success');
+      router.replace(routes.home('fr'));
+      router.refresh();
+    });
+  if (variant === 'row') {
+    return (
+      <button type="button" className={LIST_ROW} disabled={pending} onClick={logout}>
+        <ListRowContent icon="logout" label={t('logout')} chevron={false} />
+      </button>
+    );
+  }
   return (
-    <Button
-      variant="ghost"
-      icon="logout"
-      pending={pending}
-      onClick={() =>
-        startTransition(async () => {
-          await logoutAction();
-          await purgePrivateData();
-          setViewer(null);
-          feedback('success');
-          toast(t('loggedOut'), 'success');
-          router.replace(routes.home('fr'));
-          router.refresh();
-        })
-      }
-    >
+    <Button variant="ghost" icon="logout" pending={pending} onClick={logout}>
       {t('logout')}
     </Button>
   );

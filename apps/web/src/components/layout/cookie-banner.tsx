@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState, useTransition } from 'react';
 import type { ConsentCategories } from '@ecine/contracts';
 import { Button } from '@/components/ui/button';
+import { LIST_ROW, ListRowContent } from '@/components/ui/list-row';
 import { Sheet } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { routes } from '@/lib/routes';
@@ -143,5 +144,21 @@ export function CookiePreferencesLink() {
     >
       {t('manage')}
     </button>
+  );
+}
+
+/** Ligne « Gérer les cookies » de Moi : rouvre le panneau de choix. */
+export function CookiePreferencesRow() {
+  const t = useTranslations('cookies');
+  return (
+    <li>
+      <button
+        type="button"
+        className={LIST_ROW}
+        onClick={() => window.dispatchEvent(new Event(REOPEN_EVENT))}
+      >
+        <ListRowContent icon="shield" label={t('manage')} />
+      </button>
+    </li>
   );
 }

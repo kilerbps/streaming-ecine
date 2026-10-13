@@ -28,7 +28,7 @@ export function Row({
       aria-labelledby={headingId}
       className={`tile-size ${deferred ? '[content-visibility:auto] [contain-intrinsic-size:auto_260px]' : ''}`}
     >
-      <div className="flex items-center justify-between gap-4 px-4 md:px-8 lg:px-12">
+      <div className="flex items-center justify-between gap-4 px-4 md:px-8 lg:px-12 xl:px-16">
         <h2 id={headingId} className="text-xl leading-[25px] lg:text-2xl lg:leading-[30px]">
           {title}
         </h2>
@@ -43,7 +43,7 @@ export function Row({
           </Link>
         ) : null}
       </div>
-      <div className="no-scrollbar mt-3 flex snap-x snap-proximity scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 md:scroll-px-8 md:px-8 lg:scroll-px-12 lg:px-12">
+      <div className="no-scrollbar mt-3 flex snap-x snap-proximity scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 md:scroll-px-8 md:px-8 lg:scroll-px-12 lg:px-12 xl:scroll-px-16 xl:px-16">
         {children}
       </div>
     </section>
