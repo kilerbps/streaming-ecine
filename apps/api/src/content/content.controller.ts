@@ -6,7 +6,7 @@ import {
   articleDetailSchema,
   articleListQuerySchema,
   articleSummarySchema,
-  categorySchema,
+  categoryOverviewSchema,
   cursorQuerySchema,
   feedPageSchema,
   feedQuerySchema,
@@ -26,7 +26,7 @@ import {
   teamMemberSchema,
   type ArticleDetail,
   type ArticleSummary,
-  type Category,
+  type CategoryOverview,
   type FeedPage,
   type FilmDetail,
   type FilmSummary,
@@ -114,11 +114,11 @@ export class ContentController {
   }
 
   @Get('categories')
-  @Returns(z.array(categorySchema))
+  @Returns(z.array(categoryOverviewSchema))
   categories(
     @RequestLocale() locale: string,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<Category[]> {
+  ): Promise<CategoryOverview[]> {
     publicCache(res, 300);
     return this.films.categories(locale);
   }

@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import type { Category, FilmDetail, FilmListQuery, FilmSummary, Page } from '@ecine/contracts';
+import type {
+  CategoryOverview,
+  FilmDetail,
+  FilmListQuery,
+  FilmSummary,
+  Page,
+} from '@ecine/contracts';
 import { z } from 'zod';
 import { decodeCursor, encodeCursor } from '../common/cursor.js';
 import { ProblemException } from '../common/problem.js';
@@ -136,16 +142,30 @@ export class FilmsService {
     return { ...base, likeCount };
   }
 
-  categories(locale: string): Promise<Category[]> {
-    return this.cache.wrap('categories', locale, 600, async () => {
+  /** Catégories ayant au moins un titre visible, avec leur nombre de titres et une affiche. */
+  categories(locale: string): Promise<CategoryOverview[]> {
+    // Clé « overview » : l'ancienne forme en cache ({ slug, name }) ne doit pas être relue.
+    return this.cache.wrap('categories', `overview:${locale}`, 600, async () => {
+      const visible = { film: visibleWhere() };
       const categories = await this.prisma.category.findMany({
-        where: { films: { some: { film: visibleWhere() } } },
-        include: { translations: { where: { locale: { in: localesFor(locale) } } } },
+        where: { films: { some: visible } },
+        include: {
+          translations: { where: { locale: { in: localesFor(locale) } } },
+          _count: { select: { films: { where: visible } } },
+          films: {
+            where: { film: { ...visibleWhere(), posterId: { not: null } } },
+            orderBy: { film: { publishAt: 'desc' } },
+            take: 1,
+            select: { film: { select: { poster: true } } },
+          },
+        },
         orderBy: { slug: 'asc' },
       });
       return categories.map((c) => ({
         slug: c.slug,
         name: pickTranslation(c.translations, locale)?.name ?? c.slug,
+        filmCount: c._count.films,
+        cover: this.media.image(c.films[0]?.film.poster),
       }));
     });
   }

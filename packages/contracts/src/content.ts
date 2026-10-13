@@ -30,6 +30,13 @@ export const filmLanguageSchema = z.enum(FILM_LANGUAGES);
 export type FilmLanguage = z.infer<typeof filmLanguageSchema>;
 export type Category = z.infer<typeof categorySchema>;
 
+/** Catégorie pour l'exploration (recherche) : nombre de titres visibles et affiche du plus récent. */
+export const categoryOverviewSchema = categorySchema.extend({
+  filmCount: z.number().int().nonnegative(),
+  cover: imageSchema.nullable(),
+});
+export type CategoryOverview = z.infer<typeof categoryOverviewSchema>;
+
 /** Tuile film (listes, feed, recherche) : objet allégé. */
 export const filmSummarySchema = z.object({
   id: z.string(),
