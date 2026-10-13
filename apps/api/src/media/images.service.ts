@@ -66,6 +66,8 @@ export class ImagesService {
           height: processed.height,
           alt: decorative ? null : alt,
           decorative,
+          dominantColor: processed.preview.dominantColor,
+          blurDataUrl: processed.preview.blurDataUrl,
         },
       });
     } catch (err) {

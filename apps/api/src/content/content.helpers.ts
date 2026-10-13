@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { DEFAULT_LOCALE, type Image } from '@ecine/contracts';
+import { DEFAULT_LOCALE, imageCropsSchema, type Image } from '@ecine/contracts';
 import { ENV, type Env } from '../config/env.js';
 import type { Media } from '../generated/prisma/client.js';
 
@@ -28,26 +28,35 @@ export function localesFor(locale: string): string[] {
   return locale === DEFAULT_LOCALE ? [DEFAULT_LOCALE] : [locale, DEFAULT_LOCALE];
 }
 
+type ImageMedia = Pick<Media, 'id' | 'alt' | 'width' | 'height' | 'decorative'> &
+  Partial<Pick<Media, 'dominantColor' | 'blurDataUrl' | 'focalX' | 'focalY' | 'crops'>>;
+
 /** Construction des URLs publiques d'images (jamais la clé de stockage). */
 @Injectable()
 export class MediaUrls {
   constructor(@Inject(ENV) private readonly env: Env) {}
 
-  image(
-    media: Pick<Media, 'id' | 'alt' | 'width' | 'height' | 'decorative'> | null | undefined,
-  ): Image | null {
+  /**
+   * Image publique avec ce qui s'affiche avant elle (couleur dominante, aperçu flou) et son cadrage
+   * (point focal, recadrages par ratio) ; ces champs manquent pour une image pas encore enrichie.
+   */
+  image(media: ImageMedia | null | undefined): Image | null {
     if (!media || !media.width || !media.height) return null;
+    const crops = imageCropsSchema.safeParse(media.crops);
     return {
       src: `${this.env.MEDIA_PUBLIC_URL}/images/${media.id}`,
       alt: media.decorative ? '' : (media.alt ?? ''),
       width: media.width,
       height: media.height,
+      color: media.dominantColor ?? null,
+      blur: media.blurDataUrl ?? null,
+      focal:
+        media.focalX != null && media.focalY != null ? { x: media.focalX, y: media.focalY } : null,
+      crops: media.crops != null && crops.success ? crops.data : null,
     };
   }
 
-  imageWithId(
-    media: Pick<Media, 'id' | 'alt' | 'width' | 'height' | 'decorative'> | null | undefined,
-  ): (Image & { id: string }) | null {
+  imageWithId(media: ImageMedia | null | undefined): (Image & { id: string }) | null {
     const image = this.image(media);
     return image && media ? { ...image, id: media.id } : null;
   }

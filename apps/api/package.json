@@ -19,6 +19,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:seed": "node --enable-source-maps dist/seed/seed.js",
     "db:seed:video": "node --enable-source-maps dist/seed/demo-video.js",
+    "images:backfill": "node --enable-source-maps dist/maintenance/backfill-image-previews.js",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

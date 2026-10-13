@@ -9,9 +9,8 @@ export interface FeaturedItem {
   title: string;
   /** Titre dessiné (PNG ou SVG transparent) : remplace le titre en Archivo s'il existe. */
   titleImage?: ImageData | null;
+  /** Image 16:9 ; sur mobile, son recadrage 4:5 (ou son point focal) en est tiré. */
   image: ImageData | null;
-  color?: string | null;
-  focal?: string | null;
   /** Métadonnées (genre, langue, durée), espacées et jamais enchaînées par des points médians. */
   meta?: string[];
   /** Boutons : un seul principal (Regarder) et un secondaire (Ma liste). */
@@ -109,9 +108,8 @@ export function Featured({ items, labels }: { items: FeaturedItem[]; labels: Fea
             <div className="relative overflow-hidden rounded-lg lg:rounded-none">
               <MediaImage
                 image={item.image}
-                color={item.color}
-                focal={item.focal}
                 ratio={null}
+                crop={{ base: '4:5', lg: '16:9' }}
                 sizes="(min-width: 1056px) 100vw, calc(100vw - 32px)"
                 preload={index === 0}
                 className="aspect-[4/5] lg:aspect-video lg:max-h-[80dvh]"

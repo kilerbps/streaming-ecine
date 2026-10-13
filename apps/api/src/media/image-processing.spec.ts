@@ -4,7 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { IMAGE_WIDTHS } from '@ecine/contracts';
-import { allowedFormat, processImage, UnsupportedImageError } from './image-processing.js';
+import {
+  allowedFormat,
+  computePreview,
+  processImage,
+  UnsupportedImageError,
+} from './image-processing.js';
 
 const solid = (width: number, height: number) =>
   sharp({ create: { width, height, channels: 3, background: { r: 228, g: 87, b: 46 } } });
@@ -43,6 +48,27 @@ describe('processImage', () => {
     expect(meta.height).toBe(400);
     expect(meta.exif).toBeUndefined();
     expect(meta.orientation).toBeUndefined();
+  });
+
+  it('calcule la couleur dominante et un aperçu flou de moins de 500 octets', async () => {
+    const result = await processImage(await solid(800, 600).png().toBuffer(), join(dir, 'cimg3'));
+    expect(result.preview.dominantColor).toMatch(/^#[0-9a-f]{6}$/);
+    // Aplat orangé (228, 87, 46) : la couleur dominante en reste proche.
+    const [r, g, b] = [1, 3, 5].map((i) =>
+      parseInt(result.preview.dominantColor.slice(i, i + 2), 16),
+    );
+    expect(Math.abs(r! - 228) + Math.abs(g! - 87) + Math.abs(b! - 46)).toBeLessThan(40);
+    expect(result.preview.blurDataUrl.startsWith('data:image/webp;base64,')).toBe(true);
+    const blur = Buffer.from(result.preview.blurDataUrl.split(',')[1]!, 'base64');
+    expect(blur.length).toBeLessThan(500);
+    expect((await sharp(blur).metadata()).width).toBe(16);
+  });
+
+  it('calcule aussi l’aperçu depuis une variante déjà produite (rattrapage)', async () => {
+    const out = join(dir, 'cimg4');
+    await processImage(await solid(400, 600).png().toBuffer(), out);
+    const preview = await computePreview(join(out, 'w320.webp'));
+    expect(preview.dominantColor).toMatch(/^#[0-9a-f]{6}$/);
   });
 
   it('refuse SVG, GIF et fichiers qui ne sont pas des images, sans rien écrire', async () => {

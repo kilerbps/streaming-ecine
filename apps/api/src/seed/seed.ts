@@ -90,8 +90,16 @@ class Seeder {
         width: processed.width,
         height: processed.height,
         alt,
+        dominantColor: processed.preview.dominantColor,
+        blurDataUrl: processed.preview.blurDataUrl,
       },
-      update: { bytes: processed.bytes, width: processed.width, height: processed.height },
+      update: {
+        bytes: processed.bytes,
+        width: processed.width,
+        height: processed.height,
+        dominantColor: processed.preview.dominantColor,
+        blurDataUrl: processed.preview.blurDataUrl,
+      },
     });
     return id;
   }

@@ -76,11 +76,48 @@ export type PublishState = z.infer<typeof publishStateSchema>;
  * Largeurs disponibles : IMAGE_WIDTHS.
  */
 export const IMAGE_WIDTHS = [320, 640, 960, 1280, 1920] as const;
+/**
+ * Formats d'image de la refonte (docs/design/05-admin.md, Images et vidéos) : affiche 2:3, fiche mobile
+ * et portrait 4:5, couverture et PC 16:9, crédits 1:1, Découvrir 9:16.
+ */
+export const IMAGE_RATIOS = ['2:3', '4:5', '16:9', '1:1', '9:16'] as const;
+export type ImageRatio = (typeof IMAGE_RATIOS)[number];
+
+const fraction = z.number().min(0).max(1);
+
+/** Recadrage, en fractions de l'image d'origine (jamais réécrite). */
+export const cropRectSchema = z.strictObject({
+  x: fraction,
+  y: fraction,
+  w: fraction.positive(),
+  h: fraction.positive(),
+});
+export type CropRect = z.infer<typeof cropRectSchema>;
+
+export const imageCropsSchema = z.partialRecord(z.enum(IMAGE_RATIOS), cropRectSchema);
+export type ImageCrops = z.infer<typeof imageCropsSchema>;
+
+/** Point focal (visage, sujet principal), en fractions de l'image. */
+export const focalPointSchema = z.strictObject({ x: fraction, y: fraction });
+export type FocalPoint = z.infer<typeof focalPointSchema>;
+
+/** Aperçu flou : WebP de 16 px en data URL (moins de 500 octets, un peu de marge pour l'en-tête). */
+export const BLUR_DATA_URL_PREFIX = 'data:image/webp;base64,';
+
 export const imageSchema = z.object({
   src: z.string(),
   alt: z.string(),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
+  /** Couleur dominante (#rrggbb), affichée avant l'image. */
+  color: z
+    .string()
+    .regex(/^#[0-9a-f]{6}$/i)
+    .nullable()
+    .optional(),
+  blur: z.string().startsWith(BLUR_DATA_URL_PREFIX).max(1024).nullable().optional(),
+  focal: focalPointSchema.nullable().optional(),
+  crops: imageCropsSchema.nullable().optional(),
 });
 export type Image = z.infer<typeof imageSchema>;
 
