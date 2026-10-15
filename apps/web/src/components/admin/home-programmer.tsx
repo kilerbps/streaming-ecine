@@ -44,12 +44,12 @@ interface EditorialRow {
 const AUTOMATIC_ROWS: Array<[string, string]> = [
   ['Reprendre', 'Lectures en cours de chaque personne (entre 2 min et 95 %).'],
   ['Top 10 en RDC cette semaine', 'Calculé chaque jour ; affiché dès 10 titres lus sur 7 jours.'],
-  ['Nouveautés sur E-Ciné', 'Titres publiés depuis moins de 30 jours ; affichée dès 6 titres.'],
-  ['Courts-métrages : 15 minutes ou moins', 'Affichée dès 6 courts-métrages.'],
+  ['Nouveautés sur E-Ciné', 'Titres publiés depuis moins de 30 jours ; affichée dès 4 titres.'],
+  ['Courts-métrages : 15 minutes ou moins', 'Affichée dès 4 courts-métrages.'],
   ['Bientôt sur E-Ciné', 'Titres dont la sortie est annoncée, la plus proche d’abord.'],
   ['Talents à l’honneur', 'Les talents choisis ci-dessous (6 à 12).'],
   ['Vos rangées éditoriales', 'Dans l’ordre choisi ci-dessus.'],
-  ['Rangées par catégorie', 'Une rangée par catégorie qui compte 6 titres lisibles.'],
+  ['Rangées par catégorie', 'Une rangée par catégorie qui compte 4 titres lisibles.'],
 ];
 
 function move<T>(list: T[], index: number, delta: number): T[] {

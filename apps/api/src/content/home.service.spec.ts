@@ -78,15 +78,19 @@ function serviceWith(count: number) {
 }
 
 describe('HomeService', () => {
-  it('masque les rangées sous leur seuil (6 titres)', async () => {
-    const home = await serviceWith(5).home('fr');
+  it('masque les rangées sous leur seuil (4 titres)', async () => {
+    const home = await serviceWith(3).home('fr');
     expect(home.rows.map((r) => r.kind)).toEqual(['soon']);
-    expect(home.featured).toHaveLength(5);
+    expect(home.featured).toHaveLength(3);
   });
 
-  it('affiche Nouveautés et Courts-métrages dès 6 titres', async () => {
-    const home = await serviceWith(6).home('fr');
+  it('affiche Nouveautés et Courts-métrages dès 4 titres', async () => {
+    const home = await serviceWith(4).home('fr');
     expect(home.rows.map((r) => r.kind)).toEqual(['new', 'shorts', 'soon']);
+  });
+
+  it('garde 5 films à la une au plus', async () => {
+    expect((await serviceWith(8).home('fr')).featured).toHaveLength(5);
   });
 
   it("n'affiche que les films lisibles comme « Regarder » à la une", async () => {

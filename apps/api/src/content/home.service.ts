@@ -17,7 +17,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Règles d'affichage des rangées (docs/design/04-ecrans-publics.md, Accueil, « Ordre des rangées »).
- * Une rangée sous son seuil n'est pas affichée : jamais de rangée maigre.
+ * Une rangée sous son seuil n'est pas affichée : jamais de rangée maigre. Seuil des rangées de
+ * titres : 4 (4 affiches remplissent un téléphone), décidé le 15 octobre 2026 (ADR-0013).
  */
 export const HOME_RULES = {
   featuredMax: 5,
@@ -26,13 +27,13 @@ export const HOME_RULES = {
   tilesMax: 20,
   top10Min: 10,
   newWindowDays: 30,
-  newMin: 6,
+  newMin: 4,
   shortsMaxRuntimeSec: 15 * 60,
-  shortsMin: 6,
+  shortsMin: 4,
   soonMin: 1,
   talentsMin: 6,
   editorialMin: 1,
-  categoryMin: 6,
+  categoryMin: 4,
 } as const;
 
 /** Rangées dans l'ordre de la spécification ; les rangées éditoriales gardent leur ordre choisi. */
@@ -233,7 +234,7 @@ export class HomeService {
   }
 
   /**
-   * Rangées par catégorie (6 titres lisibles au moins), les plus fournies d'abord. L'ordre par
+   * Rangées par catégorie (4 titres lisibles au moins), les plus fournies d'abord. L'ordre par
    * affinité de la personne viendra avec l'historique de personnalisation (ADR-0012, point 2).
    */
   private async categories(locale: string, now: Date): Promise<HomeRow[]> {
