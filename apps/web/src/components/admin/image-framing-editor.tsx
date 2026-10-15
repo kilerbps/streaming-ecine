@@ -195,7 +195,7 @@ export function ImageFramingEditor({
             onPointerUp={() => (drag.current = null)}
             onPointerCancel={() => (drag.current = null)}
             onKeyDown={onCropKey}
-            className="absolute cursor-move border-2 border-[var(--on-image-text)] shadow-[0_0_0_9999px_var(--overlay)]"
+            className="absolute cursor-move border-2 border-[var(--on-image-text)] shadow-[var(--shadow-crop-mask)]"
             style={{
               left: `${current.x * 100}%`,
               top: `${current.y * 100}%`,
