@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   HOME_EDITORIAL_ROWS_MAX,
   HOME_FEATURED_MAX,
@@ -59,6 +59,30 @@ function move<T>(list: T[], index: number, delta: number): T[] {
   const [item] = next.splice(index, 1);
   next.splice(target, 0, item as T);
   return next;
+}
+
+/** Clés locales des emplacements et rangées (stables pendant l'édition, jamais envoyées à l'API). */
+let keySequence = 0;
+const nextKey = () => `k${(keySequence += 1)}`;
+
+/** État de l'écran → corps de PUT /admin/home (ordre des listes = ordre d'affichage). */
+function toInput(slots: Slot[], rows: EditorialRow[], talents: AdminPick[]): HomeInput {
+  return {
+    featured: slots.map((slot) => ({
+      filmId: slot.film.id,
+      startsAt: slot.startsAt,
+      endsAt: slot.endsAt,
+      previewVideo: slot.previewVideo,
+    })),
+    rows: rows.map((row) => ({
+      ...(row.id ? { id: row.id } : {}),
+      title: row.title,
+      startsAt: row.startsAt,
+      endsAt: row.endsAt,
+      filmIds: row.films.map((film) => film.id),
+    })),
+    talentIds: talents.map((talent) => talent.id),
+  };
 }
 
 const pickOf = (row: { id: string; title: string; meta: string | null }): AdminPick => ({
@@ -156,8 +180,6 @@ function PickList({
  */
 export function HomeProgrammer({ home }: { home: AdminHome }) {
   const { run, pending } = useAdminAction();
-  const counter = useRef(0);
-  const nextKey = () => `k${(counter.current += 1)}`;
   const [slots, setSlots] = useState<Slot[]>(() =>
     home.featured.map((slot) => ({ ...slot, key: nextKey() })),
   );
@@ -167,24 +189,11 @@ export function HomeProgrammer({ home }: { home: AdminHome }) {
   const [talents, setTalents] = useState<AdminPick[]>(home.talents);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const input: HomeInput = {
-    featured: slots.map((slot) => ({
-      filmId: slot.film.id,
-      startsAt: slot.startsAt,
-      endsAt: slot.endsAt,
-      previewVideo: slot.previewVideo,
-    })),
-    rows: rows.map((row) => ({
-      ...(row.id ? { id: row.id } : {}),
-      title: row.title,
-      startsAt: row.startsAt,
-      endsAt: row.endsAt,
-      filmIds: row.films.map((film) => film.id),
-    })),
-    talentIds: talents.map((talent) => talent.id),
-  };
-  const initial = useRef(JSON.stringify(input));
-  const dirty = JSON.stringify(input) !== initial.current;
+  const input = toInput(slots, rows, talents);
+  const snapshot = JSON.stringify(input);
+  // Dernier état enregistré : celui reçu de l'API, puis celui de chaque enregistrement réussi.
+  const [saved, setSaved] = useState(snapshot);
+  const dirty = snapshot !== saved;
   useUnsavedWarning(dirty);
 
   const updateSlot = (key: string, patch: Partial<Slot>) =>
@@ -201,9 +210,7 @@ export function HomeProgrammer({ home }: { home: AdminHome }) {
     }
     run(() => saveHomeAction(parsed.data), {
       success: 'Accueil mis à jour.',
-      onSuccess: () => {
-        initial.current = JSON.stringify(input);
-      },
+      onSuccess: () => setSaved(snapshot),
       onError: (failure) => setFormError(failure.error),
     });
   };
