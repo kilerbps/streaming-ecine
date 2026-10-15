@@ -45,6 +45,31 @@ const dateTimeFormatter = new Intl.DateTimeFormat('fr-FR', {
   timeZone: 'Africa/Kinshasa',
 });
 
+const dayFormatter = new Intl.DateTimeFormat('fr-FR', {
+  day: 'numeric',
+  timeZone: 'Africa/Kinshasa',
+});
+const monthFormatter = new Intl.DateTimeFormat('fr-FR', {
+  month: 'short',
+  timeZone: 'Africa/Kinshasa',
+});
+const timeFormatter = new Intl.DateTimeFormat('fr-FR', {
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'Africa/Kinshasa',
+});
+
+/** Bloc date des cartes de Nouveautés : « 24 » et « oct. » (heure de Kinshasa). */
+export function dateBlock(iso: string): { day: string; month: string } {
+  const date = new Date(iso);
+  return { day: dayFormatter.format(date), month: monthFormatter.format(date) };
+}
+
+/** Heure de Kinshasa : « 19:00 ». */
+export function formatTime(iso: string): string {
+  return timeFormatter.format(new Date(iso));
+}
+
 export function formatDate(iso: string): string {
   return dateFormatter.format(new Date(iso));
 }

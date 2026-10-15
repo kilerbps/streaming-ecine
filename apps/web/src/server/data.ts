@@ -6,6 +6,7 @@ import {
   articleSummarySchema,
   categoryOverviewSchema,
   homeSchema,
+  whatsNewSchema,
   continueWatchingItemSchema,
   feedPageSchema,
   filmDetailSchema,
@@ -60,6 +61,11 @@ export const getFilm = cache((slug: string) =>
 /** Accueil en rangées : affiche à la une et rangées calculées par l'API (étiquette `home`). */
 export function getHome() {
   return publicGet(homeSchema, '/home', { tags: ['home'], revalidate: 120 });
+}
+
+/** Nouveautés : films annoncés et événements à venir (étiquette `whats-new`). */
+export function getWhatsNew() {
+  return publicGet(whatsNewSchema, '/whats-new', { tags: ['whats-new'], revalidate: 120 });
 }
 
 export function getCategories() {
@@ -186,6 +192,12 @@ export async function getBookmarks(cursor?: string) {
   return privateRequest(pageSchema(filmSummarySchema), '/me/bookmarks', {
     query: { cursor, limit: 24 },
   });
+}
+
+/** Rappels en attente du membre connecté (films annoncés), vide pour un visiteur. */
+export async function getReminders() {
+  if (!(await getViewer())) return [];
+  return privateRequest(z.array(filmSummarySchema), '/me/reminders');
 }
 
 export async function getContinueWatching() {

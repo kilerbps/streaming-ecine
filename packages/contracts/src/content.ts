@@ -187,3 +187,25 @@ export const siteSettingsSchema = z.object({
   adsEnabled: z.boolean(),
 });
 export type SiteSettings = z.infer<typeof siteSettingsSchema>;
+
+/** Film annoncé (Nouveautés → Bientôt) : tuile 16:9, date de sortie, genre, langue, synopsis court. */
+export const upcomingFilmSchema = filmSummarySchema.extend({
+  releaseAt: z.string(),
+  synopsis: z.string(),
+  audioLanguages: z.array(filmLanguageSchema),
+});
+export type UpcomingFilm = z.infer<typeof upcomingFilmSchema>;
+
+/** Événement à venir (avant-première, projection, festival), avec le film lié s'il y en a un. */
+export const upcomingEventSchema = articleSummarySchema.extend({
+  eventStart: z.string(),
+  featuredFilm: z.object({ slug: z.string(), title: z.string() }).nullable(),
+});
+export type UpcomingEvent = z.infer<typeof upcomingEventSchema>;
+
+/** Nouveautés : films annoncés (sortie la plus proche d'abord) et événements à venir (prochain d'abord). */
+export const whatsNewSchema = z.object({
+  films: z.array(upcomingFilmSchema),
+  events: z.array(upcomingEventSchema),
+});
+export type WhatsNew = z.infer<typeof whatsNewSchema>;

@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import {
   bookmarkStateSchema,
+  reminderStateSchema,
   likeParamsSchema,
   likeStateSchema,
   playbackRefreshSchema,
@@ -10,6 +11,7 @@ import {
   progressInputSchema,
   reportInputSchema,
   type BookmarkState,
+  type ReminderState,
   type FeedPage,
   type LikeState,
   type LikeTargetType,
@@ -52,6 +54,26 @@ export async function setBookmarkAction(
       await privateRequest(bookmarkStateSchema, `/bookmarks/${encodeURIComponent(parsed.data)}`, {
         method: bookmarked ? 'PUT' : 'DELETE',
       }),
+    );
+  } catch (error) {
+    return fromError(error);
+  }
+}
+
+/** « Me le rappeler » d'un film annoncé (membre). */
+export async function setReminderAction(
+  filmId: string,
+  reminded: boolean,
+): Promise<ActionResult<ReminderState>> {
+  const parsed = idParam.safeParse(filmId);
+  if (!parsed.success) return invalid(parsed.error);
+  try {
+    return ok(
+      await privateRequest(
+        reminderStateSchema,
+        `/me/reminders/${encodeURIComponent(parsed.data)}`,
+        { method: reminded ? 'PUT' : 'DELETE' },
+      ),
     );
   } catch (error) {
     return fromError(error);

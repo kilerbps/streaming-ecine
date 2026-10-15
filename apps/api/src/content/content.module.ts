@@ -10,6 +10,7 @@ import { EditorialService } from './editorial.service.js';
 import { FilmMapper } from './film.mapper.js';
 import { FilmsService } from './films.service.js';
 import { HomeService } from './home.service.js';
+import { WhatsNewService } from './whats-new.service.js';
 import { PeopleService } from './people.service.js';
 import { SitemapController } from './sitemap.controller.js';
 
@@ -21,6 +22,7 @@ import { SitemapController } from './sitemap.controller.js';
     FilmMapper,
     FilmsService,
     HomeService,
+    WhatsNewService,
     PeopleService,
     EditorialService,
     FeedService,

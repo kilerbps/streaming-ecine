@@ -14,6 +14,7 @@ import {
   filmListQuerySchema,
   filmSummarySchema,
   homeSchema,
+  whatsNewSchema,
   idSchema,
   pageSchema,
   personDetailSchema,
@@ -32,6 +33,7 @@ import {
   type FilmDetail,
   type FilmSummary,
   type Home,
+  type WhatsNew,
   type Page,
   type PersonDetail,
   type PersonSummary,
@@ -51,6 +53,7 @@ import { SearchService } from '../search/search.service.js';
 import { EditorialService } from './editorial.service.js';
 import { FilmsService } from './films.service.js';
 import { HomeService } from './home.service.js';
+import { WhatsNewService } from './whats-new.service.js';
 import { RequestLocale } from './locale.decorator.js';
 import { PeopleService } from './people.service.js';
 
@@ -78,6 +81,7 @@ export class ContentController {
   constructor(
     private readonly films: FilmsService,
     private readonly homeService: HomeService,
+    private readonly whatsNewService: WhatsNewService,
     private readonly people: PeopleService,
     private readonly editorial: EditorialService,
     private readonly feed: FeedService,
@@ -123,6 +127,17 @@ export class ContentController {
   home(@RequestLocale() locale: string, @Res({ passthrough: true }) res: Response): Promise<Home> {
     publicCache(res, 120);
     return this.homeService.home(locale);
+  }
+
+  /** Nouveautés : films annoncés et événements à venir (lot 3). */
+  @Get('whats-new')
+  @Returns(whatsNewSchema)
+  whatsNew(
+    @RequestLocale() locale: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<WhatsNew> {
+    publicCache(res, 120);
+    return this.whatsNewService.whatsNew(locale);
   }
 
   @Get('categories')

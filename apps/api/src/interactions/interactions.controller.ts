@@ -24,6 +24,7 @@ import {
   likeTargetTypeSchema,
   pageSchema,
   progressInputSchema,
+  reminderStateSchema,
   reportInputSchema,
   viewerStateSchema,
   type BookmarkState,
@@ -31,6 +32,7 @@ import {
   type FilmSummary,
   type LikeState,
   type Page,
+  type ReminderState,
   type ViewerState,
 } from '@ecine/contracts';
 import { z } from 'zod';
@@ -118,6 +120,36 @@ export class InteractionsController {
   ): Promise<Page<FilmSummary>> {
     privateResponse(res);
     return this.interactions.bookmarks(user.id, q.limit, q.cursor, locale);
+  }
+
+  @Put('me/reminders/:filmId')
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @Returns(reminderStateSchema)
+  remind(
+    @CurrentUser() user: AuthUser,
+    @Param('filmId', new ZodPipe(idSchema)) filmId: string,
+  ): Promise<ReminderState> {
+    return this.interactions.setReminder(user.id, filmId, true);
+  }
+
+  @Delete('me/reminders/:filmId')
+  @Returns(reminderStateSchema)
+  unremind(
+    @CurrentUser() user: AuthUser,
+    @Param('filmId', new ZodPipe(idSchema)) filmId: string,
+  ): Promise<ReminderState> {
+    return this.interactions.setReminder(user.id, filmId, false);
+  }
+
+  @Get('me/reminders')
+  @Returns(z.array(filmSummarySchema))
+  reminders(
+    @CurrentUser() user: AuthUser,
+    @RequestLocale() locale: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<FilmSummary[]> {
+    privateResponse(res);
+    return this.interactions.reminders(user.id, locale);
   }
 
   @Put('me/progress/:filmId')

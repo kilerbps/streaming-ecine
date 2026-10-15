@@ -2,6 +2,24 @@ import type { MailMessage } from './mail.service.js';
 
 /** Textes des e-mails transactionnels (français, ton sobre). À faire relire par l'équipe éditoriale. */
 export const mailTemplates = {
+  /** Rappel « Me le rappeler » : le film annoncé est sorti. */
+  filmReleased(to: string, name: string, title: string, link: string): MailMessage {
+    return {
+      to,
+      subject: `« ${title} » est disponible sur E-Ciné`,
+      text: [
+        `Bonjour ${name},`,
+        '',
+        `Vous avez demandé un rappel pour la sortie de « ${title} ». Le film est disponible :`,
+        link,
+        '',
+        'Vous recevez ce message parce que vous avez activé un rappel pour ce film.',
+        '',
+        "L'équipe E-Ciné",
+      ].join('\n'),
+    };
+  },
+
   verifyEmail(to: string, name: string, link: string): MailMessage {
     return {
       to,

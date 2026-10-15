@@ -49,10 +49,10 @@ function tabs(locale: Locale): Tab[] {
       icon: 'discover',
       active: under(routes.discover(locale)),
     },
-    // Nouveautés mène aux actualités jusqu'à l'écran /nouveautes (lot 3 de la refonte).
+    // Nouveautés : films annoncés, événements et actualités (les articles restent sous /actualites).
     {
       key: 'whatsNew',
-      href: routes.news(locale),
+      href: routes.whatsNew(locale),
       icon: 'whatsNew',
       active: (p) => under(routes.news(locale))(p) || under(routes.whatsNew(locale))(p),
     },

@@ -299,7 +299,8 @@
     "hello": "Bonjour, {name}",
     "accountSecurity": "Compte et sécurité",
     "help": "Aide et contact",
-    "legal": "Mentions légales et confidentialité"
+    "legal": "Mentions légales et confidentialité",
+    "reminders": "Mes rappels"
   },
   "contact": {
     "title": "Contact",
@@ -545,5 +546,24 @@
     },
     "end": "Vous avez tout vu pour l'instant.",
     "openDiscover": "Ouvrir Découvrir"
+  },
+  "whatsNew": {
+    "title": "Nouveautés",
+    "intro": "Les films qui arrivent, les projections à venir et les actualités du cinéma congolais.",
+    "segments": "Nouveautés",
+    "soon": "Bientôt",
+    "events": "Événements",
+    "news": "Actualités",
+    "soonEmpty": "Aucun film annoncé pour le moment.",
+    "eventsEmpty": "Aucun événement à venir pour le moment.",
+    "allNews": "Toutes les actualités",
+    "remindMe": "Me le rappeler",
+    "reminderOn": "Rappel activé",
+    "reminderOnToast": "Rappel activé.",
+    "reminderOff": "Rappel retiré.",
+    "introTitle": "Rappel activé",
+    "introBody": "Le jour de la sortie, nous vous écrirons par e-mail. Vos rappels sont aussi dans Moi.",
+    "introOk": "Compris",
+    "addToCalendar": "Ajouter au calendrier"
   }
 }

@@ -6,6 +6,7 @@ import type {
   LikeState,
   LikeTargetType,
   Page,
+  ReminderState,
   ReportInput,
   ViewerState,
 } from '@ecine/contracts';
@@ -130,6 +131,42 @@ export class InteractionsService {
       create: { userId, filmId, positionSec },
       update: { positionSec },
     });
+  }
+
+  /**
+   * « Me le rappeler » : seulement pour un film annoncé (sortie future). Le rappel est envoyé par
+   * e-mail le jour de la sortie (SchedulerService), puis il quitte la liste.
+   */
+  async setReminder(userId: string, filmId: string, reminded: boolean): Promise<ReminderState> {
+    if (!reminded) {
+      await this.prisma.reminder.deleteMany({ where: { userId, filmId } });
+      return { reminded: false };
+    }
+    const film = await this.prisma.film.findFirst({
+      where: { id: filmId, ...visibleWhere() },
+      select: { releaseAt: true },
+    });
+    if (!film) throw ProblemException.notFound('Ce film est introuvable.');
+    if (!film.releaseAt || film.releaseAt <= new Date()) {
+      throw ProblemException.conflict('Ce film est déjà disponible : vous pouvez le regarder.');
+    }
+    await this.prisma.reminder.upsert({
+      where: { userId_filmId: { userId, filmId } },
+      create: { userId, filmId },
+      update: { notifiedAt: null },
+    });
+    return { reminded: true };
+  }
+
+  /** Rappels en attente (Moi → Mes rappels, état des boutons de Nouveautés), sortie la plus proche d'abord. */
+  async reminders(userId: string, locale: string): Promise<FilmSummary[]> {
+    const rows = await this.prisma.reminder.findMany({
+      where: { userId, notifiedAt: null, film: visibleWhere() },
+      include: { film: { include: filmSummaryInclude(localesFor(locale)) } },
+      orderBy: [{ film: { releaseAt: 'asc' } }, { createdAt: 'asc' }],
+      take: 50,
+    });
+    return rows.map((r) => this.films.summary(r.film, locale));
   }
 
   async continueWatching(userId: string, locale: string): Promise<ContinueWatchingItem[]> {

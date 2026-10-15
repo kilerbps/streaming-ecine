@@ -18,23 +18,33 @@ export type ContentEntity =
 
 /** Espaces de cache Redis touchés par chaque type de contenu. */
 const CACHE_NAMESPACES: Record<ContentEntity, string[]> = {
-  film: ['films', 'feed', 'categories', 'people', 'articles', 'search', 'playback', 'home'],
+  film: [
+    'films',
+    'feed',
+    'categories',
+    'people',
+    'articles',
+    'search',
+    'playback',
+    'home',
+    'whats-new',
+  ],
   person: ['people', 'films', 'search', 'home'],
-  article: ['articles', 'feed', 'search'],
+  article: ['articles', 'feed', 'search', 'whats-new'],
   post: ['feed'],
   page: ['pages'],
   team: ['team'],
   settings: ['settings'],
   category: ['categories', 'films', 'search', 'home'],
   redirect: [],
-  video: ['playback', 'films', 'feed', 'home'],
+  video: ['playback', 'films', 'feed', 'home', 'whats-new'],
   home: ['home'],
 };
 
 /**
  * Étiquettes de revalidation Next.js (partagées avec apps/web/src/server/api-client.ts).
  * Liste : `films`, `film:{slug}`, `people`, `person:{slug}`, `articles`, `article:{slug}`, `feed`,
- * `pages`, `page:{slug}`, `team`, `settings`, `categories`, `sitemap`, `home`.
+ * `pages`, `page:{slug}`, `team`, `settings`, `categories`, `sitemap`, `home`, `whats-new`.
  */
 function tagsFor(entity: ContentEntity, slugs: string[]): string[] {
   switch (entity) {
@@ -46,13 +56,14 @@ function tagsFor(entity: ContentEntity, slugs: string[]): string[] {
         'categories',
         'people',
         'home',
+        'whats-new',
         'sitemap',
         ...slugs.map((s) => `film:${s}`),
       ];
     case 'person':
       return ['people', 'films', 'home', 'sitemap', ...slugs.map((s) => `person:${s}`)];
     case 'article':
-      return ['articles', 'feed', 'sitemap', ...slugs.map((s) => `article:${s}`)];
+      return ['articles', 'feed', 'whats-new', 'sitemap', ...slugs.map((s) => `article:${s}`)];
     case 'post':
       return ['feed'];
     case 'page':

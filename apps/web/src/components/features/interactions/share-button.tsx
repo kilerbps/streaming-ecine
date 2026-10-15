@@ -14,7 +14,8 @@ export function ShareButton({
 }: {
   title: string;
   path: string;
-  variant?: 'inline' | 'action';
+  /** `action` : rond à libellé visible ; `icon` : rond sur surface, libellé pour les lecteurs d'écran. */
+  variant?: 'inline' | 'action' | 'icon';
 }) {
   const t = useTranslations('common');
   const toast = useToast();
@@ -34,6 +35,9 @@ export function ShareButton({
     await navigator.clipboard.writeText(url);
     toast(t('copied'), 'success');
   };
+  if (variant === 'icon') {
+    return <IconButton icon="share" label={t('share')} tone="surface" onClick={share} />;
+  }
   if (variant === 'action') {
     return <IconButton icon="share" label={t('share')} showLabel tone="surface" onClick={share} />;
   }

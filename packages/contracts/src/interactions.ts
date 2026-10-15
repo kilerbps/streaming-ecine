@@ -50,3 +50,7 @@ export const reportInputSchema = z.strictObject({
   details: z.string().trim().max(1000).optional(),
 });
 export type ReportInput = z.infer<typeof reportInputSchema>;
+
+/** « Me le rappeler » : rappel d'un membre pour un film annoncé, envoyé le jour de la sortie. */
+export const reminderStateSchema = z.object({ reminded: z.boolean() });
+export type ReminderState = z.infer<typeof reminderStateSchema>;

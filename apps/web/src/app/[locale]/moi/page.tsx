@@ -14,7 +14,7 @@ import { LIST_GROUP, ListLink } from '@/components/ui/list-row';
 import { Row } from '@/components/ui/row';
 import { initials } from '@/lib/format';
 import { routes } from '@/lib/routes';
-import { getBookmarks, getContinueWatching, getViewer } from '@/server/data';
+import { getBookmarks, getContinueWatching, getReminders, getViewer } from '@/server/data';
 
 export const metadata: Metadata = { title: 'Mon espace' };
 
@@ -95,7 +95,11 @@ export default async function MePage({ params }: PageProps<'/[locale]/moi'>) {
     );
   }
 
-  const [continueWatching, bookmarks] = await Promise.all([getContinueWatching(), getBookmarks()]);
+  const [continueWatching, bookmarks, reminders] = await Promise.all([
+    getContinueWatching(),
+    getBookmarks(),
+    getReminders().catch(() => []),
+  ]);
   const isTeam = viewer.role !== 'MEMBER' && viewer.role !== 'CREATOR';
   const firstName = viewer.displayName.split(/\s+/)[0] ?? viewer.displayName;
   return (
@@ -139,6 +143,19 @@ export default async function MePage({ params }: PageProps<'/[locale]/moi'>) {
           <p className="max-w-xl text-[15px] leading-5 text-muted">{t('myListEmpty')}</p>
         </section>
       )}
+      {reminders.length > 0 ? (
+        <div className="bleed mt-8">
+          <Row
+            id="mes-rappels"
+            title={t('reminders')}
+            seeAll={{ href: routes.whatsNew(locale), label: `${tc('seeAll')} : ${t('reminders')}` }}
+          >
+            {reminders.map((film) => (
+              <FilmTile key={film.id} film={film} locale={locale} layout="row" />
+            ))}
+          </Row>
+        </div>
+      ) : null}
       {menu({ isTeam })}
     </>
   );
