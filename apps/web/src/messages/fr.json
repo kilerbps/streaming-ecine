@@ -128,7 +128,10 @@
     "newTab": "(s'ouvre dans un nouvel onglet)",
     "castRow": "Avec",
     "details": "Détails",
-    "categoriesLabel": "Catégories"
+    "categoriesLabel": "Catégories",
+    "fullPage": "Voir la fiche complète",
+    "dataAuto": "Qualité auto : de 91 Mo à 1,2 Go par heure",
+    "dataSaver": "Économie de données : 360p au plus"
   },
   "player": {
     "play": "Lecture",

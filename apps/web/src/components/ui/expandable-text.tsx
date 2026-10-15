@@ -9,10 +9,13 @@ import { useLayoutEffect, useRef, useState } from 'react';
 export function ExpandableText({
   children,
   moreLabel,
+  lines = 4,
   className = '',
 }: {
   children: string;
   moreLabel: string;
+  /** Lignes visibles avant « plus » (3 dans l'aperçu rapide, 4 sur les fiches). */
+  lines?: 3 | 4;
   className?: string;
 }) {
   const ref = useRef<HTMLParagraphElement>(null);
@@ -31,7 +34,10 @@ export function ExpandableText({
 
   return (
     <div className={className}>
-      <p ref={ref} className={`whitespace-pre-line ${expanded ? '' : 'line-clamp-4'}`}>
+      <p
+        ref={ref}
+        className={`whitespace-pre-line ${expanded ? '' : lines === 3 ? 'line-clamp-3' : 'line-clamp-4'}`}
+      >
         {children}
       </p>
       {overflows && !expanded ? (

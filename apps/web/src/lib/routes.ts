@@ -8,6 +8,8 @@ export const routes = {
   films: (l: Locale) => `/${l}/films`,
   shorts: (l: Locale) => `/${l}/courts-metrages`,
   film: (l: Locale, slug: string) => `/${l}/films/${slug}`,
+  /** Aperçu rapide : feuille au-dessus de l'accueil (route interceptée), fiche complète sinon. */
+  filmPreview: (l: Locale, slug: string) => `/${l}/films/${slug}/apercu`,
   category: (l: Locale, slug: string) => `/${l}/categories/${slug}`,
   people: (l: Locale) => `/${l}/personnes`,
   person: (l: Locale, slug: string) => `/${l}/personnes/${slug}`,

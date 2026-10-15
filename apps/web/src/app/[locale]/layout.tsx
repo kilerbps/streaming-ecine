@@ -62,7 +62,7 @@ export async function generateViewport(): Promise<Viewport> {
   };
 }
 
-export default async function LocaleLayout({ children, params }: LayoutProps<'/[locale]'>) {
+export default async function LocaleLayout({ children, modal, params }: LayoutProps<'/[locale]'>) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
@@ -145,6 +145,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
             >
               {children}
             </main>
+            {modal}
             <Footer locale={locale} />
             <TabBar locale={locale} whatsNewDot={whatsNewDot} />
             <CookieBanner initial={consent} />

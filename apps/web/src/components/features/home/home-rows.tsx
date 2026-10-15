@@ -26,7 +26,9 @@ export async function HomeRows({
   const offset = continueWatching.length > 0 ? 1 : 0;
   const seeAll = (href: string, title: string) => ({ href, label: `${tc('seeAll')} : ${title}` });
   const posters = (films: FilmSummary[]) =>
-    films.map((film) => <FilmTile key={film.id} film={film} locale={locale} layout="row" />);
+    films.map((film) => (
+      <FilmTile key={film.id} film={film} locale={locale} layout="row" preview />
+    ));
 
   return (
     <div className="flex flex-col gap-8 lg:gap-10">
@@ -41,7 +43,7 @@ export async function HomeRows({
                   <Top10Tile
                     key={film.id}
                     rank={rank + 1}
-                    href={routes.film(locale, film.slug)}
+                    href={routes.filmPreview(locale, film.slug)}
                     title={film.title}
                     ariaLabel={t('top10Label', { rank: rank + 1, title: film.title })}
                     image={film.poster}
@@ -73,7 +75,7 @@ export async function HomeRows({
                 {row.films.map((film) => (
                   <LandscapeTile
                     key={film.id}
-                    href={routes.film(locale, film.slug)}
+                    href={routes.filmPreview(locale, film.slug)}
                     title={film.title}
                     image={film.poster}
                     meta={formatRuntime(film.runtimeSec) ?? undefined}

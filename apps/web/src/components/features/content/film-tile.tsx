@@ -22,10 +22,13 @@ export async function FilmTile({
   locale,
   layout = 'grid',
   eager = false,
+  preview = false,
 }: {
   film: FilmSummary;
   locale: Locale;
   layout?: 'grid' | 'row';
+  /** Toucher ouvre l'aperçu rapide (rangées de l'accueil) au lieu de la fiche. */
+  preview?: boolean;
   /** Première rangée visible : chargement prioritaire (LCP). */
   eager?: boolean;
 }) {
@@ -33,7 +36,7 @@ export async function FilmTile({
   const badges = filmBadges(film, new Date());
   return (
     <PosterTile
-      href={routes.film(locale, film.slug)}
+      href={preview ? routes.filmPreview(locale, film.slug) : routes.film(locale, film.slug)}
       title={film.title}
       image={film.poster}
       preload={eager}

@@ -54,8 +54,9 @@ const isPhone = () => window.matchMedia('(width < 42rem)').matches;
 /**
  * Feuille modale. Mobile : monte du bas en ressort, poignée, coins hauts de 24 px ; elle suit le doigt
  * et se ferme vers le bas (bouton Fermer toujours présent). `expandable` : points d'arrêt à 60 % et 92 %
- * (aperçu rapide). PC (≥ 672 px) : panneau centré de 560 px. Base Radix Dialog : focus piégé, Échap,
- * retour du focus au déclencheur. Seule `transform` s'anime.
+ * (aperçu rapide). PC (≥ 672 px) : panneau centré de 560 px (640 px en `wide`). Base Radix Dialog :
+ * focus piégé, Échap, retour du focus au déclencheur. Seule `transform` s'anime. `history={false}` :
+ * la feuille a déjà sa propre adresse (route interceptée), elle n'ajoute pas d'entrée d'historique.
  */
 export function Sheet({
   open,
@@ -64,6 +65,8 @@ export function Sheet({
   description,
   children,
   expandable = false,
+  wide = false,
+  history = true,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -71,6 +74,8 @@ export function Sheet({
   description?: ReactNode;
   children: ReactNode;
   expandable?: boolean;
+  wide?: boolean;
+  history?: boolean;
 }) {
   const t = useTranslations('common');
   const panel = useRef<HTMLDivElement>(null);
@@ -82,7 +87,7 @@ export function Sheet({
     v: number;
   } | null>(null);
   const [expanded, setExpanded] = useState(false);
-  const leave = useHistoryLayer(open, () => onOpenChange(false));
+  const leave = useHistoryLayer(open && history, () => onOpenChange(false));
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (!isPhone() || !panel.current) return;
@@ -154,7 +159,7 @@ export function Sheet({
             'transition-transform duration-[var(--spring-smooth-dur)] ease-[var(--spring-smooth)]',
             'data-[state=open]:animate-[ecine-sheet-in_var(--spring-smooth-dur)_var(--spring-smooth)]',
             'data-[state=closed]:animate-[ecine-sheet-out_var(--dur-base)_var(--ease-exit)]',
-            'md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[85dvh] md:w-[min(560px,92vw)] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:shadow-[var(--shadow-menu)]',
+            `md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[85dvh] ${wide ? 'md:w-[min(640px,92vw)]' : 'md:w-[min(560px,92vw)]'} md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:shadow-[var(--shadow-menu)]`,
             'md:data-[state=open]:animate-[ecine-fade_var(--dur-fast)_var(--ease-standard)] md:data-[state=closed]:animate-[ecine-fade-out_var(--dur-fast)_var(--ease-exit)]',
           ].join(' ')}
         >
@@ -189,7 +194,9 @@ export function Sheet({
             </div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8 pt-4 md:px-6">
-            <SheetLeaveContext.Provider value={leave}>{children}</SheetLeaveContext.Provider>
+            <SheetLeaveContext.Provider value={history ? leave : null}>
+              {children}
+            </SheetLeaveContext.Provider>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
