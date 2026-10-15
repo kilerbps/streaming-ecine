@@ -19,6 +19,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  logging: {
+    // En développement, Next.js écrit sinon chaque appel d'action serveur avec ses arguments dans le
+    // terminal : mots de passe de connexion, codes 2FA et jetons y apparaîtraient en clair.
+    serverFunctions: false,
+  },
   images: {
     // Images déjà compressées par l'API (sharp) en largeurs fixes : pas de réoptimisation par Vercel.
     loader: 'custom',
