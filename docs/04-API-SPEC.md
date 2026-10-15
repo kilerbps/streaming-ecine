@@ -36,7 +36,8 @@
 | GET | `/people/{slug}` | PUBLIC | Détail + filmographie |
 | GET | `/articles` · `/articles/{slug}` | PUBLIC | `kind` = NEWS/ANNOUNCEMENT/EVENT |
 | GET | `/posts/{id}` | PUBLIC | Publication photo + texte |
-| GET | `/categories` | PUBLIC | |
+| GET | `/home` | PUBLIC | Accueil en rangées (lot 3) : affiche à la une (programmée, sinon derniers films) et rangées automatiques ou programmées, sous leurs seuils ; cache 120 s |
+| GET | `/categories` | PUBLIC | Avec `filmCount` (titres visibles) et `cover` (affiche du plus récent) |
 | GET | `/search?q=` | PUBLIC | Groupé par type ; limité en débit |
 | GET | `/pages/{slug}` | PUBLIC | À propos, légales |
 | GET | `/team` | PUBLIC | Équipe dirigeante |
@@ -95,6 +96,7 @@
 | GET | `/admin/videos/{id}/status` | EDITOR |
 | CRUD | `/admin/people` · `/admin/articles` · `/admin/posts` · `/admin/team` · `/admin/pages` | EDITOR |
 | CRUD | `/admin/categories` · `/admin/redirects` | EDITOR |
+| GET/PUT | `/admin/home` (affiche à la une, rangées éditoriales, talents à l'honneur, enregistrés ensemble ; Top 10 en lecture seule) | EDITOR |
 | GET/PATCH | `/admin/users` · `/admin/users/{id}/role` | ADMIN (rôle SUPER_ADMIN : SUPER_ADMIN seulement) |
 | GET | `/admin/reports` · PATCH `/admin/reports/{id}` | MODERATOR |
 | GET | `/admin/stats/*` | ADMIN |

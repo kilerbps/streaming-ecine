@@ -1,5 +1,24 @@
 # Journal des modifications
 
+## [Non publié] — 2026-10-15 · Refonte « Nuit de Kin », lot 3 (en cours)
+
+### Ajouté
+
+- Données de l'accueil et du catalogue (ADR-0012) : langues, lieu de tournage, titre dessiné, accroche, date de sortie, fin de disponibilité ; lecture bloquée avant la sortie.
+- Images : couleur dominante, aperçu flou, point focal et recadrages par ratio, calculés à l'envoi (`pnpm --filter @ecine/api images:backfill` pour l'existant).
+- Accueil en rangées (`GET /v1/home`) :
+  - affiche à la une programmée, sinon les 5 derniers films ;
+  - Reprendre, Top 10, Nouveautés, Courts-métrages, Bientôt, Talents à l'honneur, rangées éditoriales, catégories, chacune sous son seuil ;
+  - fin de page « Ouvrir Découvrir ».
+- Administration : écran `/admin/accueil` (affiche à la une, rangées éditoriales, talents à l'honneur, rangées automatiques et Top 10 en lecture seule).
+- Recherche v2 : vignettes « Explorer par catégorie » (`/v1/categories` donne le nombre de titres et une image), talents, recherches récentes de l'appareil, suggestions avec vignettes au clavier.
+- Fiche film v2 : scène 4:5 / 16:9, bouton unique Regarder ou Reprendre avec temps restant, rangée d'actions, langues, distribution, « Vous aimerez aussi », détails.
+- Fiche talent v2, Moi v2 (avatar, rangées, lignes de réglages), cartes v2 partout (catalogues, actualités, talents, Reprendre, fil Découvrir).
+
+### Modifié
+
+- Le fil vertical quitte l'accueil : il reste dans l'onglet Découvrir jusqu'au lot 4.
+
 ## [Non publié] — 2026-10-09 · Refonte « Nuit de Kin », lot 2 (coquille native)
 
 ### Ajouté
