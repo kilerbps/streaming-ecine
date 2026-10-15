@@ -4,12 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useCallback, useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { registerInputSchema, type Me } from '@ecine/contracts';
+import { useForm, useWatch } from 'react-hook-form';
+import { PASSWORD_MIN, registerInputSchema, type Me } from '@ecine/contracts';
 import type { z } from 'zod';
 import { usePreferences } from '@/components/providers/preferences';
 import { Button } from '@/components/ui/button';
 import { CheckboxField, FormError, TextField } from '@/components/ui/field';
+import { PasswordField } from '@/components/ui/password-field';
 import { routes } from '@/lib/routes';
 import { registerAction } from '@/server/actions/auth';
 import { Turnstile } from './turnstile';
@@ -34,10 +35,16 @@ export function RegisterForm({
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors },
   } = useForm<Input, unknown, z.output<typeof registerInputSchema>>({
     resolver: zodResolver(registerInputSchema),
+    // Erreurs à la sortie du champ, jamais à chaque frappe (docs/design/04).
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
   });
+  // Compteur visible : « 7 sur 12 caractères » (caractères Unicode, comme la règle du serveur).
+  const length = [...(useWatch({ control, name: 'password' }) ?? '')].length;
 
   const submit = handleSubmit((values) => {
     setFormError(null);
@@ -74,11 +81,19 @@ export function RegisterForm({
         error={errors.email?.message}
         {...register('email')}
       />
-      <TextField
+      <PasswordField
         label={t('password')}
-        type="password"
         autoComplete="new-password"
-        help={t('passwordHelp')}
+        help={
+          <>
+            <span className="tabular-nums">
+              {length >= PASSWORD_MIN
+                ? t('passwordCountOk', { count: length })
+                : t('passwordCount', { count: length, min: PASSWORD_MIN })}
+            </span>{' '}
+            {t('passwordHint')}
+          </>
+        }
         error={errors.password?.message}
         {...register('password')}
       />

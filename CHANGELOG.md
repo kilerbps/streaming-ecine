@@ -22,9 +22,11 @@
   - Lecture : qualité préférée (avec les données consommées par heure) et sous-titres (langue par défaut, taille) ;
   - aperçus automatiques activables.
 - Double authentification : QR code, clé pour la saisie manuelle, 10 codes de secours à usage unique (copie, téléchargement, renouvellement), désactivation avec mot de passe et code. La connexion accepte un code de secours (ADR-0014).
+- Feuille de connexion v2 : titre qui dit pourquoi la connexion est demandée, bouton Afficher le mot de passe, inscription dans la même feuille avec compteur « 7 sur 12 caractères », erreurs à la sortie du champ, panneau de 440 px sur PC.
 
 ### Modifié
 
+- Erreur d'adresse e-mail qui dit quoi corriger, avec un exemple (« L’adresse doit contenir « @ ». Exemple : grace@gmail.com »).
 - Le fil vertical quitte l'accueil : il reste dans l'onglet Découvrir jusqu'au lot 4.
 - L'onglet Nouveautés mène à `/fr/nouveautes` (les articles restent sous `/fr/actualites`).
 - Seuil des rangées de l'accueil : 4 titres (ADR-0013).

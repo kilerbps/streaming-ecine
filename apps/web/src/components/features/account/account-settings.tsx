@@ -17,6 +17,7 @@ import { usePreferences } from '@/components/providers/preferences';
 import { useToast } from '@/components/providers/toast';
 import { Button } from '@/components/ui/button';
 import { CheckboxField, FormError, TextField } from '@/components/ui/field';
+import { PasswordField } from '@/components/ui/password-field';
 import { routes } from '@/lib/routes';
 import { TwoFactorSettings } from './two-factor-settings';
 import {
@@ -148,16 +149,14 @@ function PasswordForm() {
       )}
     >
       <FormError message={formError} />
-      <TextField
+      <PasswordField
         label={t('currentPassword')}
-        type="password"
         autoComplete="current-password"
         error={errors.currentPassword?.message}
         {...register('currentPassword')}
       />
-      <TextField
+      <PasswordField
         label={t('newPassword')}
-        type="password"
         autoComplete="new-password"
         help={ta('passwordHelp')}
         error={errors.newPassword?.message}
@@ -204,9 +203,8 @@ function DeleteAccount() {
     >
       <p className="text-muted">{t('deleteHelp')}</p>
       <FormError message={formError} />
-      <TextField
+      <PasswordField
         label={ta('password')}
-        type="password"
         autoComplete="current-password"
         error={errors.password?.message}
         {...register('password')}

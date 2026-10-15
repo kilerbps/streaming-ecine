@@ -58,6 +58,11 @@
       scroll-behavior: auto;
     }
   }
+  /* Edge ajoute son propre œil aux mots de passe : le bouton Afficher de PasswordField suffit. */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
   /* Zone forcée dans un thème (ex. data-theme="dark" sur une affiche) : la couleur héritée suit. */
   [data-theme] {
     color: var(--text);

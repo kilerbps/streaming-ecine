@@ -12,6 +12,7 @@ import { useAuth } from '@/components/providers/auth';
 import { usePreferences } from '@/components/providers/preferences';
 import { Button } from '@/components/ui/button';
 import { FormError, TextField } from '@/components/ui/field';
+import { PasswordField } from '@/components/ui/password-field';
 import { Loader } from '@/components/ui/loader';
 import { routes, safeInternalPath } from '@/lib/routes';
 import {
@@ -132,9 +133,8 @@ export function ResetPasswordForm({ token }: { token: string }) {
     <form method="post" onSubmit={submit} noValidate className="flex flex-col gap-5">
       <FormError message={formError} />
       <input type="hidden" {...register('token')} />
-      <TextField
+      <PasswordField
         label={t('password')}
-        type="password"
         autoComplete="new-password"
         help={t('passwordHelp')}
         error={errors.password?.message}

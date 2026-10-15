@@ -7,6 +7,7 @@ import type { TwoFactorSetup } from '@ecine/contracts';
 import { useToast } from '@/components/providers/toast';
 import { Button } from '@/components/ui/button';
 import { FormError, TextField } from '@/components/ui/field';
+import { PasswordField } from '@/components/ui/password-field';
 import { routes } from '@/lib/routes';
 import {
   disableTwoFactorAction,
@@ -99,9 +100,8 @@ function ConfirmForm({
       }}
     >
       <FormError message={error} />
-      <TextField
+      <PasswordField
         label={t('currentPassword')}
-        type="password"
         autoComplete="current-password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}

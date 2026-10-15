@@ -12,12 +12,16 @@ function uniqueEmail() {
 }
 
 test.describe('Parcours 1 — découverte sans compte', () => {
-  test('le feed mène à une fiche film lisible sans connexion', async ({ page }) => {
+  test('l’onglet Découvrir mène à une fiche film lisible sans connexion', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/fr$/);
     await refuseCookies(page);
+    // Accueil en rangées (lot 3) : le fil est dans l'onglet Découvrir.
+    await page.getByRole('link', { name: 'Découvrir', exact: true }).first().click();
+    await expect(page).toHaveURL(/\/fr\/decouvrir$/);
     await expect(page.getByRole('heading', { level: 1, name: 'À découvrir' })).toBeVisible();
-    const firstFilm = page.getByRole('link', { name: 'Voir le film' }).first();
+    // Cartes v2 : le titre est le lien accessible (« Voir le film » est un doublon masqué).
+    const firstFilm = page.getByRole('main').locator('h2 a[href^="/fr/films/"]').first();
     await firstFilm.click();
     await expect(page).toHaveURL(/\/fr\/films\/[a-z0-9-]+$/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
@@ -42,7 +46,8 @@ test.describe('Parcours 2 — action différée', () => {
       .first()
       .click();
     const sheet = page.getByRole('dialog');
-    await expect(sheet.getByText('Connectez-vous pour continuer')).toBeVisible();
+    // Le titre dit pourquoi la connexion est demandée.
+    await expect(sheet.getByText('Connectez-vous pour aimer ce titre')).toBeVisible();
     await sheet.getByRole('button', { name: 'Créer un compte' }).click();
     await sheet.getByLabel('Nom affiché').fill('Testeur E2E');
     await sheet.getByLabel('Adresse e-mail').fill(uniqueEmail());
@@ -52,16 +57,12 @@ test.describe('Parcours 2 — action différée', () => {
 
     await expect(sheet).toBeHidden();
     expect(page.url()).toBe(filmUrl);
-    await expect(page.getByRole('button', { name: /Je n.aime plus/ }).first()).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    // Fiche v2 : le libellé reste « J'aime », l'état est porté par aria-pressed.
+    const liked = page.getByRole('button', { name: /J.aime/, pressed: true }).first();
+    await expect(liked).toBeVisible();
     // L'état vient bien du serveur : il survit au rechargement.
     await page.reload();
-    await expect(page.getByRole('button', { name: /Je n.aime plus/ }).first()).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    await expect(liked).toBeVisible();
   });
 });
 

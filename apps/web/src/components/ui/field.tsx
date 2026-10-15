@@ -18,7 +18,7 @@ interface FieldShellProps {
   children: ReactNode;
 }
 
-function FieldShell({ id, label, help, error, optional, children }: FieldShellProps) {
+export function FieldShell({ id, label, help, error, optional, children }: FieldShellProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-text">
@@ -41,11 +41,11 @@ function FieldShell({ id, label, help, error, optional, children }: FieldShellPr
   );
 }
 
-const CONTROL =
+export const CONTROL =
   'w-full min-h-11 bg-surface-1 text-text border border-border-strong rounded-md px-3 py-2 ' +
   'placeholder:text-muted aria-[invalid=true]:border-danger';
 
-function describedBy(id: string, help?: ReactNode, error?: string): string | undefined {
+export function describedBy(id: string, help?: ReactNode, error?: string): string | undefined {
   return (
     [help ? `${id}-help` : null, error ? `${id}-error` : null].filter(Boolean).join(' ') ||
     undefined

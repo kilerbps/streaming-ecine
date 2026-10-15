@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Me } from '@ecine/contracts';
-import { AuthForms } from '@/components/features/auth/auth-forms';
+import { AuthForms, type AuthMode } from '@/components/features/auth/auth-forms';
 import { track } from '@/lib/analytics';
 import { Sheet } from '@/components/ui/sheet';
 
@@ -50,13 +50,15 @@ export function AuthProvider({
   const router = useRouter();
   const [viewer, setViewer] = useState<Viewer | null>(initialViewer);
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<AuthMode>('login');
+  const [reason, setReason] = useState<AuthReason>('session');
   const pending = useRef<(() => Promise<unknown> | void) | null>(null);
-  const reasonRef = useRef<AuthReason>('session');
 
-  const openSheet = useCallback((reason: AuthReason) => {
-    reasonRef.current = reason;
+  const openSheet = useCallback((next: AuthReason) => {
+    setReason(next);
+    setMode('login');
     setOpen(true);
-    track({ type: 'auth_sheet_open', source: reason });
+    track({ type: 'auth_sheet_open', source: next });
   }, []);
 
   const requireAuth = useCallback(
@@ -84,13 +86,13 @@ export function AuthProvider({
     (me: Me) => {
       setViewer({ displayName: me.displayName, role: me.role, emailVerified: me.emailVerified });
       setOpen(false);
-      track({ type: 'auth_success', source: reasonRef.current });
+      track({ type: 'auth_success', source: reason });
       const action = pending.current;
       pending.current = null;
       // L'utilisateur reste au même endroit : l'action interrompue est rejouée, la page est rafraîchie.
       void Promise.resolve(action?.()).finally(() => router.refresh());
     },
-    [router],
+    [router, reason],
   );
 
   const value = useMemo(
@@ -106,10 +108,11 @@ export function AuthProvider({
           setOpen(next);
           if (!next) pending.current = null;
         }}
-        title={t('sheetTitle')}
+        title={mode === 'login' ? t(`sheetTitles.${reason}`) : t('registerTitle')}
         description={t('sheetReason')}
+        narrow
       >
-        <AuthForms onAuthenticated={onAuthenticated} />
+        <AuthForms onAuthenticated={onAuthenticated} mode={mode} onModeChange={setMode} />
       </Sheet>
     </AuthContext.Provider>
   );

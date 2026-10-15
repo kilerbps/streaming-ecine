@@ -260,7 +260,13 @@
     "browseFilms": "Tous les films"
   },
   "auth": {
-    "sheetTitle": "Connectez-vous pour continuer",
+    "sheetTitles": {
+      "list": "Connectez-vous pour garder ce film dans Ma liste",
+      "like": "Connectez-vous pour aimer ce titre",
+      "reminder": "Connectez-vous pour être prévenu de sa sortie",
+      "report": "Connectez-vous pour signaler ce contenu",
+      "session": "Reconnectez-vous pour continuer"
+    },
     "sheetReason": "Regarder reste libre. Un compte sert à garder vos j'aime, votre liste et votre progression.",
     "login": "Se connecter",
     "loginTitle": "Connexion",
@@ -271,6 +277,12 @@
     "email": "Adresse e-mail",
     "password": "Mot de passe",
     "passwordHelp": "Au moins 12 caractères. Une phrase facile à retenir fonctionne très bien.",
+    "passwordHint": "Une phrase facile à retenir fonctionne très bien.",
+    "passwordCount": "{count} sur {min} caractères.",
+    "passwordCountOk": "{count} caractères, c'est suffisant.",
+    "showPassword": "Afficher",
+    "hidePassword": "Masquer",
+    "passwordSr": "le mot de passe",
     "displayName": "Nom affiché",
     "totp": "Code de vérification",
     "totpHelp": "Le code à 6 chiffres de votre application d'authentification, ou un code de secours.",

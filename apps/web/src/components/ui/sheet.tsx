@@ -54,7 +54,7 @@ const isPhone = () => window.matchMedia('(width < 42rem)').matches;
 /**
  * Feuille modale. Mobile : monte du bas en ressort, poignée, coins hauts de 24 px ; elle suit le doigt
  * et se ferme vers le bas (bouton Fermer toujours présent). `expandable` : points d'arrêt à 60 % et 92 %
- * (aperçu rapide). PC (≥ 672 px) : panneau centré de 560 px (640 px en `wide`). Base Radix Dialog :
+ * (aperçu rapide). PC (≥ 672 px) : panneau centré de 560 px (640 px en `wide`, 440 px en `narrow`). Base Radix Dialog :
  * focus piégé, Échap, retour du focus au déclencheur. Seule `transform` s'anime. `history={false}` :
  * la feuille a déjà sa propre adresse (route interceptée), elle n'ajoute pas d'entrée d'historique.
  */
@@ -66,6 +66,7 @@ export function Sheet({
   children,
   expandable = false,
   wide = false,
+  narrow = false,
   history = true,
 }: {
   open: boolean;
@@ -75,6 +76,7 @@ export function Sheet({
   children: ReactNode;
   expandable?: boolean;
   wide?: boolean;
+  narrow?: boolean;
   history?: boolean;
 }) {
   const t = useTranslations('common');
@@ -159,7 +161,7 @@ export function Sheet({
             'transition-transform duration-[var(--spring-smooth-dur)] ease-[var(--spring-smooth)]',
             'data-[state=open]:animate-[ecine-sheet-in_var(--spring-smooth-dur)_var(--spring-smooth)]',
             'data-[state=closed]:animate-[ecine-sheet-out_var(--dur-base)_var(--ease-exit)]',
-            `md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[85dvh] ${wide ? 'md:w-[min(640px,92vw)]' : 'md:w-[min(560px,92vw)]'} md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:shadow-[var(--shadow-menu)]`,
+            `md:inset-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[85dvh] ${wide ? 'md:w-[min(640px,92vw)]' : narrow ? 'md:w-[min(440px,92vw)]' : 'md:w-[min(560px,92vw)]'} md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:shadow-[var(--shadow-menu)]`,
             'md:data-[state=open]:animate-[ecine-fade_var(--dur-fast)_var(--ease-standard)] md:data-[state=closed]:animate-[ecine-fade-out_var(--dur-fast)_var(--ease-exit)]',
           ].join(' ')}
         >

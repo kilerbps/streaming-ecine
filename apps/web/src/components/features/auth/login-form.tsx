@@ -3,13 +3,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { loginInputSchema, type Me } from '@ecine/contracts';
 import type { z } from 'zod';
 import { usePreferences } from '@/components/providers/preferences';
 import { Button } from '@/components/ui/button';
 import { FormError, TextField } from '@/components/ui/field';
+import { PasswordField } from '@/components/ui/password-field';
 import { routes } from '@/lib/routes';
 import { loginAction } from '@/server/actions/auth';
 
@@ -31,10 +32,19 @@ export function LoginForm({
     register,
     handleSubmit,
     setError,
+    setFocus,
     formState: { errors },
   } = useForm<Input, unknown, z.output<typeof loginInputSchema>>({
     resolver: zodResolver(loginInputSchema),
+    // Erreurs à la sortie du champ, jamais à chaque frappe (docs/design/04).
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
   });
+
+  // Second facteur demandé : le champ du code prend le focus (collage d'un code accepté).
+  useEffect(() => {
+    if (needTotp) setFocus('totp');
+  }, [needTotp, setFocus]);
 
   const submit = handleSubmit((values) => {
     setFormError(null);
@@ -70,9 +80,8 @@ export function LoginForm({
         error={errors.email?.message}
         {...register('email')}
       />
-      <TextField
+      <PasswordField
         label={t('password')}
-        type="password"
         autoComplete="current-password"
         error={errors.password?.message}
         {...register('password')}

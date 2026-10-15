@@ -9,12 +9,24 @@ export const passwordSchema = z
   .min(PASSWORD_MIN, `Au moins ${PASSWORD_MIN} caractères`)
   .max(PASSWORD_MAX, `Au plus ${PASSWORD_MAX} caractères`);
 
-/** Nettoyée (espaces, majuscules) avant validation : une adresse copiée-collée reste acceptée. */
+/**
+ * Nettoyée (espaces, majuscules) avant validation : une adresse copiée-collée reste acceptée.
+ * L'erreur dit quoi corriger, avec un exemple (docs/design/04, écriture).
+ */
 export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .pipe(z.email('Adresse e-mail invalide').max(254, 'Adresse e-mail trop longue'));
+  .pipe(
+    z
+      .email({
+        error: (issue) =>
+          typeof issue.input === 'string' && issue.input.includes('@')
+            ? 'Vérifiez l’adresse. Exemple : grace@gmail.com'
+            : 'L’adresse doit contenir « @ ». Exemple : grace@gmail.com',
+      })
+      .max(254, 'Adresse e-mail trop longue'),
+  );
 
 export const displayNameSchema = z
   .string()

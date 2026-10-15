@@ -36,6 +36,14 @@ describe('registerInputSchema', () => {
 });
 
 describe('loginInputSchema', () => {
+  it('dit quoi corriger dans une adresse, avec un exemple', () => {
+    const message = (email: string) =>
+      loginInputSchema.safeParse({ email, password: 'x' }).error?.issues[0]?.message;
+    expect(message('grace')).toBe('L’adresse doit contenir « @ ». Exemple : grace@gmail.com');
+    expect(message('grace@')).toBe('Vérifiez l’adresse. Exemple : grace@gmail.com');
+    expect(message(' Grace@Gmail.com ')).toBeUndefined();
+  });
+
   it('accepte un code TOTP à 6 chiffres et refuse le reste', () => {
     const base = { email: 'a@b.cd', password: 'x' };
     expect(loginInputSchema.safeParse({ ...base, totp: '123456' }).success).toBe(true);
