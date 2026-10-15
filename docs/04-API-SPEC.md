@@ -37,6 +37,7 @@
 | GET | `/articles` · `/articles/{slug}` | PUBLIC | `kind` = NEWS/ANNOUNCEMENT/EVENT |
 | GET | `/posts/{id}` | PUBLIC | Publication photo + texte |
 | GET | `/home` | PUBLIC | Accueil en rangées (lot 3) : affiche à la une (programmée, sinon derniers films) et rangées automatiques ou programmées, sous leurs seuils ; cache 120 s |
+| GET | `/whats-new` | PUBLIC | Nouveautés : films annoncés (sortie la plus proche d'abord) et événements à venir avec film lié ; cache 120 s |
 | GET | `/categories` | PUBLIC | Avec `filmCount` (titres visibles) et `cover` (affiche du plus récent) |
 | GET | `/search?q=` | PUBLIC | Groupé par type ; limité en débit |
 | GET | `/pages/{slug}` | PUBLIC | À propos, légales |
@@ -74,6 +75,8 @@
 | PUT / DELETE | `/likes/{targetType}/{targetId}` | MEMBER (idempotent) |
 | PUT / DELETE | `/bookmarks/{filmId}` | MEMBER |
 | GET | `/me/bookmarks` | MEMBER |
+| PUT / DELETE | `/me/reminders/{filmId}` | MEMBER (« Me le rappeler » : film annoncé seulement, sinon 409 ; e-mail le jour de la sortie) |
+| GET | `/me/reminders` | MEMBER (rappels en attente) |
 | PUT | `/me/progress/{filmId}` | MEMBER — `{ positionSec }`, limité à 1 écriture / 10 s |
 | GET | `/me/continue-watching` | MEMBER |
 | POST | `/reports` | MEMBER |

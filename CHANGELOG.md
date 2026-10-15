@@ -14,10 +14,20 @@
 - Recherche v2 : vignettes « Explorer par catégorie » (`/v1/categories` donne le nombre de titres et une image), talents, recherches récentes de l'appareil, suggestions avec vignettes au clavier.
 - Fiche film v2 : scène 4:5 / 16:9, bouton unique Regarder ou Reprendre avec temps restant, rangée d'actions, langues, distribution, « Vous aimerez aussi », détails.
 - Fiche talent v2, Moi v2 (avatar, rangées, lignes de réglages), cartes v2 partout (catalogues, actualités, talents, Reprendre, fil Découvrir).
+- Aperçu rapide : toucher une affiche de l'accueil ouvre une feuille (route interceptée `/fr/films/{slug}/apercu`) ; une visite directe affiche la fiche.
+- Nouveautés `/fr/nouveautes` : Bientôt (rappel « Me le rappeler », e-mail le jour de la sortie), Événements (fichier `.ics`), Actualités ; rangée « Mes rappels » dans Moi.
+- Mesure : `home_row_impression`, `home_row_click`, `preview_open`, `reminder_set`.
 
 ### Modifié
 
 - Le fil vertical quitte l'accueil : il reste dans l'onglet Découvrir jusqu'au lot 4.
+- L'onglet Nouveautés mène à `/fr/nouveautes` (les articles restent sous `/fr/actualites`).
+- Seuil des rangées de l'accueil : 4 titres (ADR-0013).
+
+### Corrigé
+
+- Revalidation : les étiquettes à tiret (`whats-new`) étaient refusées et faisaient rejeter tout le lot.
+- Développement : Next.js n'écrit plus les arguments des actions serveur (dont les mots de passe) dans le terminal.
 
 ## [Non publié] — 2026-10-09 · Refonte « Nuit de Kin », lot 2 (coquille native)
 
