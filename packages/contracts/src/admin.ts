@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import {
+  focalPointSchema,
   idSchema,
+  imageCropsSchema,
   imageSchema,
   isoDateSchema,
   publishStateSchema,
@@ -404,6 +406,16 @@ export const imageAltInputSchema = z.strictObject({
   alt: z.string().trim().max(300),
   decorative: z.boolean().default(false),
 });
+
+/**
+ * Cadrage d'une image : point focal et recadrages par format (rectangles en fractions). L'image
+ * d'origine n'est jamais réécrite ; un format sans recadrage se déduit du point focal.
+ */
+export const imageFramingInputSchema = z.strictObject({
+  focal: focalPointSchema.nullable(),
+  crops: imageCropsSchema,
+});
+export type ImageFramingInput = z.infer<typeof imageFramingInputSchema>;
 
 export const videoUploadInitSchema = z.strictObject({
   filmId: idSchema,

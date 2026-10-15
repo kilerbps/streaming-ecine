@@ -5,6 +5,7 @@ import {
   idSchema,
   IMAGE_UPLOAD_MIME_TYPES,
   imageAltInputSchema,
+  imageFramingInputSchema,
   imageUploadQuerySchema,
   imageUploadResultSchema,
   UPLOAD_OFFSET_HEADER,
@@ -75,6 +76,23 @@ export async function updateImageAltAction(
   if (!body.success) return invalid(body.error);
   return adminMutation(() =>
     privateRequest(imageUploadResultSchema, `/admin/media/images/${enc(i.data)}`, {
+      method: 'PATCH',
+      body: body.data,
+    }),
+  );
+}
+
+/** Cadrage d'une image : point focal et recadrages par format (l'original n'est jamais réécrit). */
+export async function saveImageFramingAction(
+  id: string,
+  input: unknown,
+): Promise<ActionResult<ImageUploadResult>> {
+  const i = idSchema.safeParse(id);
+  const body = imageFramingInputSchema.safeParse(input);
+  if (!i.success) return invalid(i.error);
+  if (!body.success) return invalid(body.error);
+  return adminMutation(() =>
+    privateRequest(imageUploadResultSchema, `/admin/media/images/${enc(i.data)}/framing`, {
       method: 'PATCH',
       body: body.data,
     }),

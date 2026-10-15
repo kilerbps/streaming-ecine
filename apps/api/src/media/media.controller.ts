@@ -19,6 +19,7 @@ import {
   confirmQuerySchema,
   idSchema,
   imageAltInputSchema,
+  imageFramingInputSchema,
   imageUploadQuerySchema,
   imageUploadResultSchema,
   UPLOAD_OFFSET_HEADER,
@@ -77,6 +78,17 @@ export class MediaController {
     @Req() req: Request,
   ): Promise<ImageUploadResult> {
     return this.images.updateAlt(id, input, req);
+  }
+
+  @Patch('images/:id/framing')
+  @BodySchema(imageFramingInputSchema)
+  @Returns(imageUploadResultSchema)
+  updateFraming(
+    @Param('id', new ZodPipe(idSchema)) id: string,
+    @Body(new ZodPipe(imageFramingInputSchema)) input: z.infer<typeof imageFramingInputSchema>,
+    @Req() req: Request,
+  ): Promise<ImageUploadResult> {
+    return this.images.updateFraming(id, input, req);
   }
 
   @Post('uploads')

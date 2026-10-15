@@ -1,17 +1,28 @@
 import { rm } from 'node:fs/promises';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Request } from 'express';
-import type { ImageUploadQuery, ImageUploadResult } from '@ecine/contracts';
+import type { ImageFramingInput, ImageUploadQuery, ImageUploadResult } from '@ecine/contracts';
 import { ENV, type Env } from '../config/env.js';
 import { AuditService } from '../audit/audit.service.js';
 import { ProblemException } from '../common/problem.js';
 import { MediaUrls } from '../content/content.helpers.js';
-import type { Media } from '../generated/prisma/client.js';
+import { Prisma, type Media } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ContentEventsService } from '../revalidate/content-events.service.js';
 import { processImage, UnsupportedImageError } from './image-processing.js';
 import { unsupportedMedia } from './media.problems.js';
 import { newId, storageFile } from './storage.js';
+
+/** Contenus qui affichent l'image : leurs pages sont revalidées quand l'image change. */
+const USAGES = {
+  filmPosters: { select: { slug: true } },
+  filmTitleImages: { select: { slug: true } },
+  personPhotos: { select: { slug: true } },
+  articleCovers: { select: { slug: true } },
+  postImages: { select: { postId: true }, take: 1 },
+  teamPhotos: { select: { id: true }, take: 1 },
+} satisfies Prisma.MediaInclude;
+type MediaWithUsages = Prisma.MediaGetPayload<{ include: typeof USAGES }>;
 
 const ALT_REQUIRED = ProblemException.badRequest('Texte alternatif requis.', [
   { path: 'alt', message: 'Décrivez l’image (ou cochez « image décorative »).' },
@@ -99,13 +110,7 @@ export class ImagesService {
     const media = await this.prisma.media.update({
       where: { id },
       data: { alt: input.decorative ? null : alt, decorative: input.decorative },
-      include: {
-        filmPosters: { select: { slug: true } },
-        personPhotos: { select: { slug: true } },
-        articleCovers: { select: { slug: true } },
-        postImages: { select: { postId: true }, take: 1 },
-        teamPhotos: { select: { id: true }, take: 1 },
-      },
+      include: USAGES,
     });
     await this.audit.log(req, {
       action: 'media.image_alt',
@@ -113,8 +118,42 @@ export class ImagesService {
       entityId: id,
       meta: { decorative: input.decorative },
     });
-
     // Le texte alternatif apparaît dans les pages déjà en cache : on les invalide.
+    await this.invalidateUsages(media);
+    return this.result(media);
+  }
+
+  /**
+   * Cadrage (point focal, recadrages par format). Seuls les rectangles changent : l'image d'origine
+   * et ses variantes ne sont jamais réécrites.
+   */
+  async updateFraming(
+    id: string,
+    input: ImageFramingInput,
+    req: Request,
+  ): Promise<ImageUploadResult> {
+    const existing = await this.prisma.media.findFirst({
+      where: { id, kind: 'IMAGE' },
+      select: { id: true },
+    });
+    if (!existing) throw ProblemException.notFound('Image introuvable.');
+    const crops = Object.keys(input.crops).length > 0 ? input.crops : Prisma.DbNull;
+    const media = await this.prisma.media.update({
+      where: { id },
+      data: { focalX: input.focal?.x ?? null, focalY: input.focal?.y ?? null, crops },
+      include: USAGES,
+    });
+    await this.audit.log(req, {
+      action: 'media.image_framing',
+      entity: 'Media',
+      entityId: id,
+      meta: { focal: Boolean(input.focal), crops: Object.keys(input.crops) },
+    });
+    await this.invalidateUsages(media);
+    return this.result(media);
+  }
+
+  private async invalidateUsages(media: MediaWithUsages): Promise<void> {
     if (media.filmPosters.length)
       await this.events.changed(
         'film',
@@ -132,7 +171,12 @@ export class ImagesService {
       );
     if (media.postImages.length) await this.events.changed('post');
     if (media.teamPhotos.length) await this.events.changed('team');
-    return this.result(media);
+    if (media.filmTitleImages.length) {
+      await this.events.changed(
+        'film',
+        media.filmTitleImages.map((f) => f.slug),
+      );
+    }
   }
 
   private result(media: Media): ImageUploadResult {

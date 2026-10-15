@@ -134,9 +134,9 @@ export function FilmEditor({
   const showDraft = draft && JSON.stringify(draft.values) !== JSON.stringify(defaults);
 
   const { fields, append, remove, move } = useFieldArray({ control, name: 'credits' });
-  const [posterId, titleImageId, tagline, seoTitle, seoDescription] = useWatch({
+  const [posterId, titleImageId, tagline, seoTitle, seoDescription, filmTitle] = useWatch({
     control,
-    name: ['posterId', 'titleImageId', 'tagline', 'seoTitle', 'seoDescription'],
+    name: ['posterId', 'titleImageId', 'tagline', 'seoTitle', 'seoDescription', 'title'],
   });
   const poster = posterId ? (media[posterId] ?? null) : null;
   const titleImage = titleImageId ? (media[titleImageId] ?? null) : null;
@@ -409,6 +409,7 @@ export function FilmEditor({
           <ImageUploadField
             label="Affiche du film"
             value={poster}
+            previewTitle={filmTitle}
             allowDecorative={false}
             error={errors.posterId?.message}
             help="JPEG, PNG, WebP ou AVIF · 4 Mo au plus."

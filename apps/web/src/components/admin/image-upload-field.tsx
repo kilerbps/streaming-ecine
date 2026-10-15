@@ -5,8 +5,10 @@ import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { IMAGE_UPLOAD_MIME_TYPES, type ImageUploadResult } from '@ecine/contracts';
 import { Poster } from '@/components/features/content/poster';
 import { Button } from '@/components/ui/button';
+import { Sheet } from '@/components/ui/sheet';
 import { updateImageAltAction, uploadImageAction } from '@/server/actions/admin/media';
 import { ADMIN_IMAGE_MAX_BYTES } from './config';
+import { ImageFramingEditor } from './image-framing-editor';
 import { CONTROL } from './fields';
 import { formatBytes } from './format';
 import { useAdminAction } from './use-admin-action';
@@ -28,7 +30,8 @@ function fileProblem(file: File): string | null {
 /**
  * Envoi d'image réutilisable (affiches, photos, couvertures, publications, équipe) : aperçu local,
  * texte alternatif OBLIGATOIRE (ou « image décorative » si permis), envoi par Server Action, puis
- * modification du texte alternatif à tout moment.
+ * modification du texte alternatif à tout moment. Après l'envoi, le cadrage s'ouvre (point focal et
+ * recadrages par format) ; « Cadrer l'image » le rouvre.
  */
 export function ImageUploadField({
   label,
@@ -39,6 +42,7 @@ export function ImageUploadField({
   allowDecorative = true,
   ratio = '2/3',
   removable = true,
+  previewTitle,
 }: {
   label: string;
   help?: ReactNode;
@@ -48,6 +52,8 @@ export function ImageUploadField({
   allowDecorative?: boolean;
   ratio?: Ratio;
   removable?: boolean;
+  /** Titre montré sur l'aperçu « à la une » du cadrage (lisibilité sur le voile). */
+  previewTitle?: string;
 }) {
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +63,7 @@ export function ImageUploadField({
   const [alt, setAlt] = useState('');
   const [decorative, setDecorative] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [framing, setFraming] = useState(false);
   // Texte alternatif de l'image déjà enregistrée (modifiable).
   const [current, setCurrent] = useState(value);
   const [editAlt, setEditAlt] = useState(value?.alt ?? '');
@@ -113,6 +120,8 @@ export function ImageUploadField({
       onSuccess: (image) => {
         reset();
         onChange(image);
+        // L'envoi devient : point focal posé une fois, recadrages déduits (docs/design/05, Images).
+        setFraming(true);
       },
     });
   };
@@ -259,6 +268,16 @@ export function ImageUploadField({
                     onChange={(e) => choose(e.target.files?.[0])}
                   />
                 </label>
+                {value ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon="image"
+                    onClick={() => setFraming(true)}
+                  >
+                    Cadrer l’image
+                  </Button>
+                ) : null}
                 {value && removable ? (
                   <Button variant="ghost" size="sm" onClick={() => onChange(null)}>
                     Retirer
@@ -284,6 +303,19 @@ export function ImageUploadField({
           ) : null}
         </div>
       </div>
+      {value ? (
+        <Sheet open={framing} onOpenChange={setFraming} title="Cadrer l’image" wide>
+          <ImageFramingEditor
+            key={value.id}
+            image={value}
+            title={previewTitle}
+            onSaved={(image) => {
+              onChange(image);
+              setFraming(false);
+            }}
+          />
+        </Sheet>
+      ) : null}
     </fieldset>
   );
 }

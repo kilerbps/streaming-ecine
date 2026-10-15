@@ -1,4 +1,70 @@
-import type { Image, ImageRatio } from '@ecine/contracts';
+import type { CropRect, FocalPoint, Image, ImageRatio } from '@ecine/contracts';
+
+/** Largeur sur hauteur de chaque format de recadrage. */
+export const RATIO_VALUES: Record<ImageRatio, number> = {
+  '2:3': 2 / 3,
+  '4:5': 4 / 5,
+  '16:9': 16 / 9,
+  '1:1': 1,
+  '9:16': 9 / 16,
+};
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const round = (value: number) => Math.round(value * 10_000) / 10_000;
+
+/**
+ * Recadrage déduit du point focal : le plus grand rectangle du format (divisé par `zoom`), centré sur
+ * le sujet puis ramené dans l'image. Fractions de l'image (x, y, largeur, hauteur).
+ */
+export function cropAround(
+  size: { width: number; height: number },
+  ratio: ImageRatio,
+  center: FocalPoint = { x: 0.5, y: 0.5 },
+  zoom = 1,
+): CropRect {
+  const target = RATIO_VALUES[ratio];
+  let w = size.width;
+  let h = w / target;
+  if (h > size.height) {
+    h = size.height;
+    w = h * target;
+  }
+  w /= zoom;
+  h /= zoom;
+  const x = clamp(center.x * size.width - w / 2, 0, size.width - w);
+  const y = clamp(center.y * size.height - h / 2, 0, size.height - h);
+  return {
+    x: round(x / size.width),
+    y: round(y / size.height),
+    w: round(w / size.width),
+    h: round(h / size.height),
+  };
+}
+
+/** Déplace un recadrage (fractions), sans jamais sortir de l'image. */
+export function moveCrop(rect: CropRect, dx: number, dy: number): CropRect {
+  return {
+    ...rect,
+    x: round(clamp(rect.x + dx, 0, 1 - rect.w)),
+    y: round(clamp(rect.y + dy, 0, 1 - rect.h)),
+  };
+}
+
+/** Zoom du recadrage (1 = le plus grand possible) déduit de sa taille. */
+export function cropZoom(
+  size: { width: number; height: number },
+  ratio: ImageRatio,
+  rect: CropRect,
+): number {
+  const full = cropAround(size, ratio);
+  return Math.round((full.w / rect.w) * 100) / 100;
+}
+
+/** Centre d'un recadrage (pour zoomer sans le décaler). */
+export const cropCenter = (rect: CropRect): FocalPoint => ({
+  x: rect.x + rect.w / 2,
+  y: rect.y + rect.h / 2,
+});
 
 /** Ratio d'affichage (« 2/3 ») vers la clé de recadrage enregistrée en administration (« 2:3 »). */
 export function cropKey(ratio: string | null | undefined): ImageRatio | null {
