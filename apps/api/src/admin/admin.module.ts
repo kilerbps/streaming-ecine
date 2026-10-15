@@ -5,6 +5,8 @@ import { AdminArticlesService } from './articles.service.js';
 import { AdminCategoriesService } from './categories.service.js';
 import { AdminFilmsController } from './films.controller.js';
 import { AdminFilmsService } from './films.service.js';
+import { AdminHomeController } from './home.controller.js';
+import { AdminHomeService } from './home.service.js';
 import { AdminInsightsController } from './insights.controller.js';
 import { AdminInsightsService } from './insights.service.js';
 import { AdminContactMessagesController, AdminReportsController } from './moderation.controller.js';
@@ -33,6 +35,7 @@ const ADMIN_CONTROLLERS: Type[] = [
   AdminArticlesController,
   AdminPostsController,
   AdminCategoriesController,
+  AdminHomeController,
   AdminTeamController,
   AdminPagesController,
   AdminSettingsController,
@@ -55,6 +58,7 @@ const ADMIN_CONTROLLERS: Type[] = [
     AdminArticlesService,
     AdminPostsService,
     AdminCategoriesService,
+    AdminHomeService,
     AdminTeamService,
     AdminPagesService,
     AdminSettingsService,

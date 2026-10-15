@@ -449,3 +449,98 @@ export type ImageUploadQuery = z.infer<typeof imageUploadQuerySchema>;
 
 /** En-tête d'un morceau d'envoi vidéo : position (en octets) du premier octet envoyé. */
 export const UPLOAD_OFFSET_HEADER = 'upload-offset';
+
+// ——— Accueil (programmation, lot 3) ———
+
+export const HOME_FEATURED_MAX = 5;
+export const HOME_EDITORIAL_ROWS_MAX = 8;
+export const HOME_ROW_FILMS_MAX = 20;
+export const HOME_TALENTS_MIN = 6;
+export const HOME_TALENTS_MAX = 12;
+
+const uniqueIds = (ids: string[]) => new Set(ids).size === ids.length;
+const endsAfterStart = (value: { startsAt: string | null; endsAt: string | null }) =>
+  !value.startsAt || !value.endsAt || new Date(value.endsAt) > new Date(value.startsAt);
+
+/** Emplacement de l'affiche à la une : film, période (heure de Kinshasa à la saisie), aperçu vidéo. */
+export const featuredSlotInputSchema = z
+  .strictObject({
+    filmId: idSchema,
+    startsAt: isoDateSchema,
+    endsAt: isoDateSchema.nullable(),
+    previewVideo: z.boolean(),
+  })
+  .refine(endsAfterStart, { message: 'La fin doit suivre le début.', path: ['endsAt'] });
+
+/** Rangée éditoriale nommée (« Spécial 30 juin ») : titres ordonnés, programmation facultative. */
+export const homeRowInputSchema = z
+  .strictObject({
+    id: idSchema.optional(),
+    title: z.string().trim().min(2, 'Au moins 2 caractères').max(60, '60 caractères au plus'),
+    startsAt: isoDateSchema.nullable(),
+    endsAt: isoDateSchema.nullable(),
+    filmIds: z
+      .array(idSchema)
+      .min(1, 'Choisissez au moins un titre.')
+      .max(HOME_ROW_FILMS_MAX, `${HOME_ROW_FILMS_MAX} titres au plus.`)
+      .refine(uniqueIds, 'Un titre figure deux fois.'),
+  })
+  .refine(endsAfterStart, { message: 'La fin doit suivre le début.', path: ['endsAt'] });
+
+/** Programmation complète de l'accueil, enregistrée d'un seul geste (un seul bouton principal). */
+export const homeInputSchema = z.strictObject({
+  featured: z
+    .array(featuredSlotInputSchema)
+    .max(HOME_FEATURED_MAX, `${HOME_FEATURED_MAX} emplacements au plus.`),
+  rows: z
+    .array(homeRowInputSchema)
+    .max(HOME_EDITORIAL_ROWS_MAX, `${HOME_EDITORIAL_ROWS_MAX} rangées éditoriales au plus.`),
+  talentIds: z
+    .array(idSchema)
+    .max(HOME_TALENTS_MAX, `${HOME_TALENTS_MAX} talents au plus.`)
+    .refine(uniqueIds, 'Un talent figure deux fois.')
+    .refine(
+      (ids) => ids.length === 0 || ids.length >= HOME_TALENTS_MIN,
+      `Choisissez au moins ${HOME_TALENTS_MIN} talents, ou aucun.`,
+    ),
+});
+export type HomeInput = z.infer<typeof homeInputSchema>;
+
+/** Élément choisi (film ou talent) tel que l'administration l'affiche. */
+export const adminPickSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  meta: z.string().nullable(),
+});
+export type AdminPick = z.infer<typeof adminPickSchema>;
+
+export const adminHomeSchema = z.object({
+  featured: z.array(
+    z.object({
+      film: adminPickSchema,
+      startsAt: z.string(),
+      endsAt: z.string().nullable(),
+      previewVideo: z.boolean(),
+    }),
+  ),
+  rows: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      startsAt: z.string().nullable(),
+      endsAt: z.string().nullable(),
+      films: z.array(adminPickSchema),
+    }),
+  ),
+  talents: z.array(adminPickSchema),
+  /** Dernier Top 10 calculé (lecture seule), ou `null` tant qu'aucun calcul n'a eu lieu. */
+  top10: z
+    .object({
+      day: z.string(),
+      entries: z.array(
+        z.object({ rank: z.number().int(), title: z.string(), viewers: z.number().int() }),
+      ),
+    })
+    .nullable(),
+});
+export type AdminHome = z.infer<typeof adminHomeSchema>;

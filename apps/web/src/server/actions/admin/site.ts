@@ -2,9 +2,11 @@
 
 import {
   adminCategorySchema,
+  adminHomeSchema,
   adminListQuerySchema,
   adminTeamMemberSchema,
   categoryInputSchema,
+  homeInputSchema,
   idSchema,
   pageSchema,
   redirectInputSchema,
@@ -146,4 +148,16 @@ export async function saveSettingsAction(input: unknown): Promise<ActionResult> 
     });
     return null;
   }, ['/admin/parametres']);
+}
+
+// ——— Accueil ———
+
+/** Programmation de l'accueil (affiche à la une, rangées éditoriales, talents), en une fois. */
+export async function saveHomeAction(input: unknown): Promise<ActionResult> {
+  const parsed = homeInputSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  return adminMutation(async () => {
+    await privateRequest(adminHomeSchema, '/admin/home', { method: 'PUT', body: parsed.data });
+    return null;
+  }, ['/admin/accueil']);
 }

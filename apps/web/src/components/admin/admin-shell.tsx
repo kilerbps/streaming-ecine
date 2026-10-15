@@ -50,6 +50,10 @@ const SECTIONS: Array<{ title: string | null; items: NavItem[] }> = [
     ],
   },
   {
+    title: 'Accueil et programmation',
+    items: [{ href: '/admin/accueil', label: 'Accueil', icon: 'home', role: SCREEN_ROLE.content }],
+  },
+  {
     title: 'Communauté',
     items: [
       {
