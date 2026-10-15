@@ -16,6 +16,7 @@ import { ContentModule } from './content/content.module.js';
 import { HealthController } from './health/health.controller.js';
 import { loggerParams } from './logging/logger.config.js';
 import { MailModule } from './mail/mail.module.js';
+import { PushModule } from './push/push.module.js';
 import { MediaModule } from './media/media.module.js';
 import { PlaybackModule } from './playback/playback.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -38,6 +39,7 @@ import { ContentEventsModule } from './revalidate/content-events.service.js';
       }),
     }),
     MailModule,
+    PushModule,
     AuditModule,
     ContentEventsModule,
     AuthModule,

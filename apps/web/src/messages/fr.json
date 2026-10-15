@@ -453,7 +453,11 @@
       "seeAll": "Tout voir : {title}",
       "remaining": "38 min restantes",
       "top10Label": "Numéro {rank} du Top 10 : {title}",
-      "featuredMeta": ["Drame", "Lingala", "1 h 42"],
+      "featuredMeta": [
+        "Drame",
+        "Lingala",
+        "1 h 42"
+      ],
       "searchLabel": "Rechercher un film, un talent ou une catégorie",
       "searchPlaceholder": "Films, talents, catégories",
       "clear": "Effacer",
@@ -575,6 +579,11 @@
     "introTitle": "Rappel activé",
     "introBody": "Le jour de la sortie, nous vous écrirons par e-mail. Vos rappels sont aussi dans Moi.",
     "introOk": "Compris",
-    "addToCalendar": "Ajouter au calendrier"
+    "addToCalendar": "Ajouter au calendrier",
+    "introBodyPush": "Le jour de la sortie, nous vous écrirons par e-mail. Voulez-vous aussi une notification sur cet appareil ?",
+    "pushEnable": "Activer les notifications",
+    "pushLater": "Plus tard",
+    "pushOn": "Notifications activées sur cet appareil.",
+    "pushDenied": "Notifications refusées : le rappel arrivera par e-mail."
   }
 }

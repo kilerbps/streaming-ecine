@@ -93,3 +93,41 @@ self.addEventListener('fetch', (event) => {
   }
   // Tout le reste (API, médias protégés, images distantes, données RSC) : réseau, sans cache du worker.
 });
+
+// Notifications Web Push des rappels (ADR-0014) : titre, texte et chemin interne envoyés par l'API.
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = {};
+  }
+  const title = typeof data.title === 'string' ? data.title : 'E-Ciné';
+  // Seul un chemin du site est ouvert au toucher, jamais une adresse extérieure.
+  const url =
+    typeof data.url === 'string' && data.url.startsWith('/') && !data.url.startsWith('//')
+      ? data.url
+      : '/fr';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: typeof data.body === 'string' ? data.body : '',
+      icon: '/icons/icon-192.png',
+      lang: 'fr',
+      tag: url,
+      data: { url },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data?.url ?? '/fr', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      for (const client of windows) {
+        if (client.url === target && 'focus' in client) return client.focus();
+      }
+      return self.clients.openWindow(target);
+    }),
+  );
+});

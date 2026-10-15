@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isPushServiceUrl,
   analyticsEventInputSchema,
   contactInputSchema,
   filmInputSchema,
@@ -117,5 +118,31 @@ describe('analyticsEventInputSchema', () => {
     expect(analyticsEventInputSchema.safeParse({ type: 'like', session: 'court' }).success).toBe(
       false,
     );
+  });
+});
+
+describe('isPushServiceUrl', () => {
+  it('accepte les services push des navigateurs', () => {
+    for (const url of [
+      'https://fcm.googleapis.com/fcm/send/abc',
+      'https://updates.push.services.mozilla.com/wpush/v2/abc',
+      'https://web.push.apple.com/QGx',
+      'https://wns2-par02p.notify.windows.com/w/?token=abc',
+    ]) {
+      expect(isPushServiceUrl(url)).toBe(true);
+    }
+  });
+
+  it('refuse toute autre adresse (SSRF)', () => {
+    for (const url of [
+      'http://fcm.googleapis.com/fcm/send/abc',
+      'https://localhost:4200/v1/admin',
+      'https://169.254.169.254/latest',
+      'https://fcm.googleapis.com.evil.example/x',
+      'https://evilfcm.googleapis.com.example/x',
+      'pas une adresse',
+    ]) {
+      expect(isPushServiceUrl(url)).toBe(false);
+    }
   });
 });

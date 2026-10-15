@@ -23,6 +23,7 @@ import { PROBLEM_TYPES, ProblemException } from '../common/problem.js';
 import { ENV, type Env } from '../config/env.js';
 import { MediaUrls } from '../content/content.helpers.js';
 import { MailService } from '../mail/mail.service.js';
+import { PushService } from '../push/push.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ContentEventsService } from '../revalidate/content-events.service.js';
 import { AdminModule } from './admin.module.js';
@@ -131,6 +132,7 @@ const audit = { log: vi.fn() };
 const events = { changed: vi.fn() };
 const sessions = { revokeAllForUser: vi.fn() };
 const mail = { send: vi.fn() };
+const push = { sendToUser: vi.fn() };
 
 @Global()
 @Module({
@@ -140,6 +142,7 @@ const mail = { send: vi.fn() };
     { provide: ContentEventsService, useValue: events },
     { provide: SessionService, useValue: sessions },
     { provide: MailService, useValue: mail },
+    { provide: PushService, useValue: push },
     {
       provide: ENV,
       useValue: {
@@ -156,6 +159,7 @@ const mail = { send: vi.fn() };
     ContentEventsService,
     SessionService,
     MailService,
+    PushService,
     ENV,
     MediaUrls,
   ],

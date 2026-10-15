@@ -48,6 +48,14 @@ export const envSchema = z
     MAIL_FROM: z.string().default('E-Ciné <no-reply@e-cine.example>'),
     RESEND_API_KEY: z.string().optional(),
 
+    /**
+     * Notifications Web Push des rappels (ADR-0014) : paire VAPID (npx web-push generate-vapid-keys).
+     * Absente : les rappels partent seulement par e-mail.
+     */
+    VAPID_PUBLIC_KEY: z.string().min(80).max(100).optional(),
+    VAPID_PRIVATE_KEY: z.string().min(40).max(50).optional(),
+    VAPID_SUBJECT: z.string().startsWith('mailto:').or(z.url()).optional(),
+
     TURNSTILE_SECRET: z.string().optional(),
     /** 2FA obligatoire pour ADMIN/SUPER_ADMIN. Désactivable uniquement en développement local. */
     ADMIN_MFA_REQUIRED: bool.default(true),

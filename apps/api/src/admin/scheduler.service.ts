@@ -10,6 +10,7 @@ import { ENV, type Env } from '../config/env.js';
 import { kinshasaDay, shiftDay } from '../common/kinshasa.js';
 import { visibleWhere } from '../content/content.helpers.js';
 import { MailService } from '../mail/mail.service.js';
+import { PushService } from '../push/push.service.js';
 import { mailTemplates } from '../mail/mail.templates.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { type ContentEntity, ContentEventsService } from '../revalidate/content-events.service.js';
@@ -41,6 +42,7 @@ export class SchedulerService implements OnModuleInit, OnModuleDestroy {
     private readonly audit: AuditService,
     private readonly events: ContentEventsService,
     private readonly mail: MailService,
+    private readonly push: PushService,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
@@ -203,6 +205,15 @@ export class SchedulerService implements OnModuleInit, OnModuleDestroy {
       } catch (err) {
         this.logger.warn(`Rappel non envoyé (${reminder.filmId}) : ${(err as Error).message}`);
       }
+      await this.push
+        .sendToUser(reminder.userId, {
+          title: `« ${title} » est disponible`,
+          body: 'Le film que vous attendiez est sorti sur E-Ciné.',
+          url: `/fr/films/${reminder.film.slug}`,
+        })
+        .catch((err: unknown) =>
+          this.logger.warn(`Notification de rappel non envoyée : ${(err as Error).message}`),
+        );
     }
   }
 

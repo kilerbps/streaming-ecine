@@ -119,11 +119,13 @@ describe('calcul quotidien du Top 10', () => {
       $transaction: vi.fn().mockResolvedValue([]),
     };
     const events = { changed: vi.fn() };
+    const push = { sendToUser: vi.fn().mockResolvedValue(0) };
     const scheduler = new SchedulerService(
       prisma as never,
       { log: vi.fn() } as never,
       events as never,
       { send: vi.fn() } as never,
+      push as never,
       { NODE_ENV: 'test', APP_URL: 'https://e-cine.test' } as never,
     );
     return { prisma, events, scheduler };

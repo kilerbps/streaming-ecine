@@ -66,3 +66,38 @@ export const tastesSchema = z.object({
   categories: z.array(z.string().min(1).max(120)).max(TASTES_MAX),
 });
 export type Tastes = z.infer<typeof tastesSchema>;
+
+/**
+ * Services push des navigateurs acceptés (Chrome/Android, Firefox, Safari, Edge) : l'API n'envoie
+ * jamais de requête vers une autre adresse (protection SSRF).
+ */
+export const PUSH_SERVICE_HOSTS = [
+  'fcm.googleapis.com',
+  'updates.push.services.mozilla.com',
+  'web.push.apple.com',
+  'notify.windows.com',
+] as const;
+
+export function isPushServiceUrl(value: string): boolean {
+  // Hôte en minuscules, sans identifiants ni port : https://hôte/…
+  const host = /^https:\/\/([a-z0-9.-]+)\//.exec(value)?.[1];
+  if (!host) return false;
+  return PUSH_SERVICE_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
+}
+
+/** Abonnement Web Push d'un appareil (PushSubscription.toJSON() du navigateur). */
+export const pushSubscriptionInputSchema = z.strictObject({
+  endpoint: z.string().max(1024).refine(isPushServiceUrl, 'Service de notification non reconnu.'),
+  expirationTime: z.number().nullable().optional(),
+  keys: z.strictObject({
+    p256dh: z.string().min(40).max(200),
+    auth: z.string().min(10).max(100),
+  }),
+});
+export type PushSubscriptionInput = z.infer<typeof pushSubscriptionInputSchema>;
+
+export const pushUnsubscribeSchema = z.strictObject({ endpoint: z.string().max(1024) });
+
+/** Clé publique VAPID ; `null` quand les notifications sont désactivées sur le serveur. */
+export const pushKeySchema = z.object({ publicKey: z.string().nullable() });
+export type PushKey = z.infer<typeof pushKeySchema>;

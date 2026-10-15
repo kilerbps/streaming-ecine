@@ -60,19 +60,25 @@ describe('Envoi des rappels à la sortie', () => {
     const mail = {
       send: vi.fn<(message: MailMessage) => Promise<void>>().mockResolvedValue(undefined),
     };
+    const push = { sendToUser: vi.fn().mockResolvedValue(0) };
     const scheduler = new SchedulerService(
       prisma as never,
       { log: vi.fn() } as never,
       { changed: vi.fn() } as never,
       mail as never,
+      push as never,
       { NODE_ENV: 'test', APP_URL: 'https://e-cine.example' } as never,
     );
-    return { scheduler, mail };
+    return { scheduler, mail, push };
   }
 
   it('envoie le rappel une fois, avec le lien du film', async () => {
-    const { scheduler, mail } = schedulerWith(1);
+    const { scheduler, mail, push } = schedulerWith(1);
     await scheduler.tick();
+    expect(push.sendToUser).toHaveBeenCalledWith(
+      'u1',
+      expect.objectContaining({ url: '/fr/films/le-film' }),
+    );
     expect(mail.send).toHaveBeenCalledOnce();
     expect(mail.send.mock.calls[0]?.[0]).toMatchObject({
       to: 'membre@example.org',

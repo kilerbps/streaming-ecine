@@ -21,6 +21,8 @@ Dépendances ajoutées au-delà de celles nommées dans le dossier, toutes maint
 | `radix-ui` | Web | Primitives accessibles (feuilles modales) |
 | `hls.js` | Web | Lecteur HLS (chargé à la demande) |
 | `@axe-core/playwright` | Web (dev) | Audit d'accessibilité automatisé |
+| `web-push` 3.6.7 (MPL-2.0) | API | Notifications Web Push des rappels, chiffrement et signature VAPID (ADR-0014, validé le 15 octobre 2026) |
+| `qrcode` 1.5.4 (MIT) | API | QR code SVG de la double authentification (validé le 15 octobre 2026) |
 
 Volontairement **non ajoutés** : bibliothèque d'icônes (icônes SVG maison), bibliothèque de dates (Intl), Serwist (service worker écrit à la main, 80 lignes), bibliothèque OTP (TOTP RFC 6238 implémenté et testé avec les vecteurs officiels), SDK Resend (appel HTTP direct), bibliothèque de graphiques.
 
