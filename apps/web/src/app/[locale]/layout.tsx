@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { SharedPosterTransition } from '@/components/layout/shared-poster';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
@@ -150,6 +151,8 @@ export default async function LocaleLayout({ children, modal, params }: LayoutPr
             <TabBar locale={locale} whatsNewDot={whatsNewDot} />
             <CookieBanner initial={consent} />
             <ServiceWorker />
+            {/* Variable lue ici : une constante d'un module client serait une référence côté serveur. */}
+            {process.env.NEXT_PUBLIC_VIEW_TRANSITIONS === '1' ? <SharedPosterTransition /> : null}
             <InstallPrompt />
             <PageViewTracker enabled={Boolean(consent?.analytics)} />
           </AppProviders>

@@ -143,7 +143,7 @@ export default async function FilmPage({ params, searchParams }: Props) {
             crop={{ base: '4:5', lg: '16:9' }}
             sizes="100vw"
             preload
-            className="aspect-[4/5] md:aspect-video lg:max-h-[80dvh]"
+            className="aspect-[4/5] [view-transition-name:film-poster] md:aspect-video lg:max-h-[80dvh]"
           />
         }
         fallback={

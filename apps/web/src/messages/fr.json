@@ -131,7 +131,8 @@
     "categoriesLabel": "Catégories",
     "fullPage": "Voir la fiche complète",
     "dataAuto": "Qualité auto : de 91 Mo à 1,2 Go par heure",
-    "dataSaver": "Économie de données : 360p au plus"
+    "dataSaver": "Économie de données : 360p au plus",
+    "shareCta": "Regarder sur E-Ciné"
   },
   "player": {
     "play": "Lecture",
@@ -453,11 +454,7 @@
       "seeAll": "Tout voir : {title}",
       "remaining": "38 min restantes",
       "top10Label": "Numéro {rank} du Top 10 : {title}",
-      "featuredMeta": [
-        "Drame",
-        "Lingala",
-        "1 h 42"
-      ],
+      "featuredMeta": ["Drame", "Lingala", "1 h 42"],
       "searchLabel": "Rechercher un film, un talent ou une catégorie",
       "searchPlaceholder": "Films, talents, catégories",
       "clear": "Effacer",
