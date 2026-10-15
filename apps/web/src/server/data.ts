@@ -5,6 +5,7 @@ import {
   articleDetailSchema,
   articleSummarySchema,
   categoryOverviewSchema,
+  homeSchema,
   continueWatchingItemSchema,
   feedPageSchema,
   filmDetailSchema,
@@ -55,6 +56,11 @@ export const getFilm = cache((slug: string) =>
     tags: ['films', `film:${slug}`],
   }),
 );
+
+/** Accueil en rangées : affiche à la une et rangées calculées par l'API (étiquette `home`). */
+export function getHome() {
+  return publicGet(homeSchema, '/home', { tags: ['home'], revalidate: 120 });
+}
 
 export function getCategories() {
   return publicGet(z.array(categoryOverviewSchema), '/categories', {

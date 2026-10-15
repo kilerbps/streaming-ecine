@@ -6,4 +6,5 @@ export * from './interactions.js';
 export * from './playback.js';
 export * from './forms.js';
 export * from './search.js';
+export * from './home.js';
 export * from './admin.js';

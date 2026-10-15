@@ -13,6 +13,7 @@ import {
   filmDetailSchema,
   filmListQuerySchema,
   filmSummarySchema,
+  homeSchema,
   idSchema,
   pageSchema,
   personDetailSchema,
@@ -30,6 +31,7 @@ import {
   type FeedPage,
   type FilmDetail,
   type FilmSummary,
+  type Home,
   type Page,
   type PersonDetail,
   type PersonSummary,
@@ -48,6 +50,7 @@ import { FeedService } from '../feed/feed.service.js';
 import { SearchService } from '../search/search.service.js';
 import { EditorialService } from './editorial.service.js';
 import { FilmsService } from './films.service.js';
+import { HomeService } from './home.service.js';
 import { RequestLocale } from './locale.decorator.js';
 import { PeopleService } from './people.service.js';
 
@@ -74,6 +77,7 @@ function publicCache(res: Response, seconds = 60): void {
 export class ContentController {
   constructor(
     private readonly films: FilmsService,
+    private readonly homeService: HomeService,
     private readonly people: PeopleService,
     private readonly editorial: EditorialService,
     private readonly feed: FeedService,
@@ -111,6 +115,14 @@ export class ContentController {
   ): Promise<FilmDetail> {
     publicCache(res);
     return this.films.detail(slug, locale);
+  }
+
+  /** Accueil en rangées : affiche à la une et rangées automatiques ou programmées (lot 3). */
+  @Get('home')
+  @Returns(homeSchema)
+  home(@RequestLocale() locale: string, @Res({ passthrough: true }) res: Response): Promise<Home> {
+    publicCache(res, 120);
+    return this.homeService.home(locale);
   }
 
   @Get('categories')

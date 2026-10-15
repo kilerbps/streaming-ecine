@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '@/components/providers/auth';
 import { usePreferences } from '@/components/providers/preferences';
 import { useToast } from '@/components/providers/toast';
+import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { IconButton } from '@/components/ui/icon-button';
 import { track } from '@/lib/analytics';
@@ -20,8 +21,11 @@ export function BookmarkButton({
   filmId: string;
   initial: boolean;
   withLabel?: boolean;
-  /** `action` : bouton rond de 44 à libellé visible (rangée d'actions d'une fiche). */
-  variant?: 'inline' | 'action';
+  /**
+   * `action` : bouton rond de 44 à libellé visible (rangée d'actions d'une fiche) ;
+   * `on-image` : bouton secondaire de 52 px posé sur l'affiche à la une.
+   */
+  variant?: 'inline' | 'action' | 'on-image';
 }) {
   const t = useTranslations('actions');
   const { requireAuth, sessionExpired } = useAuth();
@@ -52,6 +56,19 @@ export function BookmarkButton({
   };
 
   const label = saved ? t('unbookmark') : t('bookmark');
+  if (variant === 'on-image') {
+    return (
+      <Button
+        variant="on-image"
+        size="lg"
+        icon={saved ? 'check' : 'plus'}
+        aria-pressed={saved}
+        onClick={() => requireAuth(() => toggle(!saved), 'list')}
+      >
+        {t('myList')}
+      </Button>
+    );
+  }
   if (variant === 'action') {
     return (
       <IconButton

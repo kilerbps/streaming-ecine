@@ -8,7 +8,7 @@ import { FeedList } from './feed-list';
 
 /**
  * Fil de découverte (FR-040) : films, courts, publications et actualités, avec surprises. Sert
- * l'onglet Découvrir et, jusqu'à l'accueil en rangées (lot 3 de la refonte), l'accueil.
+ * l'onglet Découvrir, en attendant le fil vertical d'extraits (lot 4 de la refonte).
  */
 export async function DiscoverFeed({ locale }: { locale: Locale }) {
   const t = await getTranslations('feed');

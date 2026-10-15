@@ -13,34 +13,44 @@ export type ContentEntity =
   | 'settings'
   | 'category'
   | 'redirect'
-  | 'video';
+  | 'video'
+  | 'home';
 
 /** Espaces de cache Redis touchés par chaque type de contenu. */
 const CACHE_NAMESPACES: Record<ContentEntity, string[]> = {
-  film: ['films', 'feed', 'categories', 'people', 'articles', 'search', 'playback'],
-  person: ['people', 'films', 'search'],
+  film: ['films', 'feed', 'categories', 'people', 'articles', 'search', 'playback', 'home'],
+  person: ['people', 'films', 'search', 'home'],
   article: ['articles', 'feed', 'search'],
   post: ['feed'],
   page: ['pages'],
   team: ['team'],
   settings: ['settings'],
-  category: ['categories', 'films', 'search'],
+  category: ['categories', 'films', 'search', 'home'],
   redirect: [],
-  video: ['playback', 'films', 'feed'],
+  video: ['playback', 'films', 'feed', 'home'],
+  home: ['home'],
 };
 
 /**
  * Étiquettes de revalidation Next.js (partagées avec apps/web/src/server/api-client.ts).
  * Liste : `films`, `film:{slug}`, `people`, `person:{slug}`, `articles`, `article:{slug}`, `feed`,
- * `pages`, `page:{slug}`, `team`, `settings`, `categories`, `sitemap`.
+ * `pages`, `page:{slug}`, `team`, `settings`, `categories`, `sitemap`, `home`.
  */
 function tagsFor(entity: ContentEntity, slugs: string[]): string[] {
   switch (entity) {
     case 'film':
     case 'video':
-      return ['films', 'feed', 'categories', 'people', 'sitemap', ...slugs.map((s) => `film:${s}`)];
+      return [
+        'films',
+        'feed',
+        'categories',
+        'people',
+        'home',
+        'sitemap',
+        ...slugs.map((s) => `film:${s}`),
+      ];
     case 'person':
-      return ['people', 'films', 'sitemap', ...slugs.map((s) => `person:${s}`)];
+      return ['people', 'films', 'home', 'sitemap', ...slugs.map((s) => `person:${s}`)];
     case 'article':
       return ['articles', 'feed', 'sitemap', ...slugs.map((s) => `article:${s}`)];
     case 'post':
@@ -52,7 +62,9 @@ function tagsFor(entity: ContentEntity, slugs: string[]): string[] {
     case 'settings':
       return ['settings'];
     case 'category':
-      return ['categories', 'films'];
+      return ['categories', 'films', 'home'];
+    case 'home':
+      return ['home'];
     case 'redirect':
       return [];
   }

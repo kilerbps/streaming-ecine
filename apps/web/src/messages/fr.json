@@ -521,5 +521,26 @@
     "kg": "kikongo",
     "lua": "tshiluba",
     "en": "anglais"
+  },
+  "home": {
+    "title": "E-Ciné, le cinéma congolais en streaming",
+    "featured": {
+      "region": "À la une",
+      "carousel": "carrousel",
+      "slide": "diapositive",
+      "show": "Afficher {title}"
+    },
+    "watch": "Regarder",
+    "seeFilm": "Voir la fiche",
+    "top10Label": "Numéro {rank} du Top 10 : {title}",
+    "rows": {
+      "top10": "Top 10 en RDC cette semaine",
+      "new": "Nouveautés sur E-Ciné",
+      "shorts": "Courts-métrages : 15 minutes ou moins",
+      "soon": "Bientôt sur E-Ciné",
+      "talents": "Talents à l'honneur"
+    },
+    "end": "Vous avez tout vu pour l'instant.",
+    "openDiscover": "Ouvrir Découvrir"
   }
 }

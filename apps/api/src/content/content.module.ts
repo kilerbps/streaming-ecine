@@ -9,6 +9,7 @@ import { ContentController } from './content.controller.js';
 import { EditorialService } from './editorial.service.js';
 import { FilmMapper } from './film.mapper.js';
 import { FilmsService } from './films.service.js';
+import { HomeService } from './home.service.js';
 import { PeopleService } from './people.service.js';
 import { SitemapController } from './sitemap.controller.js';
 
@@ -19,6 +20,7 @@ import { SitemapController } from './sitemap.controller.js';
     MediaUrls,
     FilmMapper,
     FilmsService,
+    HomeService,
     PeopleService,
     EditorialService,
     FeedService,
