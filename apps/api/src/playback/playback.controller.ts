@@ -6,6 +6,7 @@ import {
   idSchema,
   PLAYBACK_TOKEN_PARAM,
   playbackRefreshSchema,
+  playbackSessionQuerySchema,
   playbackSessionSchema,
   type PlaybackRefresh,
   type PlaybackSession,
@@ -45,11 +46,21 @@ export class PlaybackController {
   @Returns(playbackSessionSchema)
   session(
     @Param('videoId', new ZodPipe(idSchema)) videoId: string,
+    @Query(new ZodPipe(playbackSessionQuerySchema)) q: z.infer<typeof playbackSessionQuerySchema>,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<PlaybackSession> {
     noStore(res);
-    return this.playback.createSession(videoId, req.clientIp);
+    const userAgent = req.headers['user-agent'];
+    return this.playback.createSession(
+      videoId,
+      {
+        ip: req.clientIp,
+        userAgent: typeof userAgent === 'string' ? userAgent : undefined,
+        userId: req.user?.id ?? null,
+      },
+      q.apercu === '1',
+    );
   }
 
   @Post(':videoId/refresh')

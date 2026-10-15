@@ -105,19 +105,20 @@ model User {
   updatedAt          DateTime  @updatedAt
   deletedAt          DateTime?
 
-  sessions     Session[]
-  emailTokens  EmailToken[]
-  likes        Like[]
-  bookmarks    Bookmark[]
-  progress     WatchProgress[]
-  articles     Article[]
-  posts        Post[]
-  reminders    Reminder[]
-  tastes       UserTaste[]
-  dismissals   FilmDismissal[]
-  reports      Report[]
-  auditEntries AuditLog[]
-  uploads      Upload[]
+  sessions          Session[]
+  emailTokens       EmailToken[]
+  likes             Like[]
+  bookmarks         Bookmark[]
+  progress          WatchProgress[]
+  articles          Article[]
+  posts             Post[]
+  reminders         Reminder[]
+  tastes            UserTaste[]
+  dismissals        FilmDismissal[]
+  pushSubscriptions PushSubscription[]
+  reports           Report[]
+  auditEntries      AuditLog[]
+  uploads           Upload[]
 
   @@map("users")
 }
@@ -207,6 +208,7 @@ model Film {
   reminders     Reminder[]
   dismissals    FilmDismissal[]
   topTen        TopTenEntry[]
+  playbackViews PlaybackView[]
   bookmarks     Bookmark[]
   progress      WatchProgress[]
   featuredIn    Article[]         @relation("ArticleFeaturedFilm")
@@ -782,4 +784,32 @@ model TopTenEntry {
   @@id([day, rank])
   @@unique([day, filmId])
   @@map("top_ten_entries")
+}
+
+/// Lecture lancée, pour le Top 10 (ADR-0014) : une ligne par jour, film et spectateur. Le spectateur
+/// n'est connu que par une empreinte HMAC propre au jour (impossible à relier d'un jour à l'autre) ;
+/// les lignes de plus de 8 jours sont effacées.
+model PlaybackView {
+  day        DateTime @db.Date
+  filmId     String
+  viewerHash String   @db.Char(64)
+  film       Film     @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@id([day, filmId, viewerHash])
+  @@index([day])
+  @@map("playback_views")
+}
+
+/// Abonnement Web Push d'un membre (rappels « Me le rappeler », ADR-0014).
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

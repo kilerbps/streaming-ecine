@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service.js';
 import { ENV, type Env } from '../config/env.js';
+import { kinshasaDay, shiftDay } from '../common/kinshasa.js';
 import { visibleWhere } from '../content/content.helpers.js';
 import { MailService } from '../mail/mail.service.js';
 import { mailTemplates } from '../mail/mail.templates.js';
@@ -32,6 +33,8 @@ export class SchedulerService implements OnModuleInit, OnModuleDestroy {
   private running = false;
   /** Dernière vérification des sorties ; au démarrage, les 10 dernières minutes sont rattrapées. */
   private releasesCheckedAt = new Date(Date.now() - 10 * 60_000);
+  /** Dernier jour dont le Top 10 a été calculé (ou vérifié) par cette instance. */
+  private topTenDay: string | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -56,39 +59,101 @@ export class SchedulerService implements OnModuleInit, OnModuleDestroy {
   async tick(now = new Date()): Promise<void> {
     if (this.running) return;
     this.running = true;
+    // Étapes indépendantes : l'échec de l'une (base momentanément indisponible) ne bloque pas les
+    // autres, et chacune est retentée au passage suivant.
+    const steps: Array<[string, () => Promise<void>]> = [
+      ['Publication planifiée', () => this.publishDue(now)],
+      ['Sorties annoncées', () => this.releaseAnnounced(now)],
+      ['Rappels', () => this.sendReminders(now)],
+      ['Top 10', () => this.computeTopTen(now)],
+    ];
     try {
-      const due = { state: 'SCHEDULED' as const, publishAt: { lte: now }, deletedAt: null };
-      const [films, articles, posts] = await Promise.all([
-        this.prisma.film.findMany({ where: due, select: { id: true, slug: true } }),
-        this.prisma.article.findMany({ where: due, select: { id: true, slug: true } }),
-        this.prisma.post.findMany({ where: due, select: { id: true } }),
-      ]);
-      await this.release('film', 'Film', films, (ids) =>
-        this.prisma.film.updateMany({
-          where: { ...due, id: { in: ids } },
-          data: { state: 'PUBLISHED' },
-        }),
-      );
-      await this.release('article', 'Article', articles, (ids) =>
-        this.prisma.article.updateMany({
-          where: { ...due, id: { in: ids } },
-          data: { state: 'PUBLISHED' },
-        }),
-      );
-      await this.release('post', 'Post', posts, (ids) =>
-        this.prisma.post.updateMany({
-          where: { ...due, id: { in: ids } },
-          data: { state: 'PUBLISHED' },
-        }),
-      );
-      await this.releaseAnnounced(now);
-      await this.sendReminders(now);
-    } catch (err) {
-      // Nouvel essai au prochain passage : une base momentanément indisponible ne doit pas arrêter l'API.
-      this.logger.warn(`Publication planifiée reportée : ${(err as Error).message}`);
+      for (const [name, step] of steps) {
+        try {
+          await step();
+        } catch (err) {
+          this.logger.warn(`${name} reportée : ${(err as Error).message}`);
+        }
+      }
     } finally {
       this.running = false;
     }
+  }
+
+  /**
+   * Top 10 en RDC (ADR-0014) : une fois par jour (heure de Kinshasa), les films classés par nombre de
+   * spectateurs du jour cumulés sur 7 jours glissants. Les empreintes de plus de 8 jours sont effacées.
+   */
+  private async computeTopTen(now: Date): Promise<void> {
+    const today = kinshasaDay(now);
+    if (this.topTenDay === today) return;
+    const day = new Date(`${today}T00:00:00Z`);
+    const existing = await this.prisma.topTenEntry.findFirst({
+      where: { day },
+      select: { rank: true },
+    });
+    if (!existing) {
+      const rows = await this.prisma.playbackView.groupBy({
+        by: ['filmId'],
+        where: {
+          day: { gte: new Date(`${shiftDay(today, -6)}T00:00:00Z`) },
+          film: visibleWhere(now),
+        },
+        _count: { filmId: true },
+        orderBy: [{ _count: { filmId: 'desc' } }, { filmId: 'asc' }],
+        take: 10,
+      });
+      await this.prisma.$transaction([
+        this.prisma.topTenEntry.createMany({
+          data: rows.map((row, index) => ({
+            day,
+            rank: index + 1,
+            filmId: row.filmId,
+            viewers: row._count.filmId,
+          })),
+          skipDuplicates: true,
+        }),
+        this.prisma.playbackView.deleteMany({
+          where: { day: { lt: new Date(`${shiftDay(today, -8)}T00:00:00Z`) } },
+        }),
+        this.prisma.topTenEntry.deleteMany({
+          where: { day: { lt: new Date(`${shiftDay(today, -30)}T00:00:00Z`) } },
+        }),
+      ]);
+      if (rows.length > 0) {
+        await this.events.changed('home');
+        this.logger.log(`Top 10 du ${today} calculé (${rows.length} titre(s))`);
+      }
+    }
+    this.topTenDay = today;
+  }
+
+  /** Films, actualités et publications programmés dont l'heure est passée. */
+  private async publishDue(now: Date): Promise<void> {
+    const due = { state: 'SCHEDULED' as const, publishAt: { lte: now }, deletedAt: null };
+    const [films, articles, posts] = await Promise.all([
+      this.prisma.film.findMany({ where: due, select: { id: true, slug: true } }),
+      this.prisma.article.findMany({ where: due, select: { id: true, slug: true } }),
+      this.prisma.post.findMany({ where: due, select: { id: true } }),
+    ]);
+    await this.release('film', 'Film', films, (ids) =>
+      this.prisma.film.updateMany({
+        where: { ...due, id: { in: ids } },
+        data: { state: 'PUBLISHED' },
+      }),
+    );
+    await this.release('article', 'Article', articles, (ids) =>
+      this.prisma.article.updateMany({
+        where: { ...due, id: { in: ids } },
+        data: { state: 'PUBLISHED' },
+      }),
+    );
+    await this.release('post', 'Post', posts, (ids) =>
+      this.prisma.post.updateMany({
+        where: { ...due, id: { in: ids } },
+        data: { state: 'PUBLISHED' },
+      }),
+    );
   }
 
   /** Films dont l'heure de sortie vient de passer : invalidation pour qu'ils deviennent lisibles. */

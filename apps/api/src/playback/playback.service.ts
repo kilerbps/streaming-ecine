@@ -3,15 +3,16 @@ import { join, resolve } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PLAYBACK_TOKEN_PARAM, type PlaybackRefresh, type PlaybackSession } from '@ecine/contracts';
 import { ENV, type Env } from '../config/env.js';
-import { hashIp, openSecret, randomToken } from '../common/crypto.js';
+import { hashIp, hmacHex, openSecret, randomToken } from '../common/crypto.js';
+import { kinshasaDay } from '../common/kinshasa.js';
 import { ProblemException } from '../common/problem.js';
 import { playableWhere } from '../content/content.helpers.js';
 import { storagePaths } from '../media/static.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CacheService } from '../redis/cache.service.js';
 import { RedisThrottlerStorage } from '../redis/throttler-storage.js';
-import { rewriteMaster, rewriteVariant } from './hls-rewrite.js';
-import { PlaybackTokenService } from './playback-token.service.js';
+import { capMaster, renditionHeight, rewriteMaster, rewriteVariant } from './hls-rewrite.js';
+import { PlaybackTokenService, type PlaybackClaims } from './playback-token.service.js';
 
 /** Quotas anti-aspiration (docs/06-SECURITY.md §6.4). Une lecture normale charge ~10 à 20 segments/min. */
 const QUOTAS = {
@@ -21,9 +22,12 @@ const QUOTAS = {
   keysPerSession: { limit: 60, ttlMs: 5 * 60_000 },
 } as const;
 const REFRESH_GRACE_SEC = 10 * 60;
+/** Aperçus automatiques : toujours muets, en 240p au plus (docs/design/03, mode allégé). */
+const PREVIEW_MAX_HEIGHT = 240;
 
 interface PlayableVideo {
   id: string;
+  filmId: string;
   hlsBasePath: string;
   keyId: string | null;
 }
@@ -43,15 +47,25 @@ export class PlaybackService {
     this.hlsRoot = storagePaths(env).hls;
   }
 
-  async createSession(videoId: string, clientIp: string | undefined): Promise<PlaybackSession> {
-    await this.playable(videoId);
+  /**
+   * Nouvelle session de lecture. Une vraie lecture (pas un aperçu automatique) est comptée pour le
+   * Top 10 : une ligne par jour, film et spectateur, le spectateur n'étant connu que par une empreinte
+   * HMAC propre au jour (ADR-0014).
+   */
+  async createSession(
+    videoId: string,
+    viewer: { ip: string | undefined; userAgent: string | undefined; userId: string | null },
+    preview = false,
+  ): Promise<PlaybackSession> {
+    const video = await this.playable(videoId);
     await this.enforce(
       'sessions-ip',
-      hashIp(clientIp, this.env.IP_HASH_SALT) ?? 'inconnu',
+      hashIp(viewer.ip, this.env.IP_HASH_SALT) ?? 'inconnu',
       QUOTAS.sessionsPerIp,
     );
+    if (!preview) await this.recordView(video.filmId, viewer);
     const sessionId = randomToken(12);
-    const { token, expiresAt } = await this.tokens.sign({ videoId, sessionId });
+    const { token, expiresAt } = await this.tokens.sign({ videoId, sessionId, preview });
     return {
       sessionId,
       token,
@@ -71,9 +85,10 @@ export class PlaybackService {
   }
 
   async master(videoId: string, token: string | undefined): Promise<string> {
-    await this.authorize(videoId, token);
+    const claims = await this.authorize(videoId, token);
     const video = await this.playable(videoId);
-    const playlist = await this.readPlaylist(video, 'master.m3u8');
+    const full = await this.readPlaylist(video, 'master.m3u8');
+    const playlist = claims.preview ? capMaster(full, PREVIEW_MAX_HEIGHT) : full;
     const t = encodeURIComponent(token!);
     return rewriteMaster(
       playlist,
@@ -83,7 +98,8 @@ export class PlaybackService {
   }
 
   async variant(videoId: string, rendition: string, token: string | undefined): Promise<string> {
-    await this.authorize(videoId, token);
+    const claims = await this.authorize(videoId, token);
+    this.assertRendition(claims, rendition);
     const video = await this.playable(videoId);
     const playlist = await this.readPlaylist(video, join(rendition, 'index.m3u8'));
     const t = encodeURIComponent(token!);
@@ -120,6 +136,7 @@ export class PlaybackService {
     token: string | undefined,
   ): Promise<string> {
     const claims = await this.authorize(videoId, token);
+    this.assertRendition(claims, rendition);
     const video = await this.playable(videoId);
     await this.enforce('segments', claims.sessionId, QUOTAS.segmentsPerSession);
     const base = resolve(this.hlsRoot, video.hlsBasePath);
@@ -134,18 +151,45 @@ export class PlaybackService {
     return claims;
   }
 
+  /** Un jeton d'aperçu n'ouvre que les rendus de 240p au plus (l'échelle commence toujours à 144p). */
+  private assertRendition(claims: PlaybackClaims, rendition: string): void {
+    if (claims.preview && renditionHeight(rendition) > PREVIEW_MAX_HEIGHT) {
+      throw ProblemException.forbidden('Rendu non autorisé pour un aperçu.');
+    }
+  }
+
+  /** Lecture du jour pour le Top 10 ; jamais bloquante pour la lecture elle-même. */
+  private async recordView(
+    filmId: string,
+    viewer: { ip: string | undefined; userAgent: string | undefined; userId: string | null },
+  ): Promise<void> {
+    const day = kinshasaDay(new Date());
+    const who = viewer.userId
+      ? `u:${viewer.userId}`
+      : `v:${viewer.ip ?? ''}|${viewer.userAgent ?? ''}`;
+    const viewerHash = hmacHex(this.env.IP_HASH_SALT, `top10:${day}:${who}`);
+    try {
+      await this.prisma.playbackView.createMany({
+        data: [{ day: new Date(`${day}T00:00:00Z`), filmId, viewerHash }],
+        skipDuplicates: true,
+      });
+    } catch (err) {
+      this.logger.warn(`Lecture non comptée : ${(err as Error).message}`);
+    }
+  }
+
   /**
    * Vidéo prête d'un film visible et déjà sorti (mis en cache 30 s ; invalidé à chaque action
    * d'administration).
    */
   private async playable(videoId: string): Promise<PlayableVideo> {
-    const video = await this.cache.wrap('playback', videoId, 30, async () => {
+    const video = await this.cache.wrap('playback', `video:${videoId}`, 30, async () => {
       const row = await this.prisma.videoAsset.findFirst({
         where: { id: videoId, state: 'READY', film: playableWhere() },
-        select: { id: true, hlsBasePath: true, keyId: true },
+        select: { id: true, filmId: true, hlsBasePath: true, keyId: true },
       });
       return row?.hlsBasePath
-        ? { id: row.id, hlsBasePath: row.hlsBasePath, keyId: row.keyId }
+        ? { id: row.id, filmId: row.filmId, hlsBasePath: row.hlsBasePath, keyId: row.keyId }
         : null;
     });
     if (!video) throw ProblemException.notFound('Cette vidéo n’est pas disponible.');

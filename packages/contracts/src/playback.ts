@@ -11,6 +11,9 @@ export const playbackSessionSchema = z.object({
 });
 export type PlaybackSession = z.infer<typeof playbackSessionSchema>;
 
+/** Ouverture de session : `apercu=1` pour un aperçu automatique (240p, jamais compté comme lecture). */
+export const playbackSessionQuerySchema = z.strictObject({ apercu: z.enum(['1']).optional() });
+
 export const playbackRefreshSchema = z.object({
   token: z.string(),
   expiresAt: z.string(),
