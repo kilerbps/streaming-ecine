@@ -2,19 +2,12 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { revalidateTag } from 'next/cache';
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
+import { REVALIDATE_TAG } from '@/lib/revalidate-tags';
 import { serverConfig } from '@/server/config';
 
 const MAX_SKEW_MS = 5 * 60 * 1000;
 const bodySchema = z.object({
-  tags: z
-    .array(
-      z
-        .string()
-        .regex(/^[a-z]+(?::[a-z0-9-]+)?$/)
-        .max(160),
-    )
-    .min(1)
-    .max(100),
+  tags: z.array(z.string().regex(REVALIDATE_TAG).max(160)).min(1).max(100),
 });
 
 /**
