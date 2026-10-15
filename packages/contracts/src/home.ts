@@ -8,6 +8,9 @@ import { filmLanguageSchema, filmSummarySchema, personSummarySchema } from './co
  * par le site, en tête.
  */
 
+/** Seuil d'une rangée de titres (ADR-0013) : sous ce nombre, la rangée n'est pas affichée. */
+export const HOME_ROW_MIN_TITLES = 4;
+
 /** Affiche à la une : programmée en administration, sinon les derniers films publiés (5 au plus). */
 export const homeFeaturedSchema = z.object({
   film: filmSummarySchema,
@@ -44,3 +47,25 @@ export const homeSchema = z.object({
   rows: z.array(homeRowSchema),
 });
 export type Home = z.infer<typeof homeSchema>;
+
+/** Données de personnalisation d'un visiteur (cookies de l'appareil, avec son accord). */
+export const personalHomeInputSchema = z.strictObject({
+  /** Films regardés au-delà de 10 min, le plus récent d'abord. */
+  history: z.array(z.string().min(1).max(64)).max(20).default([]),
+  /** « Pas pour moi » encore actifs. */
+  dismissed: z.array(z.string().min(1).max(64)).max(100).default([]),
+  /** Goûts choisis (catégories). */
+  tastes: z.array(z.string().min(1).max(120)).max(8).default([]),
+});
+export type PersonalHomeInput = z.input<typeof personalHomeInputSchema>;
+
+/**
+ * Partie personnelle de l'accueil : « Parce que vous avez regardé {titre} », ordre des catégories par
+ * affinité, titres à masquer (« Pas pour moi »). Pour un membre, calculée depuis son compte.
+ */
+export const personalHomeSchema = z.object({
+  becauseWatched: z.object({ title: z.string(), films: z.array(filmSummarySchema) }).nullable(),
+  categoryOrder: z.array(z.string()),
+  hidden: z.array(z.string()),
+});
+export type PersonalHome = z.infer<typeof personalHomeSchema>;

@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import type { Home, HomeFeatured, HomeRow, PersonSummary } from '@ecine/contracts';
+import {
+  HOME_ROW_MIN_TITLES,
+  type Home,
+  type HomeFeatured,
+  type HomeRow,
+  type PersonSummary,
+} from '@ecine/contracts';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CacheService } from '../redis/cache.service.js';
@@ -27,13 +33,13 @@ export const HOME_RULES = {
   tilesMax: 20,
   top10Min: 10,
   newWindowDays: 30,
-  newMin: 4,
+  newMin: HOME_ROW_MIN_TITLES,
   shortsMaxRuntimeSec: 15 * 60,
-  shortsMin: 4,
+  shortsMin: HOME_ROW_MIN_TITLES,
   soonMin: 1,
   talentsMin: 6,
   editorialMin: 1,
-  categoryMin: 4,
+  categoryMin: HOME_ROW_MIN_TITLES,
 } as const;
 
 /** Rangées dans l'ordre de la spécification ; les rangées éditoriales gardent leur ordre choisi. */

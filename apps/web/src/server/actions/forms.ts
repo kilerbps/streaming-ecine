@@ -10,7 +10,7 @@ import {
 } from '@ecine/contracts';
 import { privateRequest } from '../api-client';
 import { serverConfig } from '../config';
-import { PREF_COOKIES } from '../cookie-names';
+import { PREF_COOKIES, PERSONAL_COOKIES } from '../cookie-names';
 import { readConsent } from '../consent';
 import { fromError, invalid, ok, type ActionResult } from './result';
 
@@ -47,13 +47,22 @@ export async function saveConsentAction(input: unknown): Promise<ActionResult<Co
   });
   jar.set({
     name: PREF_COOKIES.consent,
-    value: JSON.stringify({ v: CONSENT_VERSION, a: parsed.data.analytics, p: parsed.data.ads }),
+    value: JSON.stringify({
+      v: CONSENT_VERSION,
+      a: parsed.data.analytics,
+      p: parsed.data.ads,
+      h: parsed.data.personalization,
+    }),
     httpOnly: true,
     secure,
     sameSite: 'lax',
     path: '/',
     maxAge: CONSENT_MAX_AGE,
   });
+  // Personnalisation refusée : l'historique, les goûts et les « Pas pour moi » de l'appareil partent.
+  if (!parsed.data.personalization) {
+    for (const name of Object.values(PERSONAL_COOKIES)) jar.delete(name);
+  }
   try {
     await privateRequest(null, '/consent', {
       method: 'POST',

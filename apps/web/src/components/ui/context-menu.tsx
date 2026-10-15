@@ -49,10 +49,16 @@ export function ContextMenu({
   items,
   preview,
   children,
+  contents = false,
 }: {
   items: MenuItem[];
   preview?: ReactNode;
   children: ReactNode;
+  /**
+   * Déclencheur sans boîte (`display: contents`) autour de l'enfant, au lieu de se greffer dessus :
+   * nécessaire quand l'enfant vient d'un composant serveur asynchrone (tuiles de l'accueil).
+   */
+  contents?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   // Le menu contextuel de Radix ne se pilote pas : la fermeture passe par Échap, qu'il écoute déjà.
@@ -66,7 +72,11 @@ export function ContextMenu({
         if (next) vibrate('menu');
       }}
     >
-      <Ctx.Trigger asChild>{children}</Ctx.Trigger>
+      {contents ? (
+        <Ctx.Trigger className="contents">{children}</Ctx.Trigger>
+      ) : (
+        <Ctx.Trigger asChild>{children}</Ctx.Trigger>
+      )}
       <Ctx.Portal>
         <Ctx.Content className={CONTENT} collisionPadding={16}>
           {preview ? <div className="p-2 pb-3">{preview}</div> : null}

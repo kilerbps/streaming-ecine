@@ -22,12 +22,15 @@ import { FILM_COMPLETE_EVENT } from '@/lib/install';
 import { formatTimecode } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { saveProgressAction } from '@/server/actions/interactions';
+import { recordHistoryAction } from '@/server/actions/personalization';
 import { toggleFullscreen } from './fullscreen';
 import { createPlaybackMeter, type PlaybackSource } from './playback-meter';
 import { PlayerControls } from './player-controls';
 import { useHlsPlayback } from './use-hls';
 
 const SAVE_EVERY_SEC = 10;
+/** « Film regardé » pour la personnalisation : au-delà de 10 min. */
+const HISTORY_AFTER_SEC = 600;
 /** Le chargement n'apparaît qu'au-delà de 300 ms (docs/05 §7) : pas de clignotement à chaque segment. */
 const SHOW_BUFFERING_AFTER_MS = 300;
 /** Au-delà, on explique : connexion lente, ou qualité choisie trop élevée pour le réseau. */
@@ -124,6 +127,8 @@ export function Player({
   const containerRef = useRef<HTMLDivElement>(null);
   const lastSaved = useRef(0);
   const startedOnce = useRef(false);
+  // Historique de l'appareil (visiteur) : film compté une fois au-delà de 10 min (ADR-0014).
+  const historyRecorded = useRef(false);
   const [meter] = useState(() =>
     createPlaybackMeter(filmId, source ?? (autoStart ? 'resume' : 'film_page'), (event) => {
       track(event);
@@ -253,6 +258,10 @@ export function Player({
           const video = e.currentTarget;
           persist(video.currentTime);
           meter.time(video.currentTime, video.duration, video.paused);
+          if (!viewer && !historyRecorded.current && video.currentTime >= HISTORY_AFTER_SEC) {
+            historyRecorded.current = true;
+            void recordHistoryAction(filmId);
+          }
         }}
         onPause={(e) => {
           stopBuffering();

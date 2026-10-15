@@ -25,6 +25,8 @@ import {
   pageSchema,
   progressInputSchema,
   reminderStateSchema,
+  dismissalStateSchema,
+  tastesSchema,
   reportInputSchema,
   viewerStateSchema,
   type BookmarkState,
@@ -33,6 +35,8 @@ import {
   type LikeState,
   type Page,
   type ReminderState,
+  type DismissalState,
+  type Tastes,
   type ViewerState,
 } from '@ecine/contracts';
 import { z } from 'zod';
@@ -139,6 +143,45 @@ export class InteractionsController {
     @Param('filmId', new ZodPipe(idSchema)) filmId: string,
   ): Promise<ReminderState> {
     return this.interactions.setReminder(user.id, filmId, false);
+  }
+
+  @Put('me/dismissals/:filmId')
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @Returns(dismissalStateSchema)
+  dismiss(
+    @CurrentUser() user: AuthUser,
+    @Param('filmId', new ZodPipe(idSchema)) filmId: string,
+  ): Promise<DismissalState> {
+    return this.interactions.setDismissal(user.id, filmId, true);
+  }
+
+  @Delete('me/dismissals/:filmId')
+  @Returns(dismissalStateSchema)
+  undismiss(
+    @CurrentUser() user: AuthUser,
+    @Param('filmId', new ZodPipe(idSchema)) filmId: string,
+  ): Promise<DismissalState> {
+    return this.interactions.setDismissal(user.id, filmId, false);
+  }
+
+  @Get('me/tastes')
+  @Returns(tastesSchema)
+  tastes(
+    @CurrentUser() user: AuthUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Tastes> {
+    privateResponse(res);
+    return this.interactions.tastes(user.id);
+  }
+
+  @Put('me/tastes')
+  @BodySchema(tastesSchema)
+  @Returns(tastesSchema)
+  setTastes(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodPipe(tastesSchema)) input: Tastes,
+  ): Promise<Tastes> {
+    return this.interactions.setTastes(user.id, input.categories);
   }
 
   @Get('me/reminders')

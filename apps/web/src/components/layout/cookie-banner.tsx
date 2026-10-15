@@ -22,6 +22,7 @@ export function CookieBanner({ initial }: { initial: ConsentCategories | null })
   const [visible, setVisible] = useState(initial === null);
   const [customizing, setCustomizing] = useState(false);
   const [analytics, setAnalytics] = useState(initial?.analytics ?? false);
+  const [personalization, setPersonalization] = useState(initial?.personalization ?? false);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -55,14 +56,18 @@ export function CookieBanner({ initial }: { initial: ConsentCategories | null })
               <Button
                 variant="secondary"
                 pending={pending}
-                onClick={() => save({ necessary: true, analytics: false, ads: false })}
+                onClick={() =>
+                  save({ necessary: true, analytics: false, ads: false, personalization: false })
+                }
               >
                 {t('refuseAll')}
               </Button>
               <Button
                 variant="secondary"
                 pending={pending}
-                onClick={() => save({ necessary: true, analytics: true, ads: false })}
+                onClick={() =>
+                  save({ necessary: true, analytics: true, ads: false, personalization: true })
+                }
               >
                 {t('acceptAll')}
               </Button>
@@ -87,7 +92,7 @@ export function CookieBanner({ initial }: { initial: ConsentCategories | null })
           className="flex flex-col gap-5"
           onSubmit={(e) => {
             e.preventDefault();
-            save({ necessary: true, analytics, ads: false });
+            save({ necessary: true, analytics, ads: false, personalization });
           }}
         >
           <ConsentRow label={t('necessary')} help={t('necessaryHelp')} checked disabled />
@@ -96,6 +101,12 @@ export function CookieBanner({ initial }: { initial: ConsentCategories | null })
             help={t('analyticsHelp')}
             checked={analytics}
             onChange={setAnalytics}
+          />
+          <ConsentRow
+            label={t('personalization')}
+            help={t('personalizationHelp')}
+            checked={personalization}
+            onChange={setPersonalization}
           />
           <ConsentRow label={t('ads')} help={t('adsHelp')} checked={false} disabled />
           <Button type="submit" variant="primary" pending={pending}>

@@ -32,7 +32,7 @@ export function RowTracker({ row, children }: { row: string; children: ReactNode
       onClickCapture={(event) => {
         const link = (event.target as Element).closest('a');
         if (!link || !ref.current) return;
-        const tiles = [...ref.current.querySelectorAll('.no-scrollbar > a')];
+        const tiles = [...ref.current.querySelectorAll('.no-scrollbar a')];
         const position = tiles.indexOf(link);
         track({
           type: 'home_row_click',

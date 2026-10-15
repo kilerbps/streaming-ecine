@@ -1,7 +1,17 @@
-import { Controller, Get, Param, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Post as HttpPost,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import {
   articleDetailSchema,
   articleListQuerySchema,
@@ -14,6 +24,8 @@ import {
   filmListQuerySchema,
   filmSummarySchema,
   homeSchema,
+  personalHomeInputSchema,
+  personalHomeSchema,
   whatsNewSchema,
   idSchema,
   pageSchema,
@@ -33,6 +45,7 @@ import {
   type FilmDetail,
   type FilmSummary,
   type Home,
+  type PersonalHome,
   type WhatsNew,
   type Page,
   type PersonDetail,
@@ -44,7 +57,7 @@ import {
   type TeamMember,
 } from '@ecine/contracts';
 import { z } from 'zod';
-import { QuerySchema, Returns } from '../common/contract.decorators.js';
+import { BodySchema, QuerySchema, Returns } from '../common/contract.decorators.js';
 import { ProblemException } from '../common/problem.js';
 import { ZodPipe } from '../common/zod.pipe.js';
 import { Public } from '../auth/decorators.js';
@@ -53,6 +66,7 @@ import { SearchService } from '../search/search.service.js';
 import { EditorialService } from './editorial.service.js';
 import { FilmsService } from './films.service.js';
 import { HomeService } from './home.service.js';
+import { PersonalHomeService } from './personal-home.service.js';
 import { WhatsNewService } from './whats-new.service.js';
 import { RequestLocale } from './locale.decorator.js';
 import { PeopleService } from './people.service.js';
@@ -81,6 +95,7 @@ export class ContentController {
   constructor(
     private readonly films: FilmsService,
     private readonly homeService: HomeService,
+    private readonly personalHome: PersonalHomeService,
     private readonly whatsNewService: WhatsNewService,
     private readonly people: PeopleService,
     private readonly editorial: EditorialService,
@@ -127,6 +142,25 @@ export class ContentController {
   home(@RequestLocale() locale: string, @Res({ passthrough: true }) res: Response): Promise<Home> {
     publicCache(res, 120);
     return this.homeService.home(locale);
+  }
+
+  /**
+   * Partie personnelle de l'accueil (ADR-0014) : membre connecté → son compte ; visiteur → les
+   * signaux envoyés par le site depuis les cookies de l'appareil. Jamais mise en cache.
+   */
+  @HttpPost('home/personal')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 60, ttl: 60_000 } })
+  @BodySchema(personalHomeInputSchema)
+  @Returns(personalHomeSchema)
+  personal(
+    @Body(new ZodPipe(personalHomeInputSchema)) input: z.output<typeof personalHomeInputSchema>,
+    @RequestLocale() locale: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<PersonalHome> {
+    res.setHeader('Cache-Control', 'no-store');
+    return this.personalHome.personal(input, req.user?.id ?? null, locale);
   }
 
   /** Nouveautés : films annoncés et événements à venir (lot 3). */

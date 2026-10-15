@@ -6,6 +6,7 @@ import {
   articleSummarySchema,
   categoryOverviewSchema,
   homeSchema,
+  personalHomeSchema,
   whatsNewSchema,
   continueWatchingItemSchema,
   feedPageSchema,
@@ -25,9 +26,11 @@ import {
   type FilmKind,
   type LikeTargetType,
   type Me,
+  type PersonalHome,
 } from '@ecine/contracts';
 import { z } from 'zod';
 import { ApiError, privateRequest, publicGet } from './api-client';
+import { readPersonalSignals } from './personalization';
 import { serverConfig } from './config';
 import { authCookieNames } from './cookie-names';
 import { resolvePreferences, type Preferences, type ThemeSetting } from '@/lib/preferences';
@@ -61,6 +64,20 @@ export const getFilm = cache((slug: string) =>
 /** Accueil en rangées : affiche à la une et rangées calculées par l'API (étiquette `home`). */
 export function getHome() {
   return publicGet(homeSchema, '/home', { tags: ['home'], revalidate: 120 });
+}
+
+/**
+ * Partie personnelle de l'accueil (ADR-0014) : membre → son compte ; visiteur ayant accepté
+ * « Personnalisation » → les cookies de l'appareil ; sinon rien.
+ */
+export async function getPersonalHome(): Promise<PersonalHome | null> {
+  if (await getViewer()) {
+    return privateRequest(personalHomeSchema, '/home/personal', { method: 'POST', body: {} });
+  }
+  const signals = await readPersonalSignals();
+  if (!signals) return null;
+  if (!signals.history.length && !signals.dismissed.length && !signals.tastes.length) return null;
+  return privateRequest(personalHomeSchema, '/home/personal', { method: 'POST', body: signals });
 }
 
 /** Nouveautés : films annoncés et événements à venir (étiquette `whats-new`). */

@@ -16,11 +16,14 @@ export const contactInputSchema = z.strictObject({
 });
 export type ContactInput = z.infer<typeof contactInputSchema>;
 
-export const CONSENT_VERSION = '2026-10-02';
+/** Nouvelle version = nouvelle demande d'accord (ajout de « Personnalisation », ADR-0014). */
+export const CONSENT_VERSION = '2026-10-15';
 export const consentCategoriesSchema = z.strictObject({
   necessary: z.literal(true),
   analytics: z.boolean(),
   ads: z.boolean(),
+  /** Historique de l'appareil (20 derniers films), goûts et « Pas pour moi » des visiteurs. */
+  personalization: z.boolean(),
 });
 export type ConsentCategories = z.infer<typeof consentCategoriesSchema>;
 

@@ -321,7 +321,7 @@
   },
   "cookies": {
     "title": "Cookies",
-    "body": "E-Ciné utilise des cookies nécessaires au fonctionnement (session, sécurité, préférences). Avec votre accord, nous mesurons aussi l'audience de façon anonyme.",
+    "body": "E-Ciné utilise des cookies nécessaires au fonctionnement (session, sécurité, préférences). Avec votre accord, nous mesurons aussi l'audience de façon anonyme et adaptons l'accueil à ce que vous regardez.",
     "refuseAll": "Tout refuser",
     "acceptAll": "Tout accepter",
     "customize": "Personnaliser",
@@ -330,6 +330,8 @@
     "necessaryHelp": "Session, sécurité, thème, sons, langue. Toujours actifs.",
     "analytics": "Mesure d'audience",
     "analyticsHelp": "Statistiques anonymes de visite et de lecture, pour améliorer le site.",
+    "personalization": "Personnalisation",
+    "personalizationHelp": "Garde sur cet appareil les 20 derniers films regardés, vos goûts et vos « Pas pour moi », pour adapter l'accueil. Rien n'est envoyé à des tiers.",
     "ads": "Publicité",
     "adsHelp": "Aucune publicité pour l'instant.",
     "policy": "Politique cookies",
@@ -542,10 +544,19 @@
       "new": "Nouveautés sur E-Ciné",
       "shorts": "Courts-métrages : 15 minutes ou moins",
       "soon": "Bientôt sur E-Ciné",
-      "talents": "Talents à l'honneur"
+      "talents": "Talents à l'honneur",
+      "because": "Parce que vous avez regardé {title}"
     },
     "end": "Vous avez tout vu pour l'instant.",
-    "openDiscover": "Ouvrir Découvrir"
+    "openDiscover": "Ouvrir Découvrir",
+    "menu": {
+      "share": "Partager",
+      "notForMe": "Pas pour moi",
+      "open": "Voir la fiche",
+      "dismissed": "Compris, ce titre ne vous sera plus proposé.",
+      "undo": "Annuler",
+      "copied": "Lien copié."
+    }
   },
   "whatsNew": {
     "title": "Nouveautés",

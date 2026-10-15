@@ -54,3 +54,15 @@ export type ReportInput = z.infer<typeof reportInputSchema>;
 /** « Me le rappeler » : rappel d'un membre pour un film annoncé, envoyé le jour de la sortie. */
 export const reminderStateSchema = z.object({ reminded: z.boolean() });
 export type ReminderState = z.infer<typeof reminderStateSchema>;
+
+/** « Pas pour moi » : le titre quitte les rangées de l'accueil pendant 90 jours. */
+export const DISMISS_DAYS = 90;
+export const dismissalStateSchema = z.object({ dismissed: z.boolean() });
+export type DismissalState = z.infer<typeof dismissalStateSchema>;
+
+/** Goûts (choix des catégories), modifiables dans Réglages. */
+export const TASTES_MAX = 8;
+export const tastesSchema = z.object({
+  categories: z.array(z.string().min(1).max(120)).max(TASTES_MAX),
+});
+export type Tastes = z.infer<typeof tastesSchema>;

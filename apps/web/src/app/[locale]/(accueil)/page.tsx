@@ -6,7 +6,15 @@ import { HomeRows } from '@/components/features/home/home-rows';
 import { PullToRefresh } from '@/components/features/system/pull-to-refresh';
 import { LinkButton } from '@/components/ui/link-button';
 import { routes } from '@/lib/routes';
-import { getContinueWatching, getHome } from '@/server/data';
+import { applyPersonal } from '@/lib/home-rows';
+import {
+  getBookmarks,
+  getContinueWatching,
+  getHome,
+  getPersonalHome,
+  getViewer,
+} from '@/server/data';
+import { personalizationAllowed } from '@/server/personalization';
 import { pageMetadata } from '@/server/seo';
 
 export async function generateMetadata({ params }: PageProps<'/[locale]'>): Promise<Metadata> {
@@ -31,11 +39,16 @@ export async function generateMetadata({ params }: PageProps<'/[locale]'>): Prom
 export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   const { locale: raw } = await params;
   const locale = raw as Locale;
-  const [t, home, continueWatching] = await Promise.all([
+  const [t, home, continueWatching, personal, viewer, allowed] = await Promise.all([
     getTranslations('home'),
     getHome(),
     getContinueWatching(),
+    getPersonalHome().catch(() => null),
+    getViewer(),
+    personalizationAllowed(),
   ]);
+  // Ma liste du membre : état des menus contextuels (« Ajouter » ou « Retirer »).
+  const bookmarks = viewer ? await getBookmarks().catch(() => null) : null;
   return (
     <>
       <PullToRefresh />
@@ -44,7 +57,13 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
         <HomeFeatured items={home.featured} locale={locale} />
       </div>
       <div className="mt-8 lg:mt-10">
-        <HomeRows rows={home.rows} continueWatching={continueWatching} locale={locale} />
+        <HomeRows
+          rows={applyPersonal(home.rows, personal)}
+          continueWatching={continueWatching}
+          locale={locale}
+          canDismiss={Boolean(viewer) || allowed}
+          bookmarkedIds={bookmarks?.items.map((film) => film.id) ?? []}
+        />
       </div>
       <section className="container-page mt-12 flex flex-col items-center gap-4 pb-6 text-center lg:mt-16">
         <p className="text-[15px] leading-5 text-muted">{t('end')}</p>

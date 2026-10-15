@@ -4,7 +4,8 @@ import { CONSENT_VERSION, type ConsentCategories } from '@ecine/contracts';
 import { z } from 'zod';
 import { PREF_COOKIES } from './cookie-names';
 
-const stored = z.object({ v: z.string(), a: z.boolean(), p: z.boolean() });
+/** a : mesure d'audience, p : publicité, h : personnalisation (historique de l'appareil). */
+const stored = z.object({ v: z.string(), a: z.boolean(), p: z.boolean(), h: z.boolean() });
 
 /** Choix cookies en cours de validité (null = bannière à afficher). Une nouvelle version redemande l'accord. */
 export async function readConsent(): Promise<ConsentCategories | null> {
@@ -13,7 +14,7 @@ export async function readConsent(): Promise<ConsentCategories | null> {
   try {
     const parsed = stored.parse(JSON.parse(raw));
     if (parsed.v !== CONSENT_VERSION) return null;
-    return { necessary: true, analytics: parsed.a, ads: parsed.p };
+    return { necessary: true, analytics: parsed.a, ads: parsed.p, personalization: parsed.h };
   } catch {
     return null;
   }

@@ -24,3 +24,13 @@ export const PREF_COOKIES = {
   anonId: 'ecine_anon',
   seed: 'ecine_seed',
 } as const;
+
+/**
+ * Personnalisation d'un visiteur (catégorie « Personnalisation » acceptée, ADR-0014) : 20 derniers
+ * films regardés, « Pas pour moi » et goûts. Effacés dès que la catégorie est refusée.
+ */
+export const PERSONAL_COOKIES = {
+  history: 'ecine_hist',
+  dismissed: 'ecine_dismiss',
+  tastes: 'ecine_tastes',
+} as const;

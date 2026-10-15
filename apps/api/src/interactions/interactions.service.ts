@@ -5,11 +5,14 @@ import type {
   FilmSummary,
   LikeState,
   LikeTargetType,
+  DismissalState,
   Page,
   ReminderState,
+  Tastes,
   ReportInput,
   ViewerState,
 } from '@ecine/contracts';
+import { DISMISS_DAYS } from '@ecine/contracts';
 import { z } from 'zod';
 import { decodeCursor, encodeCursor } from '../common/cursor.js';
 import { ProblemException } from '../common/problem.js';
@@ -156,6 +159,53 @@ export class InteractionsService {
       update: { notifiedAt: null },
     });
     return { reminded: true };
+  }
+
+  /** « Pas pour moi » (membre) : le titre quitte les rangées de l'accueil pendant 90 jours. */
+  async setDismissal(userId: string, filmId: string, dismissed: boolean): Promise<DismissalState> {
+    if (!dismissed) {
+      await this.prisma.filmDismissal.deleteMany({ where: { userId, filmId } });
+      return { dismissed: false };
+    }
+    await this.assertTargetVisible('FILM', filmId);
+    const expiresAt = new Date(Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000);
+    await this.prisma.filmDismissal.upsert({
+      where: { userId_filmId: { userId, filmId } },
+      create: { userId, filmId, expiresAt },
+      update: { expiresAt },
+    });
+    return { dismissed: true };
+  }
+
+  async tastes(userId: string): Promise<Tastes> {
+    const rows = await this.prisma.userTaste.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'asc' },
+      select: { category: { select: { slug: true } } },
+    });
+    return { categories: rows.map((r) => r.category.slug) };
+  }
+
+  /** Goûts : remplace la sélection (catégories existantes seulement). */
+  async setTastes(userId: string, slugs: string[]): Promise<Tastes> {
+    const unique = [...new Set(slugs)];
+    const categories = await this.prisma.category.findMany({
+      where: { slug: { in: unique } },
+      select: { id: true, slug: true },
+    });
+    if (categories.length !== unique.length) {
+      throw ProblemException.badRequest('Une des catégories choisies est introuvable.');
+    }
+    await this.prisma.$transaction([
+      this.prisma.userTaste.deleteMany({ where: { userId } }),
+      this.prisma.userTaste.createMany({
+        data: unique.map((slug) => ({
+          userId,
+          categoryId: categories.find((c) => c.slug === slug)!.id,
+        })),
+      }),
+    ]);
+    return { categories: unique };
   }
 
   /** Rappels en attente (Moi → Mes rappels, état des boutons de Nouveautés), sortie la plus proche d'abord. */
