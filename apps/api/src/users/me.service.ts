@@ -1,5 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { hasRole, type Me, type TwoFactorSetup, type UpdateMeInput } from '@ecine/contracts';
+import {
+  hasRole,
+  type Me,
+  type RecoveryCodes,
+  type TwoFactorSetup,
+  type UpdateMeInput,
+} from '@ecine/contracts';
+import QRCode from 'qrcode';
 import { ENV, type Env } from '../config/env.js';
 import { openSecret, sealSecret } from '../common/crypto.js';
 import { ProblemException } from '../common/problem.js';
@@ -7,6 +14,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { AuthService, toMe } from '../auth/auth.service.js';
 import { PasswordService } from '../auth/password.service.js';
 import { SessionService } from '../auth/session.service.js';
+import { generateRecoveryCodes, recoveryHash } from '../auth/recovery-codes.js';
 import { generateTotpSecret, otpauthUrl } from '../auth/totp.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RedisService } from '../redis/redis.service.js';
@@ -138,10 +146,54 @@ export class MeService {
       'EX',
       PENDING_2FA_TTL_SEC,
     );
-    return { secret, otpauthUrl: otpauthUrl(secret, user.email) };
+    const url = otpauthUrl(secret, user.email);
+    // QR code rendu côté serveur, en SVG (aucun texte dedans : seulement des modules).
+    const svg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' });
+    return {
+      secret,
+      otpauthUrl: url,
+      qrCode: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`,
+    };
   }
 
-  async enableTwoFactor(userId: string, code: string): Promise<void> {
+  /** Nouveaux codes de secours : empreintes enregistrées, codes en clair renvoyés une seule fois. */
+  private async issueRecoveryCodes(userId: string): Promise<RecoveryCodes> {
+    const recoveryCodes = generateRecoveryCodes();
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorRecoveryHashes: recoveryCodes.map((code) =>
+          recoveryHash(this.env.MEDIA_KEY_SECRET, userId, code),
+        ),
+      },
+    });
+    return { recoveryCodes };
+  }
+
+  /** Renouvelle les codes de secours (mot de passe et second facteur exigés) ; les anciens ne servent plus. */
+  async regenerateRecoveryCodes(
+    userId: string,
+    password: string,
+    code: string,
+  ): Promise<RecoveryCodes> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    if (!user.twoFactorEnabledAt)
+      throw ProblemException.conflict('La double authentification n’est pas active.');
+    const ok =
+      (await this.passwords.verify(user.passwordHash, password)) &&
+      (await this.auth.verifySecondFactor(user, code));
+    if (!ok) throw ProblemException.badRequest('Mot de passe ou code incorrect.');
+    const codes = await this.issueRecoveryCodes(userId);
+    await this.audit.log(null, {
+      actorId: userId,
+      action: 'auth.2fa_recovery_regenerated',
+      entity: 'User',
+      entityId: userId,
+    });
+    return codes;
+  }
+
+  async enableTwoFactor(userId: string, code: string): Promise<RecoveryCodes> {
     const sealed = await this.redis.client.get(`sess:2fa-setup:${userId}`);
     if (!sealed) throw ProblemException.badRequest('Configuration expirée. Recommencez.');
     const secret = openSecret(sealed, this.env.MEDIA_KEY_SECRET).toString('utf8');
@@ -164,8 +216,10 @@ export class MeService {
       entity: 'User',
       entityId: userId,
     });
+    const codes = await this.issueRecoveryCodes(userId);
     // Les sessions existantes n'ont pas validé le second facteur : reconnexion exigée.
     await this.sessions.revokeAllForUser(userId);
+    return codes;
   }
 
   async disableTwoFactor(userId: string, password: string, code: string): Promise<void> {
@@ -177,14 +231,13 @@ export class MeService {
         'La double authentification est obligatoire pour les administrateurs.',
       );
     }
-    const secret = openSecret(user.twoFactorSecretEnc, this.env.MEDIA_KEY_SECRET).toString('utf8');
     const ok =
       (await this.passwords.verify(user.passwordHash, password)) &&
-      (await this.auth.consumeTotp(userId, secret, code));
+      (await this.auth.verifySecondFactor(user, code));
     if (!ok) throw ProblemException.badRequest('Mot de passe ou code incorrect.');
     await this.prisma.user.update({
       where: { id: userId },
-      data: { twoFactorSecretEnc: null, twoFactorEnabledAt: null },
+      data: { twoFactorSecretEnc: null, twoFactorEnabledAt: null, twoFactorRecoveryHashes: [] },
     });
     await this.audit.log(null, {
       actorId: userId,

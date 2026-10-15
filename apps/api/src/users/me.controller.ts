@@ -6,11 +6,13 @@ import {
   changePasswordInputSchema,
   deleteMeInputSchema,
   meSchema,
+  recoveryCodesSchema,
   twoFactorDisableInputSchema,
   twoFactorEnableInputSchema,
   twoFactorSetupSchema,
   updateMeInputSchema,
   type Me,
+  type RecoveryCodes,
   type TwoFactorSetup,
 } from '@ecine/contracts';
 import type { z } from 'zod';
@@ -103,18 +105,37 @@ export class MeController {
     return this.me.setupTwoFactor(user.id);
   }
 
+  /** Activation : renvoie les codes de secours, une seule fois, puis exige une reconnexion. */
   @Post('2fa/enable')
-  @HttpCode(204)
+  @HttpCode(200)
   @Throttle({ default: { limit: 10, ttl: 15 * 60_000 } })
   @BodySchema(twoFactorEnableInputSchema)
+  @Returns(recoveryCodesSchema)
   async enableTwoFactor(
     @CurrentUser() user: AuthUser,
     @Body(new ZodPipe(twoFactorEnableInputSchema))
     input: z.infer<typeof twoFactorEnableInputSchema>,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
-    await this.me.enableTwoFactor(user.id, input.code);
+  ): Promise<RecoveryCodes> {
+    const codes = await this.me.enableTwoFactor(user.id, input.code);
+    res.setHeader('Cache-Control', 'no-store');
     clearAuthCookies(res, this.env.COOKIE_SECURE);
+    return codes;
+  }
+
+  @Post('2fa/recovery-codes')
+  @HttpCode(200)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  @BodySchema(twoFactorDisableInputSchema)
+  @Returns(recoveryCodesSchema)
+  regenerateRecoveryCodes(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodPipe(twoFactorDisableInputSchema))
+    input: z.infer<typeof twoFactorDisableInputSchema>,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<RecoveryCodes> {
+    res.setHeader('Cache-Control', 'no-store');
+    return this.me.regenerateRecoveryCodes(user.id, input.password, input.code);
   }
 
   @Post('2fa/disable')

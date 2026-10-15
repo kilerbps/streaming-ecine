@@ -90,20 +90,22 @@ enum ReportState {
 // ——— Comptes et sessions ———
 
 model User {
-  id                 String    @id @default(cuid())
-  email              String    @unique
-  emailVerified      DateTime?
-  passwordHash       String?
-  displayName        String
-  role               Role      @default(MEMBER)
-  locale             String    @default("fr")
+  id                      String    @id @default(cuid())
+  email                   String    @unique
+  emailVerified           DateTime?
+  passwordHash            String?
+  displayName             String
+  role                    Role      @default(MEMBER)
+  locale                  String    @default("fr")
   /// Secret TOTP chiffré (AES-256-GCM), jamais renvoyé.
-  twoFactorSecretEnc String?
-  twoFactorEnabledAt DateTime?
-  disabledAt         DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  deletedAt          DateTime?
+  twoFactorSecretEnc      String?
+  twoFactorEnabledAt      DateTime?
+  /// Codes de secours de la 2FA : empreintes HMAC, chaque code ne sert qu'une fois.
+  twoFactorRecoveryHashes String[]  @default([])
+  disabledAt              DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
 
   sessions          Session[]
   emailTokens       EmailToken[]

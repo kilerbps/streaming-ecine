@@ -29,6 +29,7 @@ interface PreferencesContextValue extends Preferences {
   setSoundUi: (on: boolean) => void;
   setSaveData: (on: boolean) => void;
   setPerf: (perf: PerfSetting) => void;
+  setAutoPreviews: (on: boolean) => void;
   /** Retour après un geste : vibration, et son si la personne l'a choisi. */
   feedback: (name: HapticName) => void;
 }
@@ -148,6 +149,11 @@ export function PreferencesProvider({
     setPrefs((p) => ({ ...p, perf, lite }));
   }, []);
 
+  const setAutoPreviews = useCallback((autoPreviews: boolean) => {
+    writeCookie(PREFERENCE_COOKIES.autoPreviews, autoPreviews ? null : 'off');
+    setPrefs((p) => ({ ...p, autoPreviews }));
+  }, []);
+
   const value = useMemo(
     () => ({
       ...prefs,
@@ -157,9 +163,20 @@ export function PreferencesProvider({
       setSoundUi,
       setSaveData,
       setPerf,
+      setAutoPreviews,
       feedback,
     }),
-    [prefs, setTheme, setHaptics, setSoundClap, setSoundUi, setSaveData, setPerf, feedback],
+    [
+      prefs,
+      setTheme,
+      setHaptics,
+      setSoundClap,
+      setSoundUi,
+      setSaveData,
+      setPerf,
+      setAutoPreviews,
+      feedback,
+    ],
   );
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 }

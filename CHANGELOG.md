@@ -17,6 +17,11 @@
 - Aperçu rapide : toucher une affiche de l'accueil ouvre une feuille (route interceptée `/fr/films/{slug}/apercu`) ; une visite directe affiche la fiche.
 - Nouveautés `/fr/nouveautes` : Bientôt (rappel « Me le rappeler », e-mail le jour de la sortie), Événements (fichier `.ics`), Actualités ; rangée « Mes rappels » dans Moi.
 - Mesure : `home_row_impression`, `home_row_click`, `preview_open`, `reminder_set`.
+- Réglages v2 :
+  - groupes Affichage, Sons et vibrations, Données et performances, Lecture, Notifications, Goûts, Profil, Sécurité, Mes données ;
+  - Lecture : qualité préférée (avec les données consommées par heure) et sous-titres (langue par défaut, taille) ;
+  - aperçus automatiques activables.
+- Double authentification : QR code, clé pour la saisie manuelle, 10 codes de secours à usage unique (copie, téléchargement, renouvellement), désactivation avec mot de passe et code. La connexion accepte un code de secours (ADR-0014).
 
 ### Modifié
 

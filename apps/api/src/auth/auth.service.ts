@@ -20,6 +20,7 @@ import type { User } from '../generated/prisma/client.js';
 import { LoginAttemptsService } from './login-attempts.service.js';
 import { PasswordService } from './password.service.js';
 import { type ClientInfo, type IssuedTokens, SessionService } from './session.service.js';
+import { isRecoveryCode, recoveryHash } from './recovery-codes.js';
 import { verifyTotp } from './totp.js';
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -35,6 +36,7 @@ export function toMe(user: User): Me {
     role: user.role,
     locale: localeSchema.catch(DEFAULT_LOCALE).parse(user.locale),
     twoFactorEnabled: Boolean(user.twoFactorEnabledAt),
+    recoveryCodesLeft: user.twoFactorEnabledAt ? user.twoFactorRecoveryHashes.length : 0,
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -105,10 +107,7 @@ export class AuthService {
           detail: 'Saisissez le code à 6 chiffres de votre application d’authentification.',
         });
       }
-      const secret = openSecret(user.twoFactorSecretEnc, this.env.MEDIA_KEY_SECRET).toString(
-        'utf8',
-      );
-      if (!(await this.consumeTotp(user.id, secret, input.totp))) {
+      if (!(await this.verifySecondFactor(user, input.totp))) {
         await this.attempts.recordFailure(input.email);
         throw ProblemException.unauthorized('Code de vérification incorrect.');
       }
@@ -127,6 +126,34 @@ export class AuthService {
       });
     }
     return { me: toMe(user), tokens };
+  }
+
+  /**
+   * Second facteur : code à 6 chiffres de l'application (anti-rejeu), sinon code de secours, retiré
+   * dès qu'il sert (journalisé : le membre doit en être averti s'il ne l'a pas utilisé lui-même).
+   */
+  async verifySecondFactor(
+    user: Pick<User, 'id' | 'twoFactorSecretEnc'>,
+    code: string,
+  ): Promise<boolean> {
+    if (isRecoveryCode(code)) {
+      const hash = recoveryHash(this.env.MEDIA_KEY_SECRET, user.id, code);
+      const removed = await this.prisma.$executeRaw`
+        UPDATE "users"
+        SET "twoFactorRecoveryHashes" = array_remove("twoFactorRecoveryHashes", ${hash})
+        WHERE "id" = ${user.id} AND ${hash} = ANY("twoFactorRecoveryHashes")`;
+      if (removed !== 1) return false;
+      await this.audit.log(null, {
+        actorId: user.id,
+        action: 'auth.2fa_recovery_used',
+        entity: 'User',
+        entityId: user.id,
+      });
+      return true;
+    }
+    if (!user.twoFactorSecretEnc) return false;
+    const secret = openSecret(user.twoFactorSecretEnc, this.env.MEDIA_KEY_SECRET).toString('utf8');
+    return this.consumeTotp(user.id, secret, code);
   }
 
   /** Code TOTP à usage unique : un pas déjà consommé est refusé (anti-rejeu). */

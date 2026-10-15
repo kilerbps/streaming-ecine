@@ -37,8 +37,11 @@
 | GET | `/articles` · `/articles/{slug}` | PUBLIC | `kind` = NEWS/ANNOUNCEMENT/EVENT |
 | GET | `/posts/{id}` | PUBLIC | Publication photo + texte |
 | GET | `/home` | PUBLIC | Accueil en rangées (lot 3) : affiche à la une (programmée, sinon derniers films) et rangées automatiques ou programmées, sous leurs seuils ; cache 120 s |
+| POST | `/home/personal` | PUBLIC (limité) | Partie personnelle de l'accueil (ADR-0014) : membre → son compte ; visiteur → signaux de l'appareil envoyés dans le corps (`history`, `dismissed`, `tastes`), seulement s'il a accepté « Personnalisation ». Jamais en cache |
 | GET | `/whats-new` | PUBLIC | Nouveautés : films annoncés (sortie la plus proche d'abord) et événements à venir avec film lié ; cache 120 s |
 | GET | `/categories` | PUBLIC | Avec `filmCount` (titres visibles) et `cover` (affiche du plus récent) |
+| GET | `/share-images/films/{slug}` | PUBLIC (limité) | Affiche du film recadrée pour l'image de partage (`opengraph-image`) |
+| GET | `/push/key` | PUBLIC | `{ publicKey }` VAPID, `null` si Web Push n'est pas configuré ; cache 1 h |
 | GET | `/search?q=` | PUBLIC | Groupé par type ; limité en débit |
 | GET | `/pages/{slug}` | PUBLIC | À propos, légales |
 | GET | `/team` | PUBLIC | Équipe dirigeante |
@@ -49,7 +52,7 @@
 
 | Méthode | Route | Accès | Notes |
 |---|---|---|---|
-| POST | `/playback/{videoId}/session` | PUBLIC (limité) | Vérifie que le film est publié ; renvoie `{ manifestUrl, token, expiresAt }` |
+| POST | `/playback/{videoId}/session` | PUBLIC (limité) | Vérifie que le film est publié ; renvoie `{ manifestUrl, token, expiresAt }`. `?apercu=1` : session d'aperçu plafonnée à 240p, non comptée dans le Top 10 |
 | POST | `/playback/{videoId}/refresh` | Jeton valide | Renouvelle sans nouvelle autorisation lourde |
 | GET | `/playback/keys/{keyId}` | Jeton valide | Clé AES ; **rate limit strict** ; `Cache-Control: no-store` |
 
@@ -67,6 +70,12 @@
 | PATCH | `/me` | MEMBER (nom, langue, préférences) |
 | GET | `/me/export` | MEMBER — export des données |
 | DELETE | `/me` | MEMBER — suppression du compte (confirmation par mot de passe) |
+| POST | `/me/2fa/setup` | MEMBER — secret, lien `otpauth://` et QR code SVG (data URL) |
+| POST | `/me/2fa/enable` | MEMBER (limité) — `{ code }` ; renvoie 10 codes de secours, montrés une seule fois |
+| POST | `/me/2fa/recovery-codes` | MEMBER (limité) — mot de passe + code ; remplace les codes de secours |
+| POST | `/me/2fa/disable` | MEMBER (limité) — mot de passe + code (application ou secours) ; efface les codes |
+
+`/auth/login` accepte au second facteur un code à 6 chiffres ou un code de secours `abcd-efgh` (usage unique, journalisé `auth.2fa_recovery_used`). `GET /me` donne `recoveryCodesLeft`.
 
 ### Interactions
 
@@ -77,6 +86,9 @@
 | GET | `/me/bookmarks` | MEMBER |
 | PUT / DELETE | `/me/reminders/{filmId}` | MEMBER (« Me le rappeler » : film annoncé seulement, sinon 409 ; e-mail le jour de la sortie) |
 | GET | `/me/reminders` | MEMBER (rappels en attente) |
+| PUT / DELETE | `/me/dismissals/{filmId}` | MEMBER — « Pas pour moi » : titre masqué de l'accueil 90 jours (ADR-0014) |
+| GET / PUT | `/me/tastes` | MEMBER — goûts : `{ categories }`, 8 slugs au plus |
+| POST / DELETE | `/me/push-subscriptions` | MEMBER — abonnement Web Push de l'appareil (hôtes de push autorisés seulement) |
 | PUT | `/me/progress/{filmId}` | MEMBER — `{ positionSec }`, limité à 1 écriture / 10 s |
 | GET | `/me/continue-watching` | MEMBER |
 | POST | `/reports` | MEMBER |
@@ -95,6 +107,7 @@
 |---|---|---|
 | CRUD | `/admin/films` | EDITOR |
 | POST | `/admin/films/{id}/publish` · `/unpublish` · `/schedule` | EDITOR |
+| PATCH | `/admin/media/images/{id}/framing` | EDITOR — point focal et recadrages par format |
 | POST | `/admin/media/uploads` (init) · PATCH (morceaux) · POST (finalisation) | EDITOR |
 | GET | `/admin/videos/{id}/status` | EDITOR |
 | CRUD | `/admin/people` · `/admin/articles` · `/admin/posts` · `/admin/team` · `/admin/pages` | EDITOR |

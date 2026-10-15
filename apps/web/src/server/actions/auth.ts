@@ -10,12 +10,15 @@ import {
   meSchema,
   registerInputSchema,
   resetPasswordInputSchema,
+  recoveryCodesSchema,
+  twoFactorDisableInputSchema,
   twoFactorEnableInputSchema,
   twoFactorSetupSchema,
   updateMeInputSchema,
   verifyEmailInputSchema,
   type Me,
   type TwoFactorSetup,
+  type RecoveryCodes,
 } from '@ecine/contracts';
 import { privateRequest } from '../api-client';
 import { serverConfig } from '../config';
@@ -152,16 +155,51 @@ export async function setupTwoFactorAction(): Promise<ActionResult<TwoFactorSetu
   }
 }
 
-export async function enableTwoFactorAction(input: unknown): Promise<ActionResult> {
+/**
+ * Activation : renvoie les codes de secours (montrés une seule fois) ; reconnexion exigée ensuite.
+ * L'API révoque déjà les sessions ; les cookies ne sont effacés qu'après lecture des codes
+ * (`logoutAction`), sinon la page serait rendue aussitôt en visiteur et les codes perdus.
+ */
+export async function enableTwoFactorAction(input: unknown): Promise<ActionResult<RecoveryCodes>> {
   const parsed = twoFactorEnableInputSchema.safeParse(input);
   if (!parsed.success) return invalid(parsed.error);
   try {
-    await privateRequest(null, '/me/2fa/enable', {
-      method: 'POST',
-      body: parsed.data,
-      relayCookies: true,
-    });
+    return ok(
+      await privateRequest(recoveryCodesSchema, '/me/2fa/enable', {
+        method: 'POST',
+        body: parsed.data,
+      }),
+    );
+  } catch (error) {
+    return fromError(error);
+  }
+}
+
+/** Désactivation : mot de passe et code (de l'application ou de secours). */
+export async function disableTwoFactorAction(input: unknown): Promise<ActionResult> {
+  const parsed = twoFactorDisableInputSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  try {
+    await privateRequest(null, '/me/2fa/disable', { method: 'POST', body: parsed.data });
     return ok(null);
+  } catch (error) {
+    return fromError(error);
+  }
+}
+
+/** Nouveaux codes de secours (les anciens ne servent plus). */
+export async function regenerateRecoveryCodesAction(
+  input: unknown,
+): Promise<ActionResult<RecoveryCodes>> {
+  const parsed = twoFactorDisableInputSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  try {
+    return ok(
+      await privateRequest(recoveryCodesSchema, '/me/2fa/recovery-codes', {
+        method: 'POST',
+        body: parsed.data,
+      }),
+    );
   } catch (error) {
     return fromError(error);
   }

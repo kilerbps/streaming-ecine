@@ -74,3 +74,19 @@ ALTER TABLE "push_subscriptions" ADD CONSTRAINT "push_subscriptions_userId_fkey"
 ```
 
 Réversible : supprimer les deux tables.
+
+## Double authentification : codes de secours (ajout du 2026-10-15)
+
+Lot 3, Réglages : 10 codes de secours `abcd-efgh` sont donnés à l'activation de la double authentification et montrés une seule fois. Ils servent quand le téléphone est perdu.
+
+- Seules les empreintes sont gardées : `HMAC(MEDIA_KEY_SECRET, "2fa-recovery:{userId}:{code normalisé}")`, propres à chaque compte.
+- Usage unique, sans course possible : un seul `UPDATE … array_remove(…) WHERE … = ANY(…)` retire le code. Le code n'est accepté que si une ligne est modifiée. Chaque usage est journalisé (`auth.2fa_recovery_used`).
+- Le renouvellement et la désactivation demandent le mot de passe et un code. La désactivation efface les codes.
+
+Migration `apps/api/prisma/migrations/20261015150000_two_factor_recovery/migration.sql`, additive : une colonne nouvelle, vide par défaut.
+
+```sql
+ALTER TABLE "users" ADD COLUMN     "twoFactorRecoveryHashes" TEXT[] DEFAULT ARRAY[]::TEXT[];
+```
+
+Réversible : supprimer la colonne. Les comptes déjà protégés gardent leur application d'authentification et peuvent créer des codes depuis Réglages.

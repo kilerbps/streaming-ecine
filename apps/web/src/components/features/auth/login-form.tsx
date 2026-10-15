@@ -81,9 +81,10 @@ export function LoginForm({
         <TextField
           label={t('totp')}
           help={t('totpHelp')}
-          inputMode="numeric"
           autoComplete="one-time-code"
-          maxLength={6}
+          autoCapitalize="off"
+          spellCheck={false}
+          maxLength={9}
           error={errors.totp?.message}
           {...register('totp')}
         />

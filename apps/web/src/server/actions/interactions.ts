@@ -137,7 +137,10 @@ export async function suggestAction(q: string): Promise<ActionResult<SearchResul
 }
 
 /** Ouverture d'une session de lecture : jeton ≤ 5 min, lié à la vidéo (jamais placé dans l'URL de page). */
-export async function startPlaybackAction(videoId: string): Promise<ActionResult<PlaybackSession>> {
+export async function startPlaybackAction(
+  videoId: string,
+  preview = false,
+): Promise<ActionResult<PlaybackSession>> {
   const parsed = idParam.safeParse(videoId);
   if (!parsed.success) return invalid(parsed.error);
   try {
@@ -145,7 +148,8 @@ export async function startPlaybackAction(videoId: string): Promise<ActionResult
       await privateRequest(
         playbackSessionSchema,
         `/playback/${encodeURIComponent(parsed.data)}/session`,
-        { method: 'POST' },
+        // Aperçu automatique : 240p au plus côté API, jamais compté dans le Top 10.
+        { method: 'POST', query: preview ? { apercu: '1' } : undefined },
       ),
     );
   } catch (error) {

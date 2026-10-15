@@ -6,7 +6,7 @@ import { usePreferences } from '@/components/providers/preferences';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Switch } from '@/components/ui/switch';
 
-function Group({ title, children }: { title: string; children: ReactNode }) {
+export function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-8 first:mt-0">
       <h2 className="text-[17px] font-semibold leading-[22px]">{title}</h2>
@@ -17,7 +17,15 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Choice({ label, help, children }: { label: string; help: string; children: ReactNode }) {
+export function Choice({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help: string;
+  children: ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-3 py-3">
       <div>
@@ -30,8 +38,8 @@ function Choice({ label, help, children }: { label: string; help: string; childr
 }
 
 /**
- * Réglages toujours accessibles (même sans compte), mémorisés en cookies : thème (Nuit, Jour,
- * Automatique), vibrations, son du clap, sons de l'interface, mode allégé, économie de données.
+ * Réglages toujours accessibles (même sans compte), mémorisés en cookies : Affichage (thème, mode
+ * allégé), Sons et vibrations, Données (économie de données, aperçus automatiques).
  */
 export function PreferencesPanel() {
   const t = useTranslations('prefs');
@@ -48,6 +56,18 @@ export function PreferencesPanel() {
               { value: 'dark', label: t('themeDark') },
               { value: 'light', label: t('themeLight') },
               { value: 'auto', label: t('themeAuto') },
+            ]}
+          />
+        </Choice>
+        <Choice label={t('perf')} help={t('perfHelp')}>
+          <SegmentedControl
+            label={t('perf')}
+            value={prefs.perf}
+            onChange={prefs.setPerf}
+            options={[
+              { value: 'auto', label: t('perfAuto') },
+              { value: 'on', label: t('perfOn') },
+              { value: 'off', label: t('perfOff') },
             ]}
           />
         </Choice>
@@ -76,24 +96,20 @@ export function PreferencesPanel() {
       </Group>
 
       <Group title={t('data')}>
-        <Choice label={t('perf')} help={t('perfHelp')}>
-          <SegmentedControl
-            label={t('perf')}
-            value={prefs.perf}
-            onChange={prefs.setPerf}
-            options={[
-              { value: 'auto', label: t('perfAuto') },
-              { value: 'on', label: t('perfOn') },
-              { value: 'off', label: t('perfOff') },
-            ]}
-          />
-        </Choice>
         <div className="py-2">
           <Switch
             label={t('saveData')}
             description={t('saveDataHelp')}
             checked={prefs.saveData}
             onChange={prefs.setSaveData}
+          />
+        </div>
+        <div className="py-2">
+          <Switch
+            label={t('autoPreviews')}
+            description={t('autoPreviewsHelp')}
+            checked={prefs.autoPreviews}
+            onChange={prefs.setAutoPreviews}
           />
         </div>
       </Group>

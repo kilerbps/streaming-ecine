@@ -18,6 +18,8 @@ export interface Preferences {
   perf: PerfSetting;
   /** Mode allégé effectif au rendu serveur (réglage, sinon détection mémorisée). */
   lite: boolean;
+  /** Aperçus vidéo automatiques (affiche à la une, aperçu rapide), sous conditions de réseau. */
+  autoPreviews: boolean;
 }
 
 /** Cookies d'interface (non sensibles, `SameSite=Lax`, un an). */
@@ -30,6 +32,7 @@ export const PREFERENCE_COOKIES = {
   legacySound: 'ecine_sound',
   saveData: 'ecine_savedata',
   perf: 'ecine_perf',
+  autoPreviews: 'ecine_previews',
   /** Posé par la détection automatique (appareil modeste) pour les rendus suivants. */
   perfDetected: 'ecine_perf_auto',
   /** Dernière visite de Nouveautés (pastille de l'onglet, lib/news-seen.ts). */
@@ -61,6 +64,7 @@ export function resolvePreferences(
       saveData === undefined ? saveDataHeader?.trim().toLowerCase() === 'on' : saveData === 'on',
     perf,
     lite: perf === 'on' || (perf === 'auto' && read(PREFERENCE_COOKIES.perfDetected) === 'lite'),
+    autoPreviews: read(PREFERENCE_COOKIES.autoPreviews) !== 'off',
   };
 }
 

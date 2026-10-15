@@ -34,12 +34,20 @@ export const registerInputSchema = z.strictObject({
 });
 export type RegisterInput = z.infer<typeof registerInputSchema>;
 
+/** Code de secours : 8 caractères sans ambiguïté (ni 0, 1, i, l, o), tiret facultatif. */
+export const RECOVERY_CODE_RE = /^[a-hjkmnp-z2-9]{4}-?[a-hjkmnp-z2-9]{4}$/i;
+export const RECOVERY_CODE_COUNT = 10;
+/** Second facteur saisi à la connexion : code de l'application ou code de secours. */
+export const SECOND_FACTOR_RE = /^(\d{6}|[a-hjkmnp-z2-9]{4}-?[a-hjkmnp-z2-9]{4})$/i;
+
 export const loginInputSchema = z.strictObject({
   email: emailSchema,
   password: z.string().min(1, 'Mot de passe requis').max(PASSWORD_MAX),
+  /** Code à 6 chiffres de l'application, ou code de secours (« abcd-efgh »). */
   totp: z
     .string()
-    .regex(/^\d{6}$/, 'Code à 6 chiffres')
+    .trim()
+    .regex(SECOND_FACTOR_RE, 'Code à 6 chiffres ou code de secours')
     .optional(),
 });
 export type LoginInput = z.infer<typeof loginInputSchema>;
@@ -66,6 +74,8 @@ export const meSchema = z.object({
   role: roleSchema,
   locale: localeSchema,
   twoFactorEnabled: z.boolean(),
+  /** Codes de secours encore utilisables (0 sans double authentification). */
+  recoveryCodesLeft: z.number().int().nonnegative(),
   createdAt: z.string(),
 });
 export type Me = z.infer<typeof meSchema>;
@@ -88,12 +98,25 @@ export const changePasswordInputSchema = z.strictObject({
 
 /** Double authentification (TOTP, RFC 6238) — obligatoire pour ADMIN et SUPER_ADMIN. */
 export const totpCodeSchema = z.string().regex(/^\d{6}$/, 'Code à 6 chiffres');
-export const twoFactorSetupSchema = z.object({ secret: z.string(), otpauthUrl: z.string() });
+export const secondFactorSchema = z
+  .string()
+  .trim()
+  .regex(SECOND_FACTOR_RE, 'Code à 6 chiffres ou code de secours');
+/** Mise en place : clé à saisir à la main, lien otpauth et QR code (SVG en data URL, rendu serveur). */
+export const twoFactorSetupSchema = z.object({
+  secret: z.string(),
+  otpauthUrl: z.string(),
+  qrCode: z.string().startsWith('data:image/svg+xml;base64,'),
+});
 export type TwoFactorSetup = z.infer<typeof twoFactorSetupSchema>;
 export const twoFactorEnableInputSchema = z.strictObject({ code: totpCodeSchema });
+/** Codes de secours : montrés une seule fois (activation ou renouvellement). */
+export const recoveryCodesSchema = z.object({ recoveryCodes: z.array(z.string()) });
+export type RecoveryCodes = z.infer<typeof recoveryCodesSchema>;
+/** Désactivation et renouvellement des codes : mot de passe, puis code de l'application ou de secours. */
 export const twoFactorDisableInputSchema = z.strictObject({
   password: z.string().min(1).max(PASSWORD_MAX),
-  code: totpCodeSchema,
+  code: secondFactorSchema,
 });
 
 /** Réponse de connexion : les jetons sont dans des cookies HttpOnly, jamais dans le corps. */

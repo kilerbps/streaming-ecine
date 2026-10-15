@@ -666,3 +666,11 @@
 [data-motion='reduce'] .ecine-loader .particle::before {
   opacity: 0.65;
 }
+
+/* Taille des sous-titres (Réglages → Lecture) : petite, moyenne (par défaut) ou grande. */
+[data-subs='s'] video::cue {
+  font-size: 80%;
+}
+[data-subs='l'] video::cue {
+  font-size: 135%;
+}

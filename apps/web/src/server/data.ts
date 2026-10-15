@@ -7,6 +7,7 @@ import {
   categoryOverviewSchema,
   homeSchema,
   personalHomeSchema,
+  tastesSchema,
   whatsNewSchema,
   continueWatchingItemSchema,
   feedPageSchema,
@@ -30,7 +31,7 @@ import {
 } from '@ecine/contracts';
 import { z } from 'zod';
 import { ApiError, privateRequest, publicGet } from './api-client';
-import { readPersonalSignals } from './personalization';
+import { personalizationAllowed, readPersonalSignals, readTastesCookie } from './personalization';
 import { serverConfig } from './config';
 import { authCookieNames } from './cookie-names';
 import { resolvePreferences, type Preferences, type ThemeSetting } from '@/lib/preferences';
@@ -209,6 +210,17 @@ export async function getBookmarks(cursor?: string) {
   return privateRequest(pageSchema(filmSummarySchema), '/me/bookmarks', {
     query: { cursor, limit: 24 },
   });
+}
+
+/**
+ * Goûts : ceux du compte pour un membre, ceux de l'appareil pour un visiteur ayant accepté
+ * « Personnalisation » ; `null` quand ils ne peuvent pas être gardés (visiteur sans accord).
+ */
+export async function getTastes(): Promise<string[] | null> {
+  if (await getViewer()) {
+    return (await privateRequest(tastesSchema, '/me/tastes')).categories;
+  }
+  return (await personalizationAllowed()) ? readTastesCookie() : null;
 }
 
 /** Rappels en attente du membre connecté (films annoncés), vide pour un visiteur. */

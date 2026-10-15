@@ -14,6 +14,8 @@ import {
   readConnection,
   readDeviceMemory,
   readQualityPreference,
+  readSubtitlePreference,
+  autoSubtitleIndex,
   readStoredEstimate,
   recoveryDelay,
   storeEstimate,
@@ -61,7 +63,16 @@ function waitForNetwork(ms: number): Promise<void> {
  * jeton injecté dans chaque requête (playlists, clé, segments), renouvellement silencieux, débit de
  * départ estimé, tampon adapté à l'appareil, reprise automatique après une coupure.
  */
-export function useHlsPlayback(videoId: string, options: { saveData: boolean }) {
+export function useHlsPlayback(
+  videoId: string,
+  options: {
+    saveData: boolean;
+    /** Langues parlées du film : les sous-titres de la langue préférée ne s'y ajoutent pas. */
+    audioLanguages?: readonly string[];
+    /** Aperçu automatique : session marquée (240p au plus, jamais comptée), toujours muet. */
+    preview?: boolean;
+  },
+) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
   const tokenRef = useRef<string>('');
@@ -121,7 +132,7 @@ export function useHlsPlayback(videoId: string, options: { saveData: boolean }) 
       }
       if (refreshed.code === 'not_found') return 'gone';
       if (refreshed.code === 'rate') return 'retry';
-      const session = await startPlaybackAction(videoId);
+      const session = await startPlaybackAction(videoId, options.preview);
       if (session.ok) {
         tokenRef.current = session.data.token;
         scheduleRefresh(session.data.expiresAt);
@@ -132,7 +143,7 @@ export function useHlsPlayback(videoId: string, options: { saveData: boolean }) 
       // Server Action injoignable : pas de réseau.
       return 'retry';
     }
-  }, [videoId, scheduleRefresh]);
+  }, [videoId, options.preview, scheduleRefresh]);
 
   /** HLS natif (anciens Safari iOS) : la source est rechargée à la position courante. */
   const reloadNative = useCallback(() => {
@@ -187,7 +198,7 @@ export function useHlsPlayback(videoId: string, options: { saveData: boolean }) 
       if (!video) return false;
       let session: Awaited<ReturnType<typeof startPlaybackAction>>;
       try {
-        session = await startPlaybackAction(videoId);
+        session = await startPlaybackAction(videoId, options.preview);
       } catch {
         setError('network');
         return false;
@@ -261,14 +272,21 @@ export function useHlsPlayback(videoId: string, options: { saveData: boolean }) 
             storeEstimate(store, hls.bandwidthEstimate, now);
           }
         });
-        hls.on(HlsClass.Events.SUBTITLE_TRACKS_UPDATED, (_event, data) =>
+        hls.on(HlsClass.Events.SUBTITLE_TRACKS_UPDATED, (_event, data) => {
           setSubtitleTracks(
             data.subtitleTracks.map((track, index) => ({
               index,
               label: track.name || track.lang || `Piste ${index + 1}`,
             })),
-          ),
-        );
+          );
+          // Réglages → Sous-titres : langue par défaut, si le film n'est pas déjà dans cette langue.
+          const auto = autoSubtitleIndex(
+            data.subtitleTracks,
+            readSubtitlePreference(store).lang,
+            options.audioLanguages ?? [],
+          );
+          if (auto >= 0 && !options.preview) hls.subtitleTrack = auto;
+        });
         hls.on(HlsClass.Events.ERROR, (_event, data) => {
           if (!data.fatal) return;
           if (data.type === HlsClass.ErrorTypes.NETWORK_ERROR) {
@@ -299,7 +317,7 @@ export function useHlsPlayback(videoId: string, options: { saveData: boolean }) 
       }
       return true;
     },
-    [videoId, options.saveData, scheduleRefresh, recover],
+    [videoId, options.saveData, options.audioLanguages, options.preview, scheduleRefresh, recover],
   );
 
   /** Erreur de l'élément vidéo en HLS natif (jeton expiré, coupure) : même reprise que hls.js. */

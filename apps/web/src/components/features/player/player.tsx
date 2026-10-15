@@ -24,6 +24,7 @@ import { routes } from '@/lib/routes';
 import { saveProgressAction } from '@/server/actions/interactions';
 import { recordHistoryAction } from '@/server/actions/personalization';
 import { toggleFullscreen } from './fullscreen';
+import { localStore, readSubtitlePreference } from './network';
 import { createPlaybackMeter, type PlaybackSource } from './playback-meter';
 import { PlayerControls } from './player-controls';
 import { useHlsPlayback } from './use-hls';
@@ -96,6 +97,7 @@ export function Player({
   locale,
   autoStart = false,
   source,
+  audioLanguages = [],
 }: {
   filmId: string;
   videoId: string;
@@ -107,6 +109,8 @@ export function Player({
   autoStart?: boolean;
   /** Provenance mesurée de la lecture ; par défaut, la fiche ou la reprise directe. */
   source?: PlaybackSource;
+  /** Langues parlées : les sous-titres de la langue préférée ne s'activent que pour une autre langue. */
+  audioLanguages?: string[];
 }) {
   const t = useTranslations('player');
   const tf = useTranslations('film');
@@ -123,8 +127,14 @@ export function Player({
     subtitleTracks,
     setSubtitle,
     error,
-  } = useHlsPlayback(videoId, { saveData });
+  } = useHlsPlayback(videoId, { saveData, audioLanguages });
   const containerRef = useRef<HTMLDivElement>(null);
+  // Taille des sous-titres (Réglages → Lecture), lue après le rendu : rien à hydrater.
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.dataset.subs = readSubtitlePreference(localStore()).size;
+    }
+  }, []);
   const lastSaved = useRef(0);
   const startedOnce = useRef(false);
   // Historique de l'appareil (visiteur) : film compté une fois au-delà de 10 min (ADR-0014).

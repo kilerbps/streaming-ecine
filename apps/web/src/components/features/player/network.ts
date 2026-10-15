@@ -205,3 +205,50 @@ export function readQualityPreference(storage: Storage | null): number | null {
 export function storeQualityPreference(storage: Storage | null, height: number | null): void {
   safeSet(storage, QUALITY_KEY, height === null ? null : String(height));
 }
+
+const SUBTITLES_KEY = 'ecine:subtitles';
+export type SubtitleSize = 's' | 'm' | 'l';
+/** Sous-titres : langue par défaut (`null` : jamais automatiques) et taille. Défaut : français, moyenne. */
+export interface SubtitlePreference {
+  lang: string | null;
+  size: SubtitleSize;
+}
+export const DEFAULT_SUBTITLES: SubtitlePreference = { lang: 'fr', size: 'm' };
+
+export function readSubtitlePreference(storage: Storage | null): SubtitlePreference {
+  try {
+    const parsed = JSON.parse(
+      safeGet(storage, SUBTITLES_KEY) ?? 'null',
+    ) as Partial<SubtitlePreference> | null;
+    if (!parsed) return DEFAULT_SUBTITLES;
+    return {
+      lang:
+        typeof parsed.lang === 'string' || parsed.lang === null
+          ? parsed.lang
+          : DEFAULT_SUBTITLES.lang,
+      size: parsed.size === 's' || parsed.size === 'l' ? parsed.size : 'm',
+    };
+  } catch {
+    return DEFAULT_SUBTITLES;
+  }
+}
+
+export function storeSubtitlePreference(
+  storage: Storage | null,
+  preference: SubtitlePreference,
+): void {
+  safeSet(storage, SUBTITLES_KEY, JSON.stringify(preference));
+}
+
+/**
+ * Piste de sous-titres à activer d'office : celle de la langue préférée, seulement si le film n'est
+ * pas déjà dans cette langue (un film en français n'affiche pas de sous-titres français).
+ */
+export function autoSubtitleIndex(
+  tracks: ReadonlyArray<{ lang?: string }>,
+  preferred: string | null,
+  audioLanguages: readonly string[],
+): number {
+  if (!preferred || audioLanguages.includes(preferred)) return -1;
+  return tracks.findIndex((track) => track.lang?.toLowerCase().split('-')[0] === preferred);
+}

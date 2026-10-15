@@ -13,7 +13,13 @@ describe('resolvePreferences', () => {
       saveData: false,
       perf: 'auto',
       lite: false,
+      autoPreviews: true,
     });
+  });
+
+  it('coupe les aperçus automatiques seulement sur demande', () => {
+    expect(resolvePreferences(jar({ ecine_previews: 'off' }), null).autoPreviews).toBe(false);
+    expect(resolvePreferences(jar({ ecine_previews: 'on' }), null).autoPreviews).toBe(true);
   });
 
   it('prend Automatique par défaut en administration', () => {

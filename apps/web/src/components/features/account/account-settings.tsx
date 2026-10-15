@@ -10,7 +10,6 @@ import {
   deleteMeInputSchema,
   updateMeInputSchema,
   type Me,
-  type TwoFactorSetup,
 } from '@ecine/contracts';
 import type { z } from 'zod';
 import { useAuth } from '@/components/providers/auth';
@@ -19,19 +18,18 @@ import { useToast } from '@/components/providers/toast';
 import { Button } from '@/components/ui/button';
 import { CheckboxField, FormError, TextField } from '@/components/ui/field';
 import { routes } from '@/lib/routes';
+import { TwoFactorSettings } from './two-factor-settings';
 import {
   changePasswordAction,
   deleteAccountAction,
-  enableTwoFactorAction,
   resendVerificationAction,
-  setupTwoFactorAction,
   updateProfileAction,
 } from '@/server/actions/auth';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="border-t border-border py-8">
-      <h2 className="mb-5 font-serif text-2xl">{title}</h2>
+      <h2 className="mb-5 text-xl leading-[25px] lg:text-2xl lg:leading-[30px]">{title}</h2>
       {children}
     </section>
   );
@@ -172,76 +170,6 @@ function PasswordForm() {
   );
 }
 
-function TwoFactor({ enabled }: { enabled: boolean }) {
-  const t = useTranslations('me');
-  const ta = useTranslations('auth');
-  const router = useRouter();
-  const toast = useToast();
-  const [setup, setSetup] = useState<TwoFactorSetup | null>(null);
-  const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-  if (enabled) return <p className="text-success">{t('twoFactorOn')}</p>;
-  if (!setup) {
-    return (
-      <div className="flex flex-col gap-3">
-        <p className="text-muted">{t('twoFactorOff')}</p>
-        <Button
-          variant="secondary"
-          className="self-start"
-          pending={pending}
-          onClick={() =>
-            startTransition(async () => {
-              const r = await setupTwoFactorAction();
-              if (r.ok) setSetup(r.data);
-              else toast(r.error, 'error');
-            })
-          }
-        >
-          {t('twoFactorSetup')}
-        </Button>
-      </div>
-    );
-  }
-  return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted">{t('twoFactorScan')}</p>
-      <code className="block break-all border border-border bg-surface-1 p-3 font-mono text-sm">
-        {setup.secret}
-      </code>
-      <a href={setup.otpauthUrl} className="text-sm underline">
-        otpauth://
-      </a>
-      <FormError message={error} />
-      <TextField
-        label={ta('totp')}
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        maxLength={6}
-        value={code}
-        onChange={(e) => setCode(e.target.value)}
-      />
-      <Button
-        variant="secondary"
-        className="self-start"
-        pending={pending}
-        onClick={() =>
-          startTransition(async () => {
-            const r = await enableTwoFactorAction({ code });
-            if (r.ok) {
-              toast(t('twoFactorOn'), 'success');
-              router.replace(routes.login('fr'));
-              router.refresh();
-            } else setError(r.error);
-          })
-        }
-      >
-        {t('twoFactorEnable')}
-      </Button>
-    </div>
-  );
-}
-
 function DeleteAccount() {
   const t = useTranslations('me');
   const ta = useTranslations('auth');
@@ -307,7 +235,10 @@ export function AccountSettings({ me }: { me: Me }) {
         <PasswordForm />
         <div className="mt-10">
           <h3 className="mb-3 font-medium">{t('twoFactor')}</h3>
-          <TwoFactor enabled={me.twoFactorEnabled} />
+          <TwoFactorSettings
+            enabled={me.twoFactorEnabled}
+            recoveryCodesLeft={me.recoveryCodesLeft}
+          />
         </div>
       </Section>
       <Section title={t('data')}>

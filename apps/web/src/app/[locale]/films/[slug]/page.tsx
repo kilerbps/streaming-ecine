@@ -133,6 +133,7 @@ export default async function FilmPage({ params, searchParams }: Props) {
                 runtimeSec: film.runtimeSec,
                 locale,
                 autoStart: resume,
+                audioLanguages: film.audioLanguages,
               }
             : null
         }
