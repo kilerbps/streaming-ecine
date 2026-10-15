@@ -2,20 +2,32 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useResumePosition } from '@/components/features/player/player';
 import { usePreferences } from '@/components/providers/preferences';
 import { LinkButton } from '@/components/ui/link-button';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { Sheet } from '@/components/ui/sheet';
+import { track } from '@/lib/analytics';
 
 /**
  * Feuille de l'aperçu rapide, ouverte par la route interceptée : 60 % de la hauteur, 92 % en glissant
  * vers le haut ; panneau centré de 640 px sur PC. La fermer revient à l'écran d'origine.
  */
-export function PreviewSheet({ title, children }: { title: string; children: ReactNode }) {
+export function PreviewSheet({
+  filmId,
+  title,
+  children,
+}: {
+  filmId: string;
+  title: string;
+  children: ReactNode;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
+  useEffect(() => {
+    track({ type: 'preview_open', targetType: 'FILM', targetId: filmId });
+  }, [filmId]);
   return (
     <Sheet
       open={open}

@@ -26,7 +26,7 @@ export default async function FilmPreviewModal({
       : Promise.resolve(null),
   ]);
   return (
-    <PreviewSheet title={film.title}>
+    <PreviewSheet filmId={film.id} title={film.title}>
       <FilmPreview
         film={film}
         state={state}
