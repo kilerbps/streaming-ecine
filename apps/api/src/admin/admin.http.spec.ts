@@ -22,11 +22,13 @@ import { ProblemDetailsFilter } from '../common/problem-details.filter.js';
 import { PROBLEM_TYPES, ProblemException } from '../common/problem.js';
 import { ENV, type Env } from '../config/env.js';
 import { MediaUrls } from '../content/content.helpers.js';
+import { MailService } from '../mail/mail.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ContentEventsService } from '../revalidate/content-events.service.js';
 import { AdminModule } from './admin.module.js';
 import { AdminArticlesController } from './articles.controller.js';
 import { AdminFilmsController } from './films.controller.js';
+import { AdminHomeController } from './home.controller.js';
 import { AdminInsightsController } from './insights.controller.js';
 import { AdminContactMessagesController, AdminReportsController } from './moderation.controller.js';
 import { AdminPeopleController } from './people.controller.js';
@@ -52,6 +54,7 @@ const MATRIX: Array<[Type, Role]> = [
   [AdminArticlesController, 'EDITOR'],
   [AdminPostsController, 'EDITOR'],
   [AdminCategoriesController, 'EDITOR'],
+  [AdminHomeController, 'EDITOR'],
   [AdminTeamController, 'EDITOR'],
   [AdminPagesController, 'EDITOR'],
   [AdminRedirectsController, 'EDITOR'],
@@ -127,6 +130,7 @@ const prisma = {
 const audit = { log: vi.fn() };
 const events = { changed: vi.fn() };
 const sessions = { revokeAllForUser: vi.fn() };
+const mail = { send: vi.fn() };
 
 @Global()
 @Module({
@@ -135,6 +139,7 @@ const sessions = { revokeAllForUser: vi.fn() };
     { provide: AuditService, useValue: audit },
     { provide: ContentEventsService, useValue: events },
     { provide: SessionService, useValue: sessions },
+    { provide: MailService, useValue: mail },
     {
       provide: ENV,
       useValue: {
@@ -145,7 +150,15 @@ const sessions = { revokeAllForUser: vi.fn() };
     },
     MediaUrls,
   ],
-  exports: [PrismaService, AuditService, ContentEventsService, SessionService, ENV, MediaUrls],
+  exports: [
+    PrismaService,
+    AuditService,
+    ContentEventsService,
+    SessionService,
+    MailService,
+    ENV,
+    MediaUrls,
+  ],
 })
 class StubsModule {}
 
