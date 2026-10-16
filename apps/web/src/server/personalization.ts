@@ -2,6 +2,7 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import type { PersonalHomeInput } from '@ecine/contracts';
 import { z } from 'zod';
+import { dueTastesPrompt, type TastesPromptState } from '@/lib/tastes-prompt';
 import { serverConfig } from './config';
 import { readConsent } from './consent';
 import { PERSONAL_COOKIES } from './cookie-names';
@@ -18,6 +19,12 @@ const historyCookie = z.array(id).max(HISTORY_MAX);
 /** [identifiant, fin en secondes depuis l'époque]. */
 const dismissedCookie = z.array(z.tuple([id, z.number().int()])).max(DISMISSED_MAX);
 const tastesCookie = z.array(slug).max(8);
+const watchedCategories = z.array(slug).max(3);
+const tastesPromptCookie: z.ZodType<TastesPromptState> = z.union([
+  z.object({ s: z.literal('due'), c: watchedCategories }),
+  z.object({ s: z.literal('later'), c: watchedCategories, u: z.number().int() }),
+  z.object({ s: z.literal('done') }),
+]);
 
 function parse<T>(schema: z.ZodType<T>, raw: string | undefined, fallback: T): T {
   if (!raw) return fallback;
@@ -89,4 +96,18 @@ export async function readTastesCookie(): Promise<string[]> {
 
 export async function writeTastesCookie(slugs: string[]): Promise<void> {
   await write(PERSONAL_COOKIES.tastes, slugs.slice(0, 8));
+}
+
+export async function readTastesPrompt(): Promise<TastesPromptState | null> {
+  const raw = (await cookies()).get(PERSONAL_COOKIES.tastesPrompt)?.value;
+  return parse<TastesPromptState | null>(tastesPromptCookie, raw, null);
+}
+
+export async function writeTastesPrompt(state: TastesPromptState): Promise<void> {
+  await write(PERSONAL_COOKIES.tastesPrompt, state);
+}
+
+/** Catégories du film regardé quand la feuille des goûts est à proposer maintenant, sinon `null`. */
+export async function readDueTastesPrompt(): Promise<string[] | null> {
+  return dueTastesPrompt(await readTastesPrompt(), Math.floor(Date.now() / 1000));
 }

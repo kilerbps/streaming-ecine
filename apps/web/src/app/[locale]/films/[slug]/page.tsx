@@ -134,6 +134,7 @@ export default async function FilmPage({ params, searchParams }: Props) {
                 locale,
                 autoStart: resume,
                 audioLanguages: film.audioLanguages,
+                categories: film.categories.map((c) => c.slug),
               }
             : null
         }

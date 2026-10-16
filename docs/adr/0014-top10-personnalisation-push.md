@@ -28,17 +28,19 @@
 ## Personnalisation
 
 - La version du consentement passe au 2026-10-15 : la bannière est de nouveau proposée à tous.
-- Avec la catégorie acceptée, trois cookies `httpOnly` sont gardés 180 jours sur l'appareil :
+- Avec la catégorie acceptée, quatre cookies `httpOnly` sont gardés 180 jours sur l'appareil :
 
   | Cookie | Contenu |
   | --- | --- |
   | `ecine_hist` | 20 derniers films regardés au-delà de 10 minutes |
   | `ecine_dismiss` | « Pas pour moi », 40 titres au plus, 90 jours chacun |
   | `ecine_tastes` | Goûts (catégories) |
+| `ecine_tastes_prompt` | Feuille « Qu'aimez-vous regarder ? » : à proposer (avec les 3 catégories du premier film regardé), repoussée de 7 jours, ou close |
 
-- Refuser la catégorie efface ces trois cookies.
+- Refuser la catégorie efface ces quatre cookies.
+- Un membre garde ses goûts dans son compte. Seul `ecine_tastes_prompt` est posé sur son appareil, pour ne proposer la feuille qu'une fois.
 - `POST /v1/home/personal` calcule « Parce que vous avez regardé {titre} », l'ordre des catégories par affinité et les titres à masquer. Pour un membre, ce calcul utilise son compte ; il n'est jamais mis en cache.
-- **À faire par le propriétaire** : compléter la page Cookies (texte juridique) avec ces trois cookies.
+- **À faire par le propriétaire** : compléter la page Cookies (texte juridique) avec ces quatre cookies.
 
 ## Web Push
 

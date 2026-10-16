@@ -33,4 +33,6 @@ export const PERSONAL_COOKIES = {
   history: 'ecine_hist',
   dismissed: 'ecine_dismiss',
   tastes: 'ecine_tastes',
+  /** Feuille « Qu'aimez-vous regarder ? » : à proposer, repoussée ou close (R-ENG-11). */
+  tastesPrompt: 'ecine_tastes_prompt',
 } as const;

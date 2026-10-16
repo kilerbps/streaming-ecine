@@ -23,6 +23,7 @@
   - aperçus automatiques activables.
 - Double authentification : QR code, clé pour la saisie manuelle, 10 codes de secours à usage unique (copie, téléchargement, renouvellement), désactivation avec mot de passe et code. La connexion accepte un code de secours (ADR-0014).
 - Feuille de connexion v2 : titre qui dit pourquoi la connexion est demandée, bouton Afficher le mot de passe, inscription dans la même feuille avec compteur « 7 sur 12 caractères », erreurs à la sortie du champ, panneau de 440 px sur PC.
+- Choix des goûts « Qu'aimez-vous regarder ? » (R-ENG-11) : au retour sur l'accueil après 10 minutes d'un premier film, trois genres pré-choisis (ceux du film, complétés par les catégories les plus fournies), « Valider » et « Plus tard » de même poids ; « Plus tard » repousse de 7 jours, une seule fois. Cookie `ecine_tastes_prompt` (ADR-0014).
 
 ### Modifié
 

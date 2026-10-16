@@ -610,7 +610,11 @@
       "dismissed": "Compris, ce titre ne vous sera plus proposé.",
       "undo": "Annuler",
       "copied": "Lien copié."
-    }
+    },
+    "tastesTitle": "Qu'aimez-vous regarder ?",
+    "tastesBody": "Choisissez trois genres. Ils passeront en premier sur l'accueil.",
+    "tastesSubmit": "Valider",
+    "tastesLater": "Plus tard"
   },
   "whatsNew": {
     "title": "Nouveautés",

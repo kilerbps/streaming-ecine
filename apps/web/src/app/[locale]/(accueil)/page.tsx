@@ -3,19 +3,40 @@ import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@ecine/contracts';
 import { HomeFeatured } from '@/components/features/home/home-featured';
 import { HomeRows } from '@/components/features/home/home-rows';
+import { TastesPrompt } from '@/components/features/home/tastes-prompt';
 import { PullToRefresh } from '@/components/features/system/pull-to-refresh';
 import { LinkButton } from '@/components/ui/link-button';
 import { routes } from '@/lib/routes';
 import { applyPersonal } from '@/lib/home-rows';
+import { suggestTastes } from '@/lib/tastes-prompt';
 import {
   getBookmarks,
+  getCategories,
   getContinueWatching,
   getHome,
   getPersonalHome,
+  getTastes,
   getViewer,
 } from '@/server/data';
-import { personalizationAllowed } from '@/server/personalization';
+import { personalizationAllowed, readDueTastesPrompt } from '@/server/personalization';
 import { pageMetadata } from '@/server/seo';
+
+/**
+ * Feuille des goûts à proposer (R-ENG-11) : après un premier film, tant qu'aucun goût n'est choisi,
+ * quand ils peuvent être gardés (membre, ou visiteur ayant accepté « Personnalisation »).
+ */
+async function tastesPrompt(canKeep: boolean) {
+  const watched = canKeep ? await readDueTastesPrompt() : null;
+  if (!watched) return null;
+  const [tastes, categories] = await Promise.all([getTastes(), getCategories()]);
+  if (tastes === null || tastes.length > 0) return null;
+  const offered = categories.filter((c) => c.filmCount > 0);
+  if (offered.length === 0) return null;
+  return {
+    categories: offered.map(({ slug, name }) => ({ slug, name })),
+    suggested: suggestTastes(watched, offered),
+  };
+}
 
 export async function generateMetadata({ params }: PageProps<'/[locale]'>): Promise<Metadata> {
   const { locale } = await params;
@@ -48,10 +69,14 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
     personalizationAllowed(),
   ]);
   // Ma liste du membre : état des menus contextuels (« Ajouter » ou « Retirer »).
-  const bookmarks = viewer ? await getBookmarks().catch(() => null) : null;
+  const [bookmarks, prompt] = await Promise.all([
+    viewer ? getBookmarks().catch(() => null) : null,
+    tastesPrompt(Boolean(viewer) || allowed).catch(() => null),
+  ]);
   return (
     <>
       <PullToRefresh />
+      {prompt ? <TastesPrompt {...prompt} /> : null}
       <h1 className="sr-only">{t('title')}</h1>
       <div className="pt-2 lg:pt-0">
         <HomeFeatured items={home.featured} locale={locale} />

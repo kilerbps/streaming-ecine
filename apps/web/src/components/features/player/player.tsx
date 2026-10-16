@@ -22,7 +22,7 @@ import { FILM_COMPLETE_EVENT } from '@/lib/install';
 import { formatTimecode } from '@/lib/format';
 import { routes } from '@/lib/routes';
 import { saveProgressAction } from '@/server/actions/interactions';
-import { recordHistoryAction } from '@/server/actions/personalization';
+import { filmWatchedAction } from '@/server/actions/personalization';
 import { toggleFullscreen } from './fullscreen';
 import { localStore, readSubtitlePreference } from './network';
 import { createPlaybackMeter, type PlaybackSource } from './playback-meter';
@@ -30,7 +30,7 @@ import { PlayerControls } from './player-controls';
 import { useHlsPlayback } from './use-hls';
 
 const SAVE_EVERY_SEC = 10;
-/** « Film regardé » pour la personnalisation : au-delà de 10 min. */
+/** « Film regardé » (personnalisation, feuille des goûts) : au-delà de 10 min. */
 const HISTORY_AFTER_SEC = 600;
 /** Le chargement n'apparaît qu'au-delà de 300 ms (docs/05 §7) : pas de clignotement à chaque segment. */
 const SHOW_BUFFERING_AFTER_MS = 300;
@@ -98,6 +98,7 @@ export function Player({
   autoStart = false,
   source,
   audioLanguages = [],
+  categories = [],
 }: {
   filmId: string;
   videoId: string;
@@ -111,6 +112,8 @@ export function Player({
   source?: PlaybackSource;
   /** Langues parlées : les sous-titres de la langue préférée ne s'activent que pour une autre langue. */
   audioLanguages?: string[];
+  /** Catégories du film (slugs) : genres pré-choisis de la feuille des goûts. */
+  categories?: string[];
 }) {
   const t = useTranslations('player');
   const tf = useTranslations('film');
@@ -268,9 +271,9 @@ export function Player({
           const video = e.currentTarget;
           persist(video.currentTime);
           meter.time(video.currentTime, video.duration, video.paused);
-          if (!viewer && !historyRecorded.current && video.currentTime >= HISTORY_AFTER_SEC) {
+          if (!historyRecorded.current && video.currentTime >= HISTORY_AFTER_SEC) {
             historyRecorded.current = true;
-            void recordHistoryAction(filmId);
+            void filmWatchedAction({ filmId, categories });
           }
         }}
         onPause={(e) => {
