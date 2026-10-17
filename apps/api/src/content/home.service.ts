@@ -75,7 +75,8 @@ export class HomeService {
   ) {}
 
   home(locale: string): Promise<Home> {
-    return this.cache.wrap('home', locale, 120, async () => {
+    // Clé versionnée par forme de réponse : `v2` ajoute `previewVideoId` à l'affiche à la une.
+    return this.cache.wrap('home', `v2:${locale}`, 120, async () => {
       const now = new Date();
       const [featured, top10, fresh, shorts, soon, talents, editorial, categories] =
         await Promise.all([
@@ -120,7 +121,13 @@ export class HomeService {
     const include = {
       ...filmSummaryInclude(locales),
       titleImage: true,
-      videos: { where: { state: 'READY' as const }, take: 1, select: { id: true } },
+      // Même vidéo que la fiche (la plus récente prête) : aperçu et lecture coïncident.
+      videos: {
+        where: { state: 'READY' as const },
+        orderBy: { createdAt: 'desc' as const },
+        take: 1,
+        select: { id: true },
+      },
     } satisfies Prisma.FilmInclude;
     const [slots, latest] = await Promise.all([
       this.prisma.featuredSlot.findMany({
@@ -139,16 +146,22 @@ export class HomeService {
         include,
       }),
     ]);
-    const films = [...slots.map((slot) => slot.film), ...latest].filter(
-      (film, index, all) => all.findIndex((f) => f.id === film.id) === index,
-    );
-    return films.slice(0, HOME_RULES.featuredMax).map((film) => ({
-      film: this.mapper.summary(film, locale),
-      tagline: pickTranslation(film.translations, locale)?.tagline ?? null,
-      titleImage: this.media.image(film.titleImage),
-      audioLanguages: film.audioLanguages.filter(isFilmLanguage),
-      playable: film.videos.length > 0 && (film.releaseAt === null || film.releaseAt <= now),
-    }));
+    // Aperçu vidéo : seulement sur un emplacement programmé qui le demande (opt-in éditorial).
+    const entries = [
+      ...slots.map((slot) => ({ film: slot.film, preview: slot.previewVideo })),
+      ...latest.map((film) => ({ film, preview: false })),
+    ].filter((entry, index, all) => all.findIndex((e) => e.film.id === entry.film.id) === index);
+    return entries.slice(0, HOME_RULES.featuredMax).map(({ film, preview }) => {
+      const playable = film.videos.length > 0 && (film.releaseAt === null || film.releaseAt <= now);
+      return {
+        film: this.mapper.summary(film, locale),
+        tagline: pickTranslation(film.translations, locale)?.tagline ?? null,
+        titleImage: this.media.image(film.titleImage),
+        audioLanguages: film.audioLanguages.filter(isFilmLanguage),
+        playable,
+        previewVideoId: preview && playable ? (film.videos[0]?.id ?? null) : null,
+      };
+    });
   }
 
   /** Top 10 : dernier instantané quotidien (calculé par le worker), affiché s'il compte 10 titres. */

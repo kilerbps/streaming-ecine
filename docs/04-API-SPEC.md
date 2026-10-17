@@ -36,7 +36,7 @@
 | GET | `/people/{slug}` | PUBLIC | Détail + filmographie |
 | GET | `/articles` · `/articles/{slug}` | PUBLIC | `kind` = NEWS/ANNOUNCEMENT/EVENT |
 | GET | `/posts/{id}` | PUBLIC | Publication photo + texte |
-| GET | `/home` | PUBLIC | Accueil en rangées (lot 3) : affiche à la une (programmée, sinon derniers films) et rangées automatiques ou programmées, sous leurs seuils ; cache 120 s |
+| GET | `/home` | PUBLIC | Accueil en rangées (lot 3) : affiche à la une (programmée, sinon derniers films ; `previewVideoId` quand l'emplacement programmé autorise l'aperçu vidéo) et rangées automatiques ou programmées, sous leurs seuils ; cache 120 s |
 | POST | `/home/personal` | PUBLIC (limité) | Partie personnelle de l'accueil (ADR-0014) : membre → son compte ; visiteur → signaux de l'appareil envoyés dans le corps (`history`, `dismissed`, `tastes`), seulement s'il a accepté « Personnalisation ». Jamais en cache |
 | GET | `/whats-new` | PUBLIC | Nouveautés : films annoncés (sortie la plus proche d'abord) et événements à venir avec film lié ; cache 120 s |
 | GET | `/categories` | PUBLIC | Avec `filmCount` (titres visibles) et `cover` (affiche du plus récent) |

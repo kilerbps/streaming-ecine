@@ -32,7 +32,7 @@ export interface QualityLevel {
 
 export type PlaybackError = 'unavailable' | 'network' | 'generic';
 
-function withToken(url: string, token: string): string {
+export function withToken(url: string, token: string): string {
   const target = new URL(url);
   target.searchParams.set(PLAYBACK_TOKEN_PARAM, token);
   return target.toString();

@@ -19,6 +19,12 @@ export const homeFeaturedSchema = z.object({
   audioLanguages: z.array(filmLanguageSchema),
   /** Faux pour un film annoncé ou sans vidéo prête : pas de bouton « Regarder ». */
   playable: z.boolean(),
+  /**
+   * Vidéo de l'aperçu muet automatique (D-12) : emplacement programmé avec « Aperçu vidéo » et film
+   * lisible ; `null` sinon (l'image reste seule). Absent d'une réponse mise en cache avant son
+   * ajout : `null`.
+   */
+  previewVideoId: z.string().nullable().default(null),
 });
 export type HomeFeatured = z.infer<typeof homeFeaturedSchema>;
 

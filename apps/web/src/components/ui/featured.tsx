@@ -15,6 +15,8 @@ export interface FeaturedItem {
   meta?: string[];
   /** Boutons : un seul principal (Regarder) et un secondaire (Ma liste). */
   actions?: ReactNode;
+  /** Aperçu vidéo muet posé sur l'image (sous le voile), sous conditions. */
+  preview?: ReactNode;
 }
 
 /** Textes accessibles, tirés de messages/fr.json par l'écran ({index}, {total}, {title}). */
@@ -73,6 +75,8 @@ export function Featured({ items, labels }: { items: FeaturedItem[]; labels: Fea
     const timer = window.setInterval(() => {
       const node = track.current;
       if (!node || !visible.current || document.hidden) return;
+      // Un aperçu vidéo en cours (ou mis en pause) retient la diapositive.
+      if (node.querySelector('[data-previewing]')) return;
       const next = (Math.round(node.scrollLeft / node.clientWidth) + 1) % shown.length;
       node.scrollTo({ left: next * node.clientWidth, behavior: 'smooth' });
     }, ADVANCE_EVERY_MS);
@@ -114,7 +118,8 @@ export function Featured({ items, labels }: { items: FeaturedItem[]; labels: Fea
                 preload={index === 0}
                 className="aspect-[4/5] lg:aspect-video lg:max-h-[80dvh]"
               />
-              <div className="absolute inset-0 bg-[image:var(--scrim-bottom)]" />
+              {item.preview}
+              <div className="pointer-events-none absolute inset-0 bg-[image:var(--scrim-bottom)]" />
               <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-4 pb-12 lg:bottom-[12%] lg:w-[40%] lg:p-0 lg:pl-12">
                 {item.titleImage ? (
                   <MediaImage

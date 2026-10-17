@@ -6,6 +6,7 @@ import { LikeButton } from '@/components/features/interactions/like-button';
 import { ShareButton } from '@/components/features/interactions/share-button';
 import { ExpandableText } from '@/components/ui/expandable-text';
 import { Icon } from '@/components/ui/icon';
+import { AutoPreview } from '@/components/features/player/auto-preview';
 import { MediaImage } from '@/components/ui/media-image';
 import { Tag } from '@/components/ui/tag';
 import { Portrait } from '@/components/ui/tiles';
@@ -55,13 +56,15 @@ export async function FilmPreview({
 
   return (
     <div className="flex flex-col gap-4">
-      <MediaImage
-        image={film.poster}
-        ratio="16/9"
-        sizes="(min-width: 672px) 592px, 100vw"
-        preload
-        className="rounded-lg"
-      />
+      <div className="relative overflow-hidden rounded-lg">
+        <MediaImage
+          image={film.poster}
+          ratio="16/9"
+          sizes="(min-width: 672px) 592px, 100vw"
+          preload
+        />
+        {film.videoId && !upcoming ? <AutoPreview videoId={film.videoId} /> : null}
+      </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] leading-5 text-muted">
         {facts.map((fact) => (
           <span key={String(fact)}>{fact}</span>

@@ -192,7 +192,9 @@
     "slowNetwork": "Connexion lente. La qualité s'adapte automatiquement.",
     "slowNetworkManual": "Connexion trop lente pour la qualité choisie.",
     "switchToAuto": "Passer en qualité automatique",
-    "offline": "Pas de connexion. La lecture reprendra toute seule au retour du réseau."
+    "offline": "Pas de connexion. La lecture reprendra toute seule au retour du réseau.",
+    "previewPause": "Mettre l'aperçu en pause",
+    "previewPlay": "Relancer l'aperçu"
   },
   "actions": {
     "like": "J'aime",

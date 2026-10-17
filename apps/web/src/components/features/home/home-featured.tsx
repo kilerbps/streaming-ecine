@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import type { HomeFeatured as HomeFeaturedItem, Locale } from '@ecine/contracts';
 import { BookmarkButton } from '@/components/features/interactions/bookmark-button';
+import { AutoPreview } from '@/components/features/player/auto-preview';
 import { Featured } from '@/components/ui/featured';
 import { LinkButton } from '@/components/ui/link-button';
 import { formatRuntime } from '@/lib/format';
@@ -43,6 +44,7 @@ export async function HomeFeatured({
           title: film.title,
           titleImage: item.titleImage,
           image: film.poster,
+          preview: item.previewVideoId ? <AutoPreview videoId={item.previewVideoId} /> : null,
           meta: [
             film.categories[0]?.name,
             language ? capitalize(tl(language)) : null,

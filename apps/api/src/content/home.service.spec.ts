@@ -42,7 +42,7 @@ describe('orderHomeRows', () => {
 });
 
 /** Prisma simulé : chaque requête de film renvoie `count` films factices. */
-function serviceWith(count: number) {
+function serviceWith(count: number, slots: Array<{ film: number; previewVideo: boolean }> = []) {
   const films = Array.from({ length: count }, (_, i) => ({
     id: `f${i}`,
     slug: `film-${i}`,
@@ -61,7 +61,13 @@ function serviceWith(count: number) {
   }));
   const prisma = {
     film: { findMany: vi.fn().mockResolvedValue(films) },
-    featuredSlot: { findMany: vi.fn().mockResolvedValue([]) },
+    featuredSlot: {
+      findMany: vi
+        .fn()
+        .mockResolvedValue(
+          slots.map((s) => ({ film: films[s.film], previewVideo: s.previewVideo })),
+        ),
+    },
     topTenEntry: { findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn() },
     homeTalent: { findMany: vi.fn().mockResolvedValue([]) },
     homeRow: { findMany: vi.fn().mockResolvedValue([]) },
@@ -96,5 +102,18 @@ describe('HomeService', () => {
   it("n'affiche que les films lisibles comme « Regarder » à la une", async () => {
     const home = await serviceWith(1).home('fr');
     expect(home.featured[0]).toMatchObject({ playable: true, audioLanguages: ['ln'] });
+  });
+
+  it("ne donne l'aperçu vidéo qu'aux emplacements programmés qui le demandent", async () => {
+    const home = await serviceWith(4, [
+      { film: 2, previewVideo: true },
+      { film: 3, previewVideo: false },
+    ]).home('fr');
+    expect(home.featured.map((f) => [f.film.id, f.previewVideoId])).toEqual([
+      ['f2', 'v2'],
+      ['f3', null],
+      ['f0', null],
+      ['f1', null],
+    ]);
   });
 });
