@@ -191,6 +191,11 @@ model Film {
   titleImageId      String?
   /// Début du générique, pour « À suivre » dans le lecteur ; repli : 30 s avant la fin.
   creditsStartSec   Int?
+  /// Aperçu promotionnel (ADR-0015) : début du passage choisi en administration, en secondes.
+  /// Sans lui, le film n'a pas d'aperçu (l'image reste seule).
+  previewStartSec   Int?
+  /// Aperçu généré par le worker (MP4 240p muet filigrané, nom versionné), public sous /media/previews/.
+  previewFile       String?
   /// Sortie annoncée : avant cette date, le film est « Bientôt » (rappels), sans lecture.
   releaseAt         DateTime?
   /// Fin de disponibilité réelle, affichée seulement si elle existe.

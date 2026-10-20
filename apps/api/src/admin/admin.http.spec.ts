@@ -23,6 +23,8 @@ import { PROBLEM_TYPES, ProblemException } from '../common/problem.js';
 import { ENV, type Env } from '../config/env.js';
 import { MediaUrls } from '../content/content.helpers.js';
 import { MailService } from '../mail/mail.service.js';
+import { MediaModule } from '../media/media.module.js';
+import { VideosService } from '../media/videos.service.js';
 import { PushService } from '../push/push.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ContentEventsService } from '../revalidate/content-events.service.js';
@@ -133,6 +135,14 @@ const events = { changed: vi.fn() };
 const sessions = { revokeAllForUser: vi.fn() };
 const mail = { send: vi.fn() };
 const push = { sendToUser: vi.fn() };
+const videos = { requestPreview: vi.fn().mockResolvedValue(true) };
+
+/** Médias (file BullMQ comprise) remplacés : seule la demande d'aperçu sert à l'administration. */
+@Module({
+  providers: [{ provide: VideosService, useValue: videos }],
+  exports: [VideosService],
+})
+class MediaStubModule {}
 
 @Global()
 @Module({
@@ -185,7 +195,10 @@ beforeAll(async () => {
       { provide: APP_INTERCEPTOR, useClass: ReturnsInterceptor },
       { provide: APP_FILTER, useClass: ProblemDetailsFilter },
     ],
-  }).compile();
+  })
+    .overrideModule(MediaModule)
+    .useModule(MediaStubModule)
+    .compile();
   app = moduleRef.createNestApplication({ logger: false });
   app.setGlobalPrefix('v1');
   await app.init();

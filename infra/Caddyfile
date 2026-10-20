@@ -32,13 +32,21 @@
 	}
 }
 
-# Médias : images compressées servies directement (publiques, immuables) ;
+# Médias : images compressées et aperçus promotionnels servis directement (publics, immuables) ;
 # segments HLS chiffrés uniquement via l'API (jeton vérifié). Jamais de listage de répertoire.
 {$MEDIA_DOMAIN} {
 	import securite
 
 	handle_path /images/* {
 		root * /data/storage/images
+		header Cache-Control "public, max-age=31536000, immutable"
+		header Cross-Origin-Resource-Policy "cross-origin"
+		file_server
+	}
+
+	# Aperçus promotionnels (ADR-0015) : MP4 240p muets et filigranés, nom versionné.
+	handle_path /previews/* {
+		root * /data/storage/previews
 		header Cache-Control "public, max-age=31536000, immutable"
 		header Cross-Origin-Resource-Policy "cross-origin"
 		file_server

@@ -16,6 +16,7 @@ import { ProblemException } from '../common/problem.js';
 import { isFilmLanguage, iso, MediaUrls } from '../content/content.helpers.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { VideosService } from '../media/videos.service.js';
 import { ContentEventsService } from '../revalidate/content-events.service.js';
 import {
   assertImages,
@@ -82,6 +83,7 @@ function filmScalars(input: FilmInput) {
     filmingLocation: input.filmingLocation || null,
     titleImageId: input.titleImageId ?? null,
     creditsStartSec: input.creditsStartSec ?? null,
+    previewStartSec: input.previewStartSec ?? null,
     releaseAt: input.releaseAt ? new Date(input.releaseAt) : null,
     availableUntil: input.availableUntil ? new Date(input.availableUntil) : null,
     trailerUrl: input.trailerUrl ?? null,
@@ -132,6 +134,7 @@ function snapshot(film: AdminFilm): AuditSnapshot {
     filmingLocation: film.filmingLocation,
     titleImageId: film.titleImage?.id ?? null,
     creditsStartSec: film.creditsStartSec,
+    previewStartSec: film.previewStartSec,
     releaseAt: film.releaseAt,
     availableUntil: film.availableUntil,
     trailerUrl: film.trailerUrl,
@@ -154,6 +157,7 @@ export class AdminFilmsService {
     private readonly media: MediaUrls,
     private readonly audit: AuditService,
     private readonly events: ContentEventsService,
+    private readonly videos: VideosService,
   ) {}
 
   async list(q: AdminListQuery): Promise<Page<AdminRow>> {
@@ -224,6 +228,7 @@ export class AdminFilmsService {
       meta: auditDiff({}, snapshot(created)),
     });
     await this.events.changed('film', [created.slug]);
+    if (created.previewStartSec !== null) await this.videos.requestPreview(id);
     return created;
   }
 
@@ -271,6 +276,8 @@ export class AdminFilmsService {
       meta: auditDiff(snapshot(before), snapshot(after)),
     });
     await this.events.changed('film', [before.slug, after.slug]);
+    // Passage de l'aperçu choisi, changé ou retiré : le worker retaille (ou retire) l'extrait.
+    if (after.previewStartSec !== before.previewStartSec) await this.videos.requestPreview(id);
     return after;
   }
 
@@ -500,6 +507,8 @@ export class AdminFilmsService {
       filmingLocation: film.filmingLocation,
       titleImage: this.media.imageWithId(film.titleImage),
       creditsStartSec: film.creditsStartSec,
+      previewStartSec: film.previewStartSec,
+      previewUrl: this.media.preview(film.previewFile),
       releaseAt: iso(film.releaseAt),
       availableUntil: iso(film.availableUntil),
       trailerUrl: film.trailerUrl,

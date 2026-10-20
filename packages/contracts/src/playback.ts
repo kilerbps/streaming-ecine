@@ -29,3 +29,9 @@ export const PLAYBACK_TOKEN_PARAM = 't';
  * clé n'est chargée qu'une fois). Le HLS natif (anciens iPhone) garde les adresses avec jeton.
  */
 export const PLAYBACK_BARE_PARAM = 'bare';
+
+/**
+ * Aperçu promotionnel (ADR-0015, exception validée le 20 octobre 2026) : extrait statique au passage
+ * choisi en administration, 240p, sans son, filigrané, servi sans jeton et mis en cache un an.
+ */
+export const PREVIEW_CLIP = { seconds: 14, maxSeconds: 20, height: 240 } as const;

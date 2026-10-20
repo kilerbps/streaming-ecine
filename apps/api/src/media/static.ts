@@ -76,4 +76,17 @@ export function configureStatic(app: NestExpressApplication, env: Env): void {
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     },
   });
+  // Aperçus promotionnels (ADR-0015) : MP4 240p muets et filigranés, seule vidéo servie sans jeton.
+  // Nom versionné à chaque changement : cache d'un an, immuable.
+  app.useStaticAssets(paths.previews, {
+    prefix: '/media/previews/',
+    index: false,
+    dotfiles: 'deny',
+    fallthrough: false,
+    immutable: true,
+    maxAge: '365d',
+    setHeaders: (res: Response) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
+  });
 }

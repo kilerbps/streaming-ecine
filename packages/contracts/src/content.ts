@@ -79,6 +79,8 @@ export const filmDetailSchema = filmSummarySchema.extend({
   trailerUrl: z.string().nullable(),
   /** Identifiant de la vidéo lisible (null si aucune vidéo prête). Jamais de chemin de stockage. */
   videoId: z.string().nullable(),
+  /** Aperçu promotionnel statique (ADR-0015) ; absent d'une réponse en cache antérieure : null. */
+  previewUrl: z.string().nullable().default(null),
   credits: z.array(creditSchema),
   seo: z.object({
     title: z.string().nullable(),

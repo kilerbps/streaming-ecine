@@ -19,6 +19,27 @@
 
 Reste à faire par le propriétaire : avis du juriste sur le cookie d'appareil (« strictement nécessaire ») et page Cookies ; mention de Turnstile sur les fiches dans la politique de confidentialité ; crédit « DB-IP.com » dans les mentions légales ; vérification des contrats pour les extraits.
 
+## Mise en œuvre (20 octobre 2026)
+
+Réalisé (commits `45d2ce7`, `a79ca50` et suivants) :
+
+- **Limites** : `apps/api/src/rate-limit/` (valeurs dans `policies.ts`, seule source des chiffres). Algorithme à seau en script Lua multi-clés ; repli local sans Redis ; inscription et contact refusés sans Redis.
+- **Toujours appliqués**, même en observation : plafonds anti-inondation par IP (et /48 en IPv6), IP d'hébergeurs sans appareil vérifié, routes sensibles (`@SensitiveLimit` : inscription, connexion, mot de passe oublié et réinitialisation, changement de mot de passe, renvoi de vérification, suppression de compte, double authentification, contact, vérification d'appareil), quotas par session (renouvellements, clés, segments).
+- **Sessions simultanées** : une session ne compte qu'après un renouvellement de son jeton (~4 min de lecture réelle). Une ouverture abandonnée (zapping, rechargement) ne bloque donc personne.
+- **Classes d'IP** : hébergeur si l'ASN figure dans `hosting-asns.ts` (30 ASN vérifiés dans DB-IP le 20 octobre ; Cloudflare exclu, ses utilisateurs WARP sont des particuliers), sinon RDC si le pays est `CD`, sinon autres.
+- **Top 10** : l'appareil identifie un visiteur quand il est connu (auparavant IP + agent, qui sous-comptait derrière un CGNAT).
+- **Clé AES** : listes `?bare=1` pour hls.js, une seule demande de clé par session vérifiée en lecture réelle (3 qualités, 49 segments).
+- **Aperçus** : extrait de 14 s, 350 à 400 kbit/s (environ 0,6 Mo), nom versionné ; généré par le worker quand le début change ou qu'une nouvelle vidéo est prête ; filigrane `apps/api/assets/watermark.png` produit par `pnpm brand:build`.
+
+Migration `apps/api/prisma/migrations/20261020085445_preview_clips/migration.sql`, additive :
+
+```sql
+ALTER TABLE "films" ADD COLUMN "previewFile" TEXT,
+ADD COLUMN "previewStartSec" INTEGER;
+```
+
+Restent : Worker Cloudflare (reporté), segments de 6 s à revoir avec lui (4 s aujourd'hui), tableau de bord des indicateurs (journaux `rateLimit` seulement), test de charge k6, et les points du propriétaire listés plus haut.
+
 ## Contexte
 
 **Toutes les limites comptent par IP.** Relevé du code au 17 octobre :

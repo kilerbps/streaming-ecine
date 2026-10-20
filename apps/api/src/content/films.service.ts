@@ -117,6 +117,8 @@ export class FilmsService {
           availableUntil: iso(film.availableUntil),
           trailerUrl: film.trailerUrl,
           videoId: upcoming ? null : (film.videos[0]?.id ?? null),
+          // Pas d'aperçu tant que le film n'est pas sorti (rien à regarder derrière).
+          previewUrl: upcoming ? null : this.media.preview(film.previewFile),
           credits: film.credits.map((c) => ({
             role: c.role,
             character: c.character,

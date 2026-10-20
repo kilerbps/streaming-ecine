@@ -57,6 +57,8 @@ function serviceWith(count: number, slots: Array<{ film: number; previewVideo: b
     titleImage: null,
     audioLanguages: ['ln'],
     videos: [{ id: `v${i}` }],
+    // Le film 1 n'a pas encore d'aperçu généré.
+    previewFile: i === 1 ? null : `f${i}-abc.mp4`,
     categories: [],
   }));
   const prisma = {
@@ -74,7 +76,10 @@ function serviceWith(count: number, slots: Array<{ film: number; previewVideo: b
     category: { findMany: vi.fn().mockResolvedValue([]) },
   };
   const cache = { wrap: (_ns: string, _key: string, _ttl: number, fn: () => unknown) => fn() };
-  const media = { image: () => null };
+  const media = {
+    image: () => null,
+    preview: (file: string | null) => (file ? `https://media.test/previews/${file}` : null),
+  };
   return new HomeService(
     prisma as never,
     cache as never,
@@ -104,16 +109,17 @@ describe('HomeService', () => {
     expect(home.featured[0]).toMatchObject({ playable: true, audioLanguages: ['ln'] });
   });
 
-  it("ne donne l'aperçu vidéo qu'aux emplacements programmés qui le demandent", async () => {
+  it("ne donne l'aperçu qu'aux emplacements programmés qui le demandent, s'il est généré", async () => {
     const home = await serviceWith(4, [
       { film: 2, previewVideo: true },
       { film: 3, previewVideo: false },
+      { film: 1, previewVideo: true },
     ]).home('fr');
-    expect(home.featured.map((f) => [f.film.id, f.previewVideoId])).toEqual([
-      ['f2', 'v2'],
+    expect(home.featured.map((f) => [f.film.id, f.previewUrl])).toEqual([
+      ['f2', 'https://media.test/previews/f2-abc.mp4'],
       ['f3', null],
-      ['f0', null],
       ['f1', null],
+      ['f0', null],
     ]);
   });
 });

@@ -47,6 +47,8 @@ COPY --from=build /repo/packages/contracts/dist /app/packages/contracts/dist
 COPY --from=prod-deps /repo/apps/api/package.json /app/apps/api/package.json
 COPY --from=prod-deps /repo/apps/api/node_modules /app/apps/api/node_modules
 COPY --from=build /repo/apps/api/dist /app/apps/api/dist
+# Filigrane des aperçus promotionnels (pnpm brand:build), lu par le worker.
+COPY --from=build /repo/apps/api/assets /app/apps/api/assets
 
 # ——— Base d'exécution : utilisateur non root, stockage inscriptible ———
 FROM ${NODE_IMAGE} AS runtime

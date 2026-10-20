@@ -8,6 +8,16 @@ export interface TranscodeJobData {
   videoAssetId: string;
 }
 
+/** Aperçu promotionnel d'un film (ADR-0015) : la tâche relit le film au moment de s'exécuter. */
+export const PREVIEW_JOB = 'preview';
+
+export interface PreviewJobData {
+  filmId: string;
+}
+
+/** Tâches de la file `transcode`. */
+export type QueueJobData = TranscodeJobData | PreviewJobData;
+
 /** Options d'une tâche : identifiant = id de la vidéo (pas de doublon), 2 tentatives espacées. */
 export function transcodeJobOptions(videoAssetId: string): JobsOptions {
   return {
@@ -21,10 +31,25 @@ export function transcodeJobOptions(videoAssetId: string): JobsOptions {
 
 /** Ajoute la tâche de transcodage d'une vidéo (ignorée par BullMQ si elle existe déjà). */
 export async function enqueueTranscode(
-  queue: Queue<TranscodeJobData>,
+  queue: Queue<QueueJobData>,
   videoAssetId: string,
 ): Promise<void> {
   await queue.add(TRANSCODE_JOB, { videoAssetId }, transcodeJobOptions(videoAssetId));
+}
+
+/** Une tâche d'aperçu en attente par film ; elle lit le début et la vidéo les plus récents. */
+export function previewJobOptions(filmId: string): JobsOptions {
+  return {
+    jobId: `preview-${filmId}`,
+    attempts: 2,
+    backoff: { type: 'exponential', delay: 60_000 },
+    removeOnComplete: true,
+    removeOnFail: { age: 7 * 24 * 3600 },
+  };
+}
+
+export async function enqueuePreview(queue: Queue<QueueJobData>, filmId: string): Promise<void> {
+  await queue.add(PREVIEW_JOB, { filmId }, previewJobOptions(filmId));
 }
 
 /**

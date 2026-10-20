@@ -20,11 +20,11 @@ export const homeFeaturedSchema = z.object({
   /** Faux pour un film annoncé ou sans vidéo prête : pas de bouton « Regarder ». */
   playable: z.boolean(),
   /**
-   * Vidéo de l'aperçu muet automatique (D-12) : emplacement programmé avec « Aperçu vidéo » et film
-   * lisible ; `null` sinon (l'image reste seule). Absent d'une réponse mise en cache avant son
-   * ajout : `null`.
+   * Aperçu muet automatique (D-12, ADR-0015) : extrait statique d'un film lisible, sur un
+   * emplacement programmé avec « Aperçu vidéo » ; `null` sinon (l'image reste seule). Absent d'une
+   * réponse mise en cache avant son ajout : `null`.
    */
-  previewVideoId: z.string().nullable().default(null),
+  previewUrl: z.string().nullable().default(null),
 });
 export type HomeFeatured = z.infer<typeof homeFeaturedSchema>;
 

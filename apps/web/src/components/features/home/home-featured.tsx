@@ -44,7 +44,7 @@ export async function HomeFeatured({
           title: film.title,
           titleImage: item.titleImage,
           image: film.poster,
-          preview: item.previewVideoId ? <AutoPreview videoId={item.previewVideoId} /> : null,
+          preview: item.previewUrl ? <AutoPreview src={item.previewUrl} /> : null,
           meta: [
             film.categories[0]?.name,
             language ? capitalize(tl(language)) : null,

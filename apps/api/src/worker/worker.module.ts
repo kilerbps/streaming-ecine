@@ -7,9 +7,10 @@ import { PrismaModule } from '../prisma/prisma.module.js';
 import { QueueModule } from '../queue/queue.module.js';
 import { RedisModule } from '../redis/redis.module.js';
 import { ContentEventsModule } from '../revalidate/content-events.service.js';
+import { PreviewGenerator } from './preview.generator.js';
 import { TranscodeProcessor } from './transcode.processor.js';
 
-/** Processus worker (sans HTTP) : consomme la file `transcode`. */
+/** Processus worker (sans HTTP) : consomme la file `transcode` (transcodage et aperçus). */
 @Module({
   imports: [
     ConfigModule,
@@ -19,6 +20,6 @@ import { TranscodeProcessor } from './transcode.processor.js';
     ContentEventsModule,
     QueueModule,
   ],
-  providers: [TranscodeProcessor],
+  providers: [TranscodeProcessor, PreviewGenerator],
 })
 export class WorkerModule {}

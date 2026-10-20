@@ -10,7 +10,13 @@ import { ENV, type Env } from '../config/env.js';
 import { sealSecret } from '../common/crypto.js';
 import { hlsDir, randomAlnum, storageFile } from '../media/storage.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { TRANSCODE_QUEUE, type TranscodeJobData } from '../queue/transcode.queue.js';
+import {
+  PREVIEW_JOB,
+  TRANSCODE_QUEUE,
+  type PreviewJobData,
+  type QueueJobData,
+  type TranscodeJobData,
+} from '../queue/transcode.queue.js';
 import { ContentEventsService } from '../revalidate/content-events.service.js';
 import {
   buildHlsArgs,
@@ -20,6 +26,7 @@ import {
   pickLadder,
 } from './ffmpeg.js';
 import { BinaryMissingError, probe, ProbeFailedError, runProcess } from './ffmpeg-runner.js';
+import { PreviewGenerator } from './preview.generator.js';
 
 /** Écriture de la progression en base au plus toutes les 3 s. */
 const PROGRESS_WRITE_MS = 3000;
@@ -68,13 +75,19 @@ export class TranscodeProcessor extends WorkerHost implements OnApplicationShutd
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: ContentEventsService,
+    private readonly previews: PreviewGenerator,
     @Inject(ENV) private readonly env: Env,
   ) {
     super();
   }
 
-  async process(job: Job<TranscodeJobData>): Promise<void> {
-    const { videoAssetId } = job.data;
+  async process(job: Job<QueueJobData>): Promise<void> {
+    // Aperçu promotionnel demandé depuis l'administration (ADR-0015).
+    if (job.name === PREVIEW_JOB) {
+      await this.previews.generate((job.data as PreviewJobData).filmId);
+      return;
+    }
+    const { videoAssetId } = job.data as TranscodeJobData;
     const video = await this.prisma.videoAsset.findUnique({
       where: { id: videoAssetId },
       include: {
@@ -209,6 +222,15 @@ export class TranscodeProcessor extends WorkerHost implements OnApplicationShutd
         },
         'Vidéo prête (HLS chiffré)',
       );
+      // Nouvelle vidéo prête : l'aperçu promotionnel est retaillé dans la nouvelle source.
+      await this.previews
+        .generate(video.film.id)
+        .catch((err: unknown) =>
+          this.logger.warn(
+            { filmId: video.film.id, err: (err as Error).message },
+            'Aperçu promotionnel non généré',
+          ),
+        );
     } catch (err) {
       const failure = toTranscodeError(err);
       if (!(err instanceof TranscodeError))
@@ -238,7 +260,7 @@ export class TranscodeProcessor extends WorkerHost implements OnApplicationShutd
   }
 
   private async recordFailure(
-    job: Job<TranscodeJobData>,
+    job: Job<QueueJobData>,
     videoId: string,
     outDir: string,
     orphanKeyId: string | null,

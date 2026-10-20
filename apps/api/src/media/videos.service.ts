@@ -10,9 +10,10 @@ import { ProblemException } from '../common/problem.js';
 import type { VideoAsset } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import {
+  enqueuePreview,
   enqueueTranscode,
   TRANSCODE_QUEUE,
-  type TranscodeJobData,
+  type QueueJobData,
 } from '../queue/transcode.queue.js';
 import { ContentEventsService } from '../revalidate/content-events.service.js';
 import { hlsDir, storageFile } from './storage.js';
@@ -43,7 +44,7 @@ export class VideosService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly events: ContentEventsService,
-    @InjectQueue(TRANSCODE_QUEUE) private readonly queue: Queue<TranscodeJobData>,
+    @InjectQueue(TRANSCODE_QUEUE) private readonly queue: Queue<QueueJobData>,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
@@ -88,6 +89,29 @@ export class VideosService implements OnModuleInit {
         where: { id: videoAssetId, state: 'PENDING' },
         data: { error: QUEUE_DOWN_MESSAGE },
       });
+      return false;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
+   * Demande (ou retire) l'aperçu promotionnel d'un film (ADR-0015) : le worker relit le début
+   * choisi et la vidéo prête la plus récente. Sans Redis, rien n'est perdu : la prochaine
+   * modification du film ou le prochain transcodage relancera la tâche.
+   */
+  async requestPreview(filmId: string): Promise<boolean> {
+    let timer: NodeJS.Timeout | undefined;
+    try {
+      await Promise.race([
+        enqueuePreview(this.queue, filmId),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('délai dépassé')), ENQUEUE_TIMEOUT_MS);
+        }),
+      ]);
+      return true;
+    } catch (err) {
+      this.logger.warn({ filmId }, `Tâche d'aperçu non ajoutée : ${(err as Error).message}`);
       return false;
     } finally {
       clearTimeout(timer);

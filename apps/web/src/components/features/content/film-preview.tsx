@@ -63,7 +63,7 @@ export async function FilmPreview({
           sizes="(min-width: 672px) 592px, 100vw"
           preload
         />
-        {film.videoId && !upcoming ? <AutoPreview videoId={film.videoId} /> : null}
+        {film.previewUrl ? <AutoPreview src={film.previewUrl} /> : null}
       </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px] leading-5 text-muted">
         {facts.map((fact) => (

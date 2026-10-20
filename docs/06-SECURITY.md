@@ -34,7 +34,7 @@ Référentiels : **OWASP Top 10:2025**, **OWASP ASVS** (niveau 2 visé), **OWASP
 - Mot de passe : **Argon2id**, longueur ≥ 12, liste des mots de passe courants refusée, pas de règles de composition absurdes.
 - Jeton d'accès JWT **court** (10–15 min) ; **refresh token tournant** (usage unique, stocké haché), **détection de rejeu** (famille révoquée).
 - Cookies : `HttpOnly; Secure; SameSite=Lax; Path` minimal ; préfixe `__Host-` quand le domaine le permet. **Aucun jeton dans `localStorage`.**
-- Limites : par IP **et** par compte ; verrouillage progressif ; réponse identique que le compte existe ou non.
+- Limites : par compte ou par appareil (cookie signé), l'IP ne servant que de plafond (CGNAT, ADR-0015) ; les routes d'authentification restent toujours appliquées ; verrouillage progressif ; réponse identique que le compte existe ou non.
 - Déconnexion : révocation côté serveur, suppression des cookies, purge des caches privés du service worker.
 - 2FA (TOTP) **obligatoire** pour ADMIN/SUPER_ADMIN ; recommandé pour EDITOR.
 - Vérification d'e-mail avant toute action publique (commentaires, V2).
@@ -64,10 +64,10 @@ Référentiels : **OWASP Top 10:2025**, **OWASP ASVS** (niveau 2 visé), **OWASP
 
 Couches (toutes obligatoires) :
 
-1. **Pas de fichier MP4 public.** Source stockée privée ; diffusion en **HLS** uniquement.
+1. **Pas de fichier MP4 public.** Source stockée privée ; diffusion en **HLS** uniquement. Seule exception (ADR-0015, décision du propriétaire du 20 octobre 2026) : les aperçus promotionnels de 20 s au plus, en 240p, sans son et filigranés, au passage choisi en administration.
 2. **Chiffrement AES-128** des segments ; clé servie **seulement** avec un jeton valide, `no-store`, rate limit strict.
 3. **Jetons signés courts** (HMAC/JWT) liés à la session et à la vidéo, ≤ 5 min, renouvelés par le lecteur ; la validité est vérifiée sur manifest, segments (ou cookies signés) et clé. Le chiffrement seul ne bloque pas le partage d'une URL autorisée : **le jeton est indispensable**.
-4. **Quotas** : nombre de sessions de lecture simultanées et de manifests par IP/session ; détection d'aspiration (téléchargement séquentiel rapide de tous les segments) → 429 + journal.
+4. **Quotas** : sessions de lecture par compte ou appareil (pot commun des appareils neufs, plafond IP), sessions simultanées, renouvellements, clés et segments par session ; détection d'aspiration (téléchargement séquentiel rapide de tous les segments) → 429 + journal (ADR-0015).
 5. **Anti-hotlinking** : vérification d'`Origin`/`Referer` (renfort, pas garantie), HTTPS uniquement.
 6. **Pas de listage de répertoire**, noms de segments non devinables.
 7. **Interface** : `controlsList="nodownload"`, `disablePictureInPicture` si souhaité, menu contextuel vidéo désactivé — **confort uniquement, pas une sécurité**.

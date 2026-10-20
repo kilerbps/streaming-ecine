@@ -77,6 +77,11 @@ export class MediaUrls {
     };
   }
 
+  /** Aperçu promotionnel statique (ADR-0015), public et mis en cache un an (nom versionné). */
+  preview(file: string | null | undefined): string | null {
+    return file ? `${this.env.MEDIA_PUBLIC_URL}/previews/${file}` : null;
+  }
+
   imageWithId(media: ImageMedia | null | undefined): (Image & { id: string }) | null {
     const image = this.image(media);
     return image && media ? { ...image, id: media.id } : null;

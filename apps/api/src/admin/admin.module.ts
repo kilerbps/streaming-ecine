@@ -1,4 +1,5 @@
 import { type MiddlewareConsumer, Module, type NestModule, type Type } from '@nestjs/common';
+import { MediaModule } from '../media/media.module.js';
 import { noStore } from './admin.helpers.js';
 import { AdminArticlesController } from './articles.controller.js';
 import { AdminArticlesService } from './articles.service.js';
@@ -51,6 +52,8 @@ const ADMIN_CONTROLLERS: Type[] = [
  * et impose la 2FA aux ADMIN+), audit de chaque écriture, invalidation des caches, réponses `no-store`.
  */
 @Module({
+  // Aperçus promotionnels : la modification d'un film demande l'extrait au worker (ADR-0015).
+  imports: [MediaModule],
   controllers: ADMIN_CONTROLLERS,
   providers: [
     AdminFilmsService,

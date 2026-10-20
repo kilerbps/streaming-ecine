@@ -2,7 +2,8 @@
 // Génère toutes les déclinaisons du logo à partir de packages/design-tokens/logo/{logo,symbol}.svg
 // (charte « Nuit de Kin », Lecture du logo) : icônes de l'app installable (symbole blanc sur le bleu
 // du logo, version « maskable » avec 80 % de zone utile), favicon SVG, icône Apple, écrans de
-// démarrage iPhone (logo complet sur le fond Nuit) et la liste de ces écrans pour les métadonnées.
+// démarrage iPhone (logo complet sur le fond Nuit), la liste de ces écrans pour les métadonnées et
+// le filigrane des aperçus promotionnels (apps/api/assets/watermark.png).
 // Quand le SVG officiel arrive : remplacer les deux fichiers source, puis `pnpm brand:build`.
 // Rendu par sharp, déjà installé pour l'API (aucune nouvelle dépendance).
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -99,6 +100,14 @@ async function main(): Promise<void> {
     `${compose(512, 512, BLUE, symbolWhite, 0.7, 112).replace(/ width="512" height="512" viewBox/, ' viewBox')}\n`,
   );
   console.log('  apps/web/src/app/icon.svg');
+
+  // Filigrane des aperçus promotionnels (ADR-0015) : symbole blanc sur fond transparent, que le
+  // worker réduit à ~10 % de la largeur de l'extrait avec une opacité de 60 %.
+  const [, , symbolW, symbolH] = symbolWhite.viewBox;
+  await png(
+    compose(480, Math.round((480 * symbolH) / symbolW), 'none', symbolWhite, 1),
+    join(root, 'apps/api/assets/watermark.png'),
+  );
 
   // Écrans de démarrage iPhone : logo complet centré sur le fond Nuit.
   const images: Array<{ url: string; media: string }> = [];

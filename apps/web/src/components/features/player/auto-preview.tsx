@@ -1,58 +1,34 @@
 'use client';
 
-import type Hls from 'hls.js';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { usePreferences } from '@/components/providers/preferences';
 import { Icon } from '@/components/ui/icon';
 import {
+  PREVIEW_BUDGET_PER_VISIT,
   PREVIEW_DELAY_UNKNOWN_NETWORK_MS,
-  PREVIEW_MAX_BYTES,
+  PREVIEW_START_DELAY_MS,
   previewMode,
 } from '@/lib/auto-preview';
-import { startPlaybackAction } from '@/server/actions/interactions';
 import { readConnection } from './network';
-import { withToken } from './use-hls';
 
 /** Part de l'aperçu à l'écran pour démarrer, et en deçà de laquelle il s'arrête. */
 const VISIBLE_RATIO = 0.6;
-/** Réseau connu : court délai, pour ne rien lancer pendant un défilement rapide. */
-const START_DELAY_MS = 600;
 /** Réseau inconnu (iPhone) : un seul aperçu par écran (adresse), pour toute la visite. */
 const playedOnScreen = new Set<string>();
-
-/**
- * Sessions d'aperçu gardées pendant la visite, jusqu'à une minute de leur expiration : un aperçu
- * relancé (feuille rouverte, accueil réaffiché) n'ouvre pas de nouvelle session, car la limite de
- * l'API est partagée avec la lecture des films.
- */
-const sessions = new Map<string, { token: string; manifestUrl: string; until: number }>();
-const SESSION_MARGIN_MS = 60_000;
-
-async function previewSession(videoId: string) {
-  const kept = sessions.get(videoId);
-  if (kept && kept.until > Date.now()) return kept;
-  const result = await startPlaybackAction(videoId, true);
-  if (!result.ok) return null;
-  const session = {
-    token: result.data.token,
-    manifestUrl: result.data.manifestUrl,
-    until: new Date(result.data.expiresAt).getTime() - SESSION_MARGIN_MS,
-  };
-  sessions.set(videoId, session);
-  return session;
-}
+/** Aperçus restants pour la visite (données mobiles, ADR-0015). */
+let budget = PREVIEW_BUDGET_PER_VISIT;
 
 type Phase = 'idle' | 'playing' | 'paused' | 'done';
 
 /**
- * Aperçu vidéo muet posé sur une image (affiche à la une, aperçu rapide ; D-12, docs/design/03) :
- * session d'aperçu (240p au plus, jamais comptée dans le Top 10), 1,5 Mo au plus, arrêté dès qu'il
- * sort de l'écran ou que l'onglet est masqué. Jamais en mode allégé, en économie de données, en
- * mouvement réduit ni hors 4G/Wi-Fi. Bouton pause (contenu animé de plus de 5 s).
- * Sans hls.js (HLS natif), le plafond de données ne peut pas être tenu : pas d'aperçu.
+ * Aperçu vidéo muet posé sur une image (affiche à la une, aperçu rapide ; D-12, ADR-0015) : extrait
+ * statique de 14 s en 240p (environ 0,6 Mo), sans session de lecture ni jeton. Démarre après 1 s de
+ * visibilité, s'arrête dès qu'il sort de l'écran ou que l'onglet est masqué ; 5 par visite au plus.
+ * Jamais en mode allégé, en économie de données, en mouvement réduit ni hors 4G/Wi-Fi.
+ * Bouton pause (contenu animé de plus de 5 s).
  */
-export function AutoPreview({ videoId }: { videoId: string }) {
+export function AutoPreview({ src }: { src: string }) {
   const t = useTranslations('player');
   const { autoPreviews, lite, saveData } = usePreferences();
   const box = useRef<HTMLDivElement>(null);
@@ -73,19 +49,15 @@ export function AutoPreview({ videoId }: { videoId: string }) {
     const screen = window.location.pathname;
     if (mode === 'never' || (mode === 'delayed' && playedOnScreen.has(screen))) return;
 
-    let hls: Hls | null = null;
     let timer: number | undefined;
     let started = false;
     let stopped = false;
-    let capped = false;
 
     const teardown = () => {
       stopped = true;
       window.clearTimeout(timer);
       observer.disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
-      hls?.destroy();
-      hls = null;
       media.pause();
       media.removeAttribute('src');
       media.load();
@@ -96,48 +68,13 @@ export function AutoPreview({ videoId }: { videoId: string }) {
       setPhase('done');
     };
 
-    const begin = async () => {
+    const begin = () => {
+      if (budget <= 0) return stop();
+      budget -= 1;
       started = true;
       if (mode === 'delayed') playedOnScreen.add(screen);
-      const { default: HlsClass } = await import('hls.js');
-      if (stopped) return;
-      if (!HlsClass.isSupported()) return stop();
-      let session: Awaited<ReturnType<typeof previewSession>>;
-      try {
-        session = await previewSession(videoId);
-      } catch {
-        return stop();
-      }
-      if (stopped) return;
-      if (!session) return stop();
-      const { token, manifestUrl } = session;
-      let loaded = 0;
-      hls = new HlsClass({
-        startLevel: 0,
-        capLevelToPlayerSize: true,
-        maxBufferLength: 8,
-        maxMaxBufferLength: 12,
-        xhrSetup: (xhr, url) => {
-          xhr.open('GET', withToken(url, token), true);
-        },
-      });
-      hls.on(HlsClass.Events.FRAG_LOADED, (_event, data) => {
-        const size = data.frag.stats.loaded;
-        loaded += size;
-        // 1,5 Mo au plus : on s'arrête avant le morceau qui dépasserait, puis on lit le tampon.
-        if (loaded + size > PREVIEW_MAX_BYTES) {
-          capped = true;
-          hls?.stopLoad();
-        }
-      });
-      hls.on(HlsClass.Events.ERROR, (_event, data) => {
-        if (data.fatal) stop();
-      });
-      hls.on(HlsClass.Events.MANIFEST_PARSED, () => {
-        media.play().catch(stop);
-      });
-      hls.loadSource(withToken(manifestUrl, token));
-      hls.attachMedia(media);
+      media.src = src;
+      media.play().catch(stop);
     };
 
     const observer = new IntersectionObserver(
@@ -149,31 +86,26 @@ export function AutoPreview({ videoId }: { videoId: string }) {
         }
         window.clearTimeout(timer);
         if (visible && !document.hidden) {
-          const delay = mode === 'delayed' ? PREVIEW_DELAY_UNKNOWN_NETWORK_MS : START_DELAY_MS;
-          timer = window.setTimeout(() => void begin(), delay);
+          const delay =
+            mode === 'delayed' ? PREVIEW_DELAY_UNKNOWN_NETWORK_MS : PREVIEW_START_DELAY_MS;
+          timer = window.setTimeout(begin, delay);
         }
       },
       { threshold: [0, VISIBLE_RATIO, 1] },
     );
     const onVisibility = () => {
-      if (document.hidden) {
-        if (started) stop();
-        else window.clearTimeout(timer);
-      }
-    };
-    const onWaiting = () => {
-      if (capped) stop();
+      if (!document.hidden) return;
+      if (started) stop();
+      else window.clearTimeout(timer);
     };
     observer.observe(node);
     document.addEventListener('visibilitychange', onVisibility);
     media.addEventListener('ended', stop);
-    media.addEventListener('waiting', onWaiting);
     return () => {
       media.removeEventListener('ended', stop);
-      media.removeEventListener('waiting', onWaiting);
       if (!stopped) teardown();
     };
-  }, [videoId, autoPreviews, lite, saveData]);
+  }, [src, autoPreviews, lite, saveData]);
 
   const shown = phase === 'playing' || phase === 'paused';
   return (

@@ -92,7 +92,7 @@ Modules : `auth`, `users`, `films`, `people`, `articles`, `posts` (feed), `media
 | Préfixe | Usage | TTL | Perte tolérée ? |
 |---|---|---|---|
 | `cache:` | Réponses dérivées (listes, compteurs) | 30 s – 10 min | Oui |
-| `rl:` | Rate limiting | fenêtre | Oui |
+| `rl:` | Limites de débit à seau (GCRA), appareils vérifiés par IP (HyperLogLog), sessions présentes (ADR-0015) | jusqu'à 2 h | Oui (repli local en mémoire) |
 | `sess:` | Liste de révocation / sessions actives | durée du token | Reconstructible |
 | `bull:` | Files de jobs | — | Non critique : les jobs sont repris depuis la base |
 | `play:` | Compteurs de jetons de lecture | 5 min | Oui |

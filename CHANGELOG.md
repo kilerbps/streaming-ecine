@@ -24,11 +24,13 @@
 - Double authentification : QR code, clé pour la saisie manuelle, 10 codes de secours à usage unique (copie, téléchargement, renouvellement), désactivation avec mot de passe et code. La connexion accepte un code de secours (ADR-0014).
 - Feuille de connexion v2 : titre qui dit pourquoi la connexion est demandée, bouton Afficher le mot de passe, inscription dans la même feuille avec compteur « 7 sur 12 caractères », erreurs à la sortie du champ, panneau de 440 px sur PC.
 - Choix des goûts « Qu'aimez-vous regarder ? » (R-ENG-11) : au retour sur l'accueil après 10 minutes d'un premier film, trois genres pré-choisis (ceux du film, complétés par les catégories les plus fournies), « Valider » et « Plus tard » de même poids ; « Plus tard » repousse de 7 jours, une seule fois. Cookie `ecine_tastes_prompt` (ADR-0014).
-- Aperçus vidéo automatiques (D-12) sur l'affiche à la une (emplacement programmé avec « Aperçu vidéo ») et dans l'aperçu rapide :
-  - muets, en 240p (session d'aperçu jamais comptée), 1,5 Mo au plus ;
-  - arrêtés hors de l'écran ou onglet masqué ; bouton pause ; l'affiche à la une attend la fin de l'aperçu ;
-  - seulement avec le réglage actif, hors mode allégé, économie de données et mouvement réduit, en 4G ou Wi-Fi détectés ; réseau inconnu (iPhone) : après 2 s, un seul par écran ;
-  - session d'aperçu réutilisée pendant la visite (la limite de l'API est partagée avec la lecture).
+- Aperçus vidéo automatiques (D-12, ADR-0015) sur l'affiche à la une (emplacement programmé avec « Aperçu vidéo ») et dans l'aperçu rapide :
+  - extrait statique de 14 s au passage choisi en administration (« Début de l'aperçu »), 240p, muet, logo E-Ciné en filigrane, environ 0,6 Mo, généré par le worker et servi sans jeton sous `/media/previews/` (cache d'un an) ;
+  - démarrage après 1 s de visibilité, 5 par visite au plus, arrêt hors de l'écran ou onglet masqué, bouton pause ; l'affiche à la une attend la fin de l'aperçu ;
+  - seulement avec le réglage actif, hors mode allégé, économie de données et mouvement réduit, en 4G ou Wi-Fi détectés ; réseau inconnu (iPhone) : après 2 s, un seul par écran.
+- Limites de débit par identité (ADR-0015) : par compte, appareil vérifié (Turnstile invisible sur la fiche) ou appareil neuf, avec un pot commun des appareils neufs et un plafond par IP selon le réseau (RDC, autres, hébergeurs ; bases DB-IP Lite, `pnpm --filter @ecine/api geo:update`). Mode observation au lancement (`RATE_LIMIT_MODE=observe`). Le lecteur réessaie seul après un refus, avec un compte à rebours, ou vérifie l'appareil.
+- Relais signé du site vers l'API (HMAC horodaté) et cookie d'appareil signé, à la place de la clé de service statique.
+- Lecture : listes sans jeton pour hls.js, la clé AES n'est demandée qu'une fois par session.
 
 ### Modifié
 

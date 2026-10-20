@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type Hls from 'hls.js';
-import {
-  PLAYBACK_BARE_PARAM,
-  PLAYBACK_TOKEN_PARAM,
-  type RateLimitReason,
-} from '@ecine/contracts';
+import { PLAYBACK_BARE_PARAM, PLAYBACK_TOKEN_PARAM, type RateLimitReason } from '@ecine/contracts';
 import { refreshPlaybackAction, startPlaybackAction } from '@/server/actions/interactions';
 import {
   ABR_FACTORS,
@@ -90,8 +86,6 @@ export function useHlsPlayback(
     saveData: boolean;
     /** Langues parlées du film : les sous-titres de la langue préférée ne s'y ajoutent pas. */
     audioLanguages?: readonly string[];
-    /** Aperçu automatique : session marquée (240p au plus, jamais comptée), toujours muet. */
-    preview?: boolean;
   },
 ) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -154,7 +148,7 @@ export function useHlsPlayback(
       }
       if (refreshed.code === 'not_found') return 'gone';
       if (refreshed.code === 'rate') return 'retry';
-      const session = await startPlaybackAction(videoId, options.preview);
+      const session = await startPlaybackAction(videoId);
       if (session.ok) {
         tokenRef.current = session.data.token;
         scheduleRefresh(session.data.expiresAt);
@@ -165,7 +159,7 @@ export function useHlsPlayback(
       // Server Action injoignable : pas de réseau.
       return 'retry';
     }
-  }, [videoId, options.preview, scheduleRefresh]);
+  }, [videoId, scheduleRefresh]);
 
   /** HLS natif (anciens Safari iOS) : la source est rechargée à la position courante. */
   const reloadNative = useCallback(() => {
@@ -220,7 +214,7 @@ export function useHlsPlayback(
       if (!video) return false;
       let session: Awaited<ReturnType<typeof startPlaybackAction>>;
       try {
-        session = await startPlaybackAction(videoId, options.preview);
+        session = await startPlaybackAction(videoId);
       } catch {
         setError('network');
         return false;
@@ -308,7 +302,7 @@ export function useHlsPlayback(
             readSubtitlePreference(store).lang,
             options.audioLanguages ?? [],
           );
-          if (auto >= 0 && !options.preview) hls.subtitleTrack = auto;
+          if (auto >= 0) hls.subtitleTrack = auto;
         });
         hls.on(HlsClass.Events.ERROR, (_event, data) => {
           if (!data.fatal) return;
@@ -340,7 +334,7 @@ export function useHlsPlayback(
       }
       return true;
     },
-    [videoId, options.saveData, options.audioLanguages, options.preview, scheduleRefresh, recover],
+    [videoId, options.saveData, options.audioLanguages, scheduleRefresh, recover],
   );
 
   /** Erreur de l'élément vidéo en HLS natif (jeton expiré, coupure) : même reprise que hls.js. */

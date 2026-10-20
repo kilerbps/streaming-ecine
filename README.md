@@ -54,6 +54,14 @@ docker exec ecine-worker-dev node dist/seed/demo-video.js --all   # une vidéo p
 > **Windows (Git Bash)** : préfixer `docker run` et `docker exec` par `MSYS_NO_PATHCONV=1` et donner un chemin Windows au volume (`-v "C:\…\streaming-ecine\storage:/data/storage"`). Sinon Git Bash convertit le chemin, le volume est mal monté et le worker écrit ses vidéos hors de `storage/`. Vérifier avec `docker inspect ecine-worker-dev`.
 >
 > Après un changement de l'échelle de transcodage (`apps/api/src/worker/ffmpeg.ts`), reconstruire l'image puis relancer `--all` : la page d'un film lit sa vidéo prête la plus récente.
+>
+> Aperçus promotionnels (ADR-0015) : le worker taille l'extrait quand « Début de l'aperçu » change en administration ou qu'une nouvelle vidéo est prête. Après un changement du filigrane (`pnpm brand:build`) ou de `apps/api/src/worker/preview.ts`, reconstruire l'image du worker.
+
+Classes d'IP des limites de débit (ADR-0015) : bases DB-IP Lite (CC BY 4.0, mention de DB-IP.com obligatoire), à télécharger une fois puis chaque mois, et à recharger en redémarrant l'API :
+
+```bash
+pnpm --filter @ecine/api geo:update
+```
 
 ## Commandes
 

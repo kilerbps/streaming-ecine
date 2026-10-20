@@ -75,8 +75,8 @@ export class HomeService {
   ) {}
 
   home(locale: string): Promise<Home> {
-    // Clé versionnée par forme de réponse : `v2` ajoute `previewVideoId` à l'affiche à la une.
-    return this.cache.wrap('home', `v2:${locale}`, 120, async () => {
+    // Clé versionnée par forme de réponse : `v3` donne `previewUrl` (aperçu statique, ADR-0015).
+    return this.cache.wrap('home', `v3:${locale}`, 120, async () => {
       const now = new Date();
       const [featured, top10, fresh, shorts, soon, talents, editorial, categories] =
         await Promise.all([
@@ -159,7 +159,7 @@ export class HomeService {
         titleImage: this.media.image(film.titleImage),
         audioLanguages: film.audioLanguages.filter(isFilmLanguage),
         playable,
-        previewVideoId: preview && playable ? (film.videos[0]?.id ?? null) : null,
+        previewUrl: preview && playable ? this.media.preview(film.previewFile) : null,
       };
     });
   }

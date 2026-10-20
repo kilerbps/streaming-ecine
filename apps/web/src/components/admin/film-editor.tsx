@@ -9,6 +9,7 @@ import {
   FILM_LANGUAGES,
   filmInputSchema,
   filmKindSchema,
+  PREVIEW_CLIP,
   type AdminCategory,
   type AdminFilm,
   type CreditRole,
@@ -67,6 +68,7 @@ function toValues(film: AdminFilm | null): Values {
     filmingLocation: film?.filmingLocation ?? '',
     titleImageId: film?.titleImage?.id ?? undefined,
     creditsStartSec: film?.creditsStartSec ?? undefined,
+    previewStartSec: film?.previewStartSec ?? undefined,
     releaseAt: film?.releaseAt ?? undefined,
     availableUntil: film?.availableUntil ?? undefined,
     trailerUrl: film?.trailerUrl ?? undefined,
@@ -380,6 +382,42 @@ export function FilmEditor({
                 onChange={(event) => field.onChange(parseTimecode(event.target.value))}
                 error={fieldState.error?.message}
               />
+            )}
+          />
+          <Controller
+            control={control}
+            name="previewStartSec"
+            render={({ field, fieldState }) => (
+              <div className="flex flex-col gap-3">
+                <TextField
+                  label="Début de l’aperçu"
+                  optional
+                  inputMode="numeric"
+                  placeholder="mm:ss, ex. 12:40"
+                  help={`Extrait muet de ${PREVIEW_CLIP.seconds} s en 240p, filigrané, montré à la une et dans l’aperçu rapide. Choisissez un passage sans scène clé ni fin, autorisé par les ayants droit. Sans valeur : pas d’aperçu.`}
+                  name={field.name}
+                  onBlur={field.onBlur}
+                  defaultValue={field.value ? formatTimecode(field.value) : ''}
+                  onChange={(event) => field.onChange(parseTimecode(event.target.value))}
+                  error={fieldState.error?.message}
+                />
+                {/* Extrait actuel : l'équipe le vérifie avant de publier (ADR-0015). */}
+                {film?.previewUrl ? (
+                  <video
+                    src={film.previewUrl}
+                    controls
+                    muted
+                    playsInline
+                    preload="metadata"
+                    aria-label="Aperçu actuel"
+                    className="w-full max-w-sm rounded-md bg-surface-2"
+                  />
+                ) : film?.previewStartSec != null ? (
+                  <p className="text-sm text-muted">
+                    Aperçu en préparation : rechargez la page dans une minute.
+                  </p>
+                ) : null}
+              </div>
             )}
           />
         </FormSection>

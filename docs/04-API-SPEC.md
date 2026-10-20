@@ -14,7 +14,8 @@
 | Pagination | Curseur : `?limit=20&cursor=…` → `{ items, nextCursor }`. `limit` max 50 |
 | Tri/filtres | Liste blanche de champs ; jamais d'accès direct à la base par paramètre |
 | Idempotence | En-tête `Idempotency-Key` sur les créations sensibles (inscription, contact, upload) |
-| Limitation de débit | En-têtes `RateLimit-*` ; 429 + `Retry-After` |
+| Limitation de débit | Par compte, appareil vérifié ou appareil neuf, l'IP servant de plafond (ADR-0015) ; 429 + `Retry-After` + `reason` (`identity`, `pot_ip`, `verify`, `ip`, `concurrent`, `session`) et `retryAfter` dans le problème |
+| Relais du site | Les appels du serveur Next.js portent `x-ecine-relay` (HMAC-SHA256 horodaté, 30 s) couvrant l'IP, l'agent et l'appareil du visiteur ; sans signature valide, ces en-têtes sont ignorés |
 | Cache | `ETag` + `Cache-Control` sur les lectures publiques ; Redis en dessous |
 | Langue | `Accept-Language` ou `?locale=` ; repli sur `fr` |
 | Santé | `GET /health` (base, Redis) — sans détail sensible |
@@ -41,12 +42,13 @@
 | GET | `/whats-new` | PUBLIC | Nouveautés : films annoncés (sortie la plus proche d'abord) et événements à venir avec film lié ; cache 120 s |
 | GET | `/categories` | PUBLIC | Avec `filmCount` (titres visibles) et `cover` (affiche du plus récent) |
 | GET | `/share-images/films/{slug}` | PUBLIC (limité) | Affiche du film recadrée pour l'image de partage (`opengraph-image`) |
+| POST | `/devices/verify` | PUBLIC (relais signé, limité) | Vérification Turnstile de l'appareil du visiteur : `{ verifiedUntil }` (24 h), que le site scelle dans le cookie d'appareil (ADR-0015) |
 | GET | `/push/key` | PUBLIC | `{ publicKey }` VAPID, `null` si Web Push n'est pas configuré ; cache 1 h |
 | GET | `/search?q=` | PUBLIC | Groupé par type ; limité en débit |
 | GET | `/pages/{slug}` | PUBLIC | À propos, légales |
 | GET | `/team` | PUBLIC | Équipe dirigeante |
 | GET | `/site-settings` | PUBLIC | Contacts, réseaux, `adsEnabled` |
-| GET | `/sitemap-data` | Interne | Utilisé par `app/sitemap.ts` ; clé de service |
+| GET | `/sitemap-data` | Interne | Utilisé par `app/sitemap.ts` ; relais signé du site |
 
 ### Lecture vidéo
 
@@ -54,6 +56,8 @@
 |---|---|---|---|
 | POST | `/playback/{videoId}/session` | PUBLIC (limité) | Vérifie que le film est publié ; renvoie `{ manifestUrl, token, expiresAt }`. `?apercu=1` : session d'aperçu plafonnée à 240p, non comptée dans le Top 10 |
 | POST | `/playback/{videoId}/refresh` | Jeton valide | Renouvelle sans nouvelle autorisation lourde |
+| GET | `/playback/{videoId}/master.m3u8` · `/{rendition}/index.m3u8` | Jeton valide | `?bare=1` : adresses réécrites sans jeton (hls.js l'ajoute à chaque requête, la clé garde une adresse stable) ; sans `bare`, le jeton est dans chaque adresse (HLS natif) |
+| GET | `/media/previews/{fichier}.mp4` | PUBLIC | Aperçu promotionnel statique (ADR-0015) : 14 s, 240p, muet, filigrané ; nom versionné, cache d'un an. Adresse donnée par `previewUrl` (fiche, affiche à la une) |
 | GET | `/playback/keys/{keyId}` | Jeton valide | Clé AES ; **rate limit strict** ; `Cache-Control: no-store` |
 
 ### Compte et session

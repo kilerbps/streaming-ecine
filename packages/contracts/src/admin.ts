@@ -78,6 +78,13 @@ export const filmInputSchema = z.strictObject({
     .min(1)
     .max(60 * 60 * 12)
     .optional(),
+  /** Début de l'aperçu promotionnel (ADR-0015) ; absent : pas d'aperçu. */
+  previewStartSec: z
+    .number()
+    .int()
+    .min(0)
+    .max(60 * 60 * 12)
+    .optional(),
   releaseAt: isoDateSchema.optional(),
   availableUntil: isoDateSchema.optional(),
   trailerUrl: z.url().optional(),
@@ -114,6 +121,9 @@ export const adminFilmSchema = z.object({
   filmingLocation: z.string().nullable(),
   titleImage: imageSchema.extend({ id: z.string() }).nullable(),
   creditsStartSec: z.number().int().nullable(),
+  previewStartSec: z.number().int().nullable(),
+  /** Aperçu généré (null tant que le worker ne l'a pas produit, ou sans début choisi). */
+  previewUrl: z.string().nullable(),
   releaseAt: z.string().nullable(),
   availableUntil: z.string().nullable(),
   trailerUrl: z.string().nullable(),

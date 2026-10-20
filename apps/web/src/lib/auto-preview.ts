@@ -1,12 +1,15 @@
 /**
- * Aperçus vidéo automatiques (D-12, docs/design/03, Conditions) : affiche à la une et aperçu rapide.
- * Toujours muets, en 240p (session d'aperçu), 1,5 Mo au plus, arrêtés hors de l'écran.
+ * Aperçus vidéo automatiques (D-12, docs/design/03, Conditions ; ADR-0015) : affiche à la une et
+ * aperçu rapide. Extrait statique muet en 240p (environ 0,6 Mo, sous le plafond de 1,5 Mo de
+ * R-PERF-05), arrêté hors de l'écran.
  */
 
-/** Données d'un aperçu au plus (R-PERF-05). */
-export const PREVIEW_MAX_BYTES = 1_500_000;
+/** Réseau connu : démarrage après 1 s de visibilité (rien pendant un défilement rapide). */
+export const PREVIEW_START_DELAY_MS = 1_000;
 /** Sans API réseau (iPhone) : présence à l'écran exigée avant de démarrer. */
 export const PREVIEW_DELAY_UNKNOWN_NETWORK_MS = 2_000;
+/** Aperçus par visite au plus (environ 3 Mo) : un « Wi-Fi » est souvent un partage de connexion. */
+export const PREVIEW_BUDGET_PER_VISIT = 5;
 
 export interface PreviewContext {
   /** Réglages → « Aperçus automatiques ». */

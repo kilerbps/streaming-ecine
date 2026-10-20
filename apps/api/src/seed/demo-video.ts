@@ -11,7 +11,7 @@ import {
   enqueueTranscode,
   redisConnectionOptions,
   TRANSCODE_QUEUE,
-  type TranscodeJobData,
+  type QueueJobData,
 } from '../queue/transcode.queue.js';
 import { buildTestSourceArgs } from '../worker/ffmpeg.js';
 import { parseDemoVideoArgs } from './demo-video-args.js';
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   const args = parseDemoVideoArgs(process.argv.slice(2));
 
   const prisma = new PrismaService(env);
-  const queue = new Queue<TranscodeJobData>(TRANSCODE_QUEUE, {
+  const queue = new Queue<QueueJobData>(TRANSCODE_QUEUE, {
     connection: redisConnectionOptions(env.REDIS_URL),
     prefix: 'bull',
   });
