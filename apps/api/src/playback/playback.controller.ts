@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { SkipThrottle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
   idSchema,
@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { Returns } from '../common/contract.decorators.js';
 import { ZodPipe } from '../common/zod.pipe.js';
 import { Public } from '../auth/decorators.js';
+import { RateLimitService } from '../rate-limit/rate-limit.service.js';
 import { RENDITION_RE, SEGMENT_RE } from './hls-rewrite.js';
 import { PlaybackService } from './playback.service.js';
 
@@ -39,10 +40,13 @@ function noStore(res: Response): void {
 @Public()
 @Controller('playback')
 export class PlaybackController {
-  constructor(private readonly playback: PlaybackService) {}
+  constructor(
+    private readonly playback: PlaybackService,
+    private readonly limits: RateLimitService,
+  ) {}
 
+  // Limites : par identité, pot commun et plafond de l'IP (RateLimitService.sessionOpen, ADR-0015).
   @Post(':videoId/session')
-  @Throttle({ default: { limit: 30, ttl: 10 * 60_000 } })
   @Returns(playbackSessionSchema)
   session(
     @Param('videoId', new ZodPipe(idSchema)) videoId: string,
@@ -51,13 +55,14 @@ export class PlaybackController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<PlaybackSession> {
     noStore(res);
-    const userAgent = req.headers['user-agent'];
     return this.playback.createSession(
       videoId,
       {
+        identity: this.limits.identify(req),
         ip: req.clientIp,
-        userAgent: typeof userAgent === 'string' ? userAgent : undefined,
+        userAgent: req.clientUserAgent,
         userId: req.user?.id ?? null,
+        deviceId: req.device?.id ?? null,
       },
       q.apercu === '1',
     );
@@ -65,7 +70,6 @@ export class PlaybackController {
 
   @Post(':videoId/refresh')
   @HttpCode(200)
-  @Throttle({ default: { limit: 30, ttl: 5 * 60_000 } })
   @Returns(playbackRefreshSchema)
   refresh(
     @Param('videoId', new ZodPipe(idSchema)) videoId: string,

@@ -3,11 +3,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { statsQuerySchema } from '@ecine/contracts';
 import { serverConfig } from '@/server/config';
 import { authCookieNames } from '@/server/cookie-names';
+import { relayHeaders, visitorIp } from '@/server/relay';
 
 /**
  * Export CSV des statistiques (ADMIN, vérifié par l'API) : relais serveur du fichier produit par
  * `GET /admin/stats/export.csv`, avec les cookies du visiteur. `privateRequest` ne lit que du JSON,
- * d'où cet appel direct (mêmes en-têtes : clé de service, IP et agent réels, cookies d'authentification).
+ * d'où cet appel direct (mêmes en-têtes : relais signé de l'IP et de l'agent réels, cookies d'authentification).
  */
 export async function GET(request: NextRequest) {
   const parsed = statsQuerySchema.safeParse({
@@ -24,18 +25,16 @@ export async function GET(request: NextRequest) {
     .filter((c): c is NonNullable<typeof c> => Boolean(c))
     .map((c) => `${c.name}=${encodeURIComponent(c.value)}`)
     .join('; ');
-  const forwarded: Record<string, string> = {
-    accept: 'text/csv',
-    'x-service-key': config.SERVICE_API_KEY,
-  };
-  if (auth) forwarded.cookie = auth;
-  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip');
-  if (ip) forwarded['x-client-ip'] = ip;
-  const ua = h.get('user-agent');
-  if (ua) forwarded['x-client-user-agent'] = ua.slice(0, 255);
-
   const target = new URL('/v1/admin/stats/export.csv', config.API_INTERNAL_URL);
   target.searchParams.set('days', String(parsed.data.days));
+  const forwarded: Record<string, string> = {
+    accept: 'text/csv',
+    ...relayHeaders(config.SERVICE_API_KEY, 'GET', target.toString(), {
+      ip: visitorIp(h),
+      userAgent: h.get('user-agent'),
+    }),
+  };
+  if (auth) forwarded.cookie = auth;
   let res: Response;
   try {
     res = await fetch(target, {

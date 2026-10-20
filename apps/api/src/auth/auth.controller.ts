@@ -17,6 +17,7 @@ import { BodySchema, Returns } from '../common/contract.decorators.js';
 import { ProblemException } from '../common/problem.js';
 import { clientInfo } from '../common/request.js';
 import { ZodPipe } from '../common/zod.pipe.js';
+import { SensitiveLimit } from '../rate-limit/sensitive.decorator.js';
 import { AuthService } from './auth.service.js';
 import { clearAuthCookies, readRefreshToken, setAuthCookies } from './cookies.js';
 import { Public } from './decorators.js';
@@ -35,7 +36,13 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @Throttle({ default: { limit: 5, ttl: 60 * MINUTE } })
+  // ADR-0015 : 3 par heure et par appareil ; par IP 30 (RDC) / 10 / 3 (hébergeurs) ; refusée sans Redis.
+  @SensitiveLimit({
+    limit: 3,
+    ttlMs: 60 * MINUTE,
+    ip: { rdc: 30, other: 10, hosting: 3 },
+    failClosed: true,
+  })
   @BodySchema(registerInputSchema)
   @Returns(authResultSchema)
   async register(
@@ -52,7 +59,7 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(200)
-  @Throttle({ default: { limit: 10, ttl: MINUTE } })
+  @SensitiveLimit({ limit: 10, ttlMs: MINUTE })
   @BodySchema(loginInputSchema)
   @Returns(authResultSchema)
   async login(
@@ -104,7 +111,7 @@ export class AuthController {
   @Public()
   @Post('forgot-password')
   @HttpCode(202)
-  @Throttle({ default: { limit: 3, ttl: 15 * MINUTE } })
+  @SensitiveLimit({ limit: 3, ttlMs: 15 * MINUTE })
   @BodySchema(forgotPasswordInputSchema)
   async forgotPassword(
     @Body(new ZodPipe(forgotPasswordInputSchema)) input: z.infer<typeof forgotPasswordInputSchema>,
@@ -115,7 +122,7 @@ export class AuthController {
   @Public()
   @Post('reset-password')
   @HttpCode(204)
-  @Throttle({ default: { limit: 5, ttl: 15 * MINUTE } })
+  @SensitiveLimit({ limit: 5, ttlMs: 15 * MINUTE })
   @BodySchema(resetPasswordInputSchema)
   async resetPassword(
     @Body(new ZodPipe(resetPasswordInputSchema)) input: z.infer<typeof resetPasswordInputSchema>,

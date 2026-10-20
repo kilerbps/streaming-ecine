@@ -10,8 +10,15 @@ const claimsSchema = z.object({
   typ: z.literal('play'),
   /** Aperçu automatique : rendus de 240p au plus, jamais compté comme lecture. */
   pv: z.literal(true).optional(),
+  /** Identité de limite (clé opaque, ADR-0015) : quotas par identité et sessions simultanées. */
+  idk: z.string().max(40).optional(),
 });
-export type PlaybackClaims = { videoId: string; sessionId: string; preview?: boolean };
+export type PlaybackClaims = {
+  videoId: string;
+  sessionId: string;
+  preview?: boolean;
+  identityKey?: string;
+};
 
 /** Jeton de lecture signé (HS256), lié à une vidéo et à une session de lecture, durée ≤ 5 min. */
 @Injectable()
@@ -29,6 +36,7 @@ export class PlaybackTokenService {
       psid: claims.sessionId,
       typ: 'play',
       ...(claims.preview ? { pv: true } : {}),
+      ...(claims.identityKey ? { idk: claims.identityKey } : {}),
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -51,7 +59,12 @@ export class PlaybackTokenService {
       });
       const claims = claimsSchema.parse(payload);
       if (claims.vid !== videoId) return null;
-      return { videoId: claims.vid, sessionId: claims.psid, preview: claims.pv === true };
+      return {
+        videoId: claims.vid,
+        sessionId: claims.psid,
+        preview: claims.pv === true,
+        identityKey: claims.idk,
+      };
     } catch {
       return null;
     }

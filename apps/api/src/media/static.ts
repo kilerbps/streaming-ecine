@@ -51,6 +51,10 @@ export function storagePaths(env: Pick<Env, 'STORAGE_DIR'>) {
     sources: resolve(root, 'sources'),
     uploads: resolve(root, 'uploads'),
     hls: resolve(root, 'hls'),
+    /** Aperçus promotionnels publics (ADR-0015) : MP4 240p muets, en cache un an. */
+    previews: resolve(root, 'previews'),
+    /** Bases DB-IP Lite des limites de débit (privées, jamais servies). */
+    geo: resolve(root, 'geo'),
   };
 }
 

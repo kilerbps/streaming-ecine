@@ -1,4 +1,5 @@
 import 'server-only';
+import type { RateLimitReason } from '@ecine/contracts';
 import { PROBLEM } from '@/lib/problem-types';
 import type { z } from 'zod';
 import { ApiError } from '../api-client';
@@ -11,6 +12,8 @@ export type ActionResult<T = null> =
       code: 'auth' | 'mfa' | 'rate' | 'validation' | 'conflict' | 'not_found' | 'unknown';
       error: string;
       fieldErrors?: Record<string, string>;
+      /** 429 : motif et attente en secondes (ADR-0015) ; le client réessaie ou vérifie l'appareil. */
+      rate?: { reason: RateLimitReason; retryAfter: number };
     };
 
 export function ok<T>(data: T): ActionResult<T> {
@@ -54,5 +57,9 @@ export function fromError<T>(error: unknown): ActionResult<T> {
                 : 'unknown';
   const fallback =
     code === 'unknown' ? 'Une erreur est survenue. Réessayez dans un instant.' : problem.title;
-  return { ok: false, code, error: problem.detail ?? fallback, fieldErrors };
+  const rate =
+    code === 'rate'
+      ? { reason: problem.reason ?? 'identity', retryAfter: problem.retryAfter ?? 30 }
+      : undefined;
+  return { ok: false, code, error: problem.detail ?? fallback, fieldErrors, rate };
 }

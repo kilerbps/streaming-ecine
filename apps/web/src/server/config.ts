@@ -9,7 +9,10 @@ const schema = z
     API_PUBLIC_URL: z.url(),
     MEDIA_PUBLIC_URL: z.url(),
     CANONICAL_HOST: z.string().optional(),
+    /** Clé du relais signé vers l'API (HMAC, ADR-0015) ; jamais envoyée telle quelle. */
     SERVICE_API_KEY: z.string().min(32),
+    /** Signature des cookies d'appareil (limites de débit par appareil, ADR-0015). */
+    DEVICE_COOKIE_SECRET: z.string().min(32),
     REVALIDATE_SECRET: z.string().min(32),
     /** Absent : `true` en production. Voir `cookieSecure`. */
     COOKIE_SECURE: z.enum(['true', 'false']).optional(),

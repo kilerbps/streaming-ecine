@@ -14,7 +14,7 @@ export const Public = () => SetMetadata(IS_PUBLIC, true);
 /** Rôle minimum exigé (hiérarchie : SUPER_ADMIN > ADMIN > EDITOR > MODERATOR). Vérifié en base à chaque appel. */
 export const Roles = (minimum: Role) => SetMetadata(MIN_ROLE, minimum);
 
-/** Route interne réservée au serveur Next.js (en-tête `x-service-key`). */
+/** Route interne réservée au serveur Next.js (relais signé, voir RelayMiddleware). */
 export const ServiceOnly = () => SetMetadata(SERVICE_ONLY, true);
 
 /** Utilisateur connecté (route protégée : toujours défini). */

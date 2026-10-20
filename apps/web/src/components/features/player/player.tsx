@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Loader } from '@/components/ui/loader';
 import { track } from '@/lib/analytics';
+import { DEVICE_VERIFIED_EVENT, DEVICE_VERIFY_EVENT } from '@/lib/device-events';
 import { FILM_COMPLETE_EVENT } from '@/lib/install';
 import { formatTimecode } from '@/lib/format';
 import { routes } from '@/lib/routes';
@@ -44,6 +45,18 @@ function subscribeStorage(onChange: () => void): () => void {
   window.addEventListener('storage', onChange);
   return () => window.removeEventListener('storage', onChange);
 }
+
+/** Seconde courante, rafraîchie chaque seconde (compte à rebours d'un nouvel essai). */
+function subscribeSecond(onChange: () => void): () => void {
+  const timer = window.setInterval(onChange, 1000);
+  return () => window.clearInterval(timer);
+}
+const subscribeNothing = () => () => {};
+const currentSecond = () => Math.floor(Date.now() / 1000);
+const serverSecond = () => 0;
+
+/** Nouveaux essais automatiques après un refus des limites de débit (puis bouton « Regarder »). */
+const BUSY_AUTO_RETRIES = 3;
 
 function subscribeOnline(onChange: () => void): () => void {
   window.addEventListener('online', onChange);
@@ -130,6 +143,7 @@ export function Player({
     subtitleTracks,
     setSubtitle,
     error,
+    busy,
   } = useHlsPlayback(videoId, { saveData, audioLanguages });
   const containerRef = useRef<HTMLDivElement>(null);
   // Taille des sous-titres (Réglages → Lecture), lue après le rendu : rien à hydrater.
@@ -202,6 +216,48 @@ export function Player({
     if (!ok) setStatus('idle');
   }, [feedback, meter, start, canResume, resumeAt]);
 
+  // Refus des limites de débit (ADR-0015) : jamais d'impasse. Nouvel essai automatique après
+  // l'attente (avec un peu de hasard pour étaler les essais), ou vérification de l'appareil.
+  const busyRetries = useRef(0);
+  const verifyRequests = useRef(0);
+  useEffect(() => {
+    if (status === 'playing') {
+      busyRetries.current = 0;
+      verifyRequests.current = 0;
+    }
+  }, [status]);
+  useEffect(() => {
+    if (error !== 'busy' || !busy || busy.reason === 'concurrent') return;
+    const delay = Math.max(1000, busy.retryAt - Date.now()) * (1 + Math.random() * 0.3);
+    if (busy.reason === 'pot_ip' || busy.reason === 'verify') {
+      if (verifyRequests.current >= 2) return;
+      verifyRequests.current += 1;
+      const retry = () => void begin();
+      window.addEventListener(DEVICE_VERIFIED_EVENT, retry, { once: true });
+      window.dispatchEvent(new Event(DEVICE_VERIFY_EVENT));
+      const timer = window.setTimeout(retry, Math.max(delay, 8000));
+      return () => {
+        window.removeEventListener(DEVICE_VERIFIED_EVENT, retry);
+        window.clearTimeout(timer);
+      };
+    }
+    if (busyRetries.current >= BUSY_AUTO_RETRIES) return;
+    const timer = window.setTimeout(() => {
+      busyRetries.current += 1;
+      void begin();
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [error, busy, begin]);
+  const second = useSyncExternalStore(
+    error === 'busy' ? subscribeSecond : subscribeNothing,
+    currentSecond,
+    serverSecond,
+  );
+  const busyCountdown =
+    error === 'busy' && busy && busy.reason !== 'concurrent' && second > 0
+      ? Math.max(0, Math.ceil(busy.retryAt / 1000 - second))
+      : 0;
+
   useEffect(() => {
     if (autoStart && status === 'idle' && !startedOnce.current) {
       startedOnce.current = true;
@@ -235,9 +291,17 @@ export function Player({
       ? t('errorUnavailable')
       : error === 'network'
         ? t('errorNetwork')
-        : error
-          ? t('errorGeneric')
-          : null;
+        : error === 'busy'
+          ? busy?.reason === 'concurrent'
+            ? t('busyConcurrent')
+            : busy?.reason === 'pot_ip' || busy?.reason === 'verify'
+              ? t('busyVerify')
+              : busy?.reason === 'ip'
+                ? t('busyWait')
+                : t('busyWaitDevice')
+          : error
+            ? t('errorGeneric')
+            : null;
 
   return (
     <div
@@ -302,8 +366,18 @@ export function Player({
               {canResume ? tf('resume', { time: formatTimecode(resumeAt) }) : tf('watch')}
             </Button>
             {errorMessage ? (
-              <p role="alert" className="text-sm text-danger">
+              <p
+                role="alert"
+                // Une attente n'est pas une panne : texte neutre, le rouge reste pour les erreurs.
+                className={`text-sm ${error === 'busy' ? 'text-muted' : 'text-danger'}`}
+              >
                 {errorMessage}
+                {/* Compte à rebours visuel seulement : l'alerte n'est pas relue chaque seconde. */}
+                {busyCountdown > 0 ? (
+                  <span aria-hidden="true" className="ml-1 tabular-nums">
+                    {t('busyCountdown', { seconds: busyCountdown })}
+                  </span>
+                ) : null}
               </p>
             ) : null}
           </div>

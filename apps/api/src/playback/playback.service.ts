@@ -3,24 +3,27 @@ import { join, resolve } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PLAYBACK_TOKEN_PARAM, type PlaybackRefresh, type PlaybackSession } from '@ecine/contracts';
 import { ENV, type Env } from '../config/env.js';
-import { hashIp, hmacHex, openSecret, randomToken } from '../common/crypto.js';
+import { hmacHex, openSecret, randomToken } from '../common/crypto.js';
 import { kinshasaDay } from '../common/kinshasa.js';
 import { ProblemException } from '../common/problem.js';
 import { playableWhere } from '../content/content.helpers.js';
 import { storagePaths } from '../media/static.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CacheService } from '../redis/cache.service.js';
-import { RedisThrottlerStorage } from '../redis/throttler-storage.js';
 import { capMaster, renditionHeight, rewriteMaster, rewriteVariant } from './hls-rewrite.js';
+import { RateLimitService, type Identity } from '../rate-limit/rate-limit.service.js';
 import { PlaybackTokenService, type PlaybackClaims } from './playback-token.service.js';
 
-/** Quotas anti-aspiration (docs/06-SECURITY.md §6.4). Une lecture normale charge ~10 à 20 segments/min. */
-const QUOTAS = {
-  sessionsPerIp: { limit: 40, ttlMs: 10 * 60_000 },
-  refreshPerSession: { limit: 10, ttlMs: 5 * 60_000 },
-  segmentsPerSession: { limit: 150, ttlMs: 60_000 },
-  keysPerSession: { limit: 60, ttlMs: 5 * 60_000 },
-} as const;
+/** Visiteur d'une session : identité de limite (ADR-0015) et données du comptage du Top 10. */
+export interface PlaybackViewer {
+  identity: Identity;
+  ip: string | undefined;
+  userAgent: string | undefined;
+  userId: string | null;
+  deviceId: string | null;
+}
+
+// Quotas : apps/src/rate-limit/policies.ts (ADR-0015). Une lecture normale charge ~10 segments/min.
 const REFRESH_GRACE_SEC = 10 * 60;
 /** Aperçus automatiques : toujours muets, en 240p au plus (docs/design/03, mode allégé). */
 const PREVIEW_MAX_HEIGHT = 240;
@@ -40,7 +43,7 @@ export class PlaybackService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: CacheService,
-    private readonly quotas: RedisThrottlerStorage,
+    private readonly limits: RateLimitService,
     private readonly tokens: PlaybackTokenService,
     @Inject(ENV) private readonly env: Env,
   ) {
@@ -48,24 +51,25 @@ export class PlaybackService {
   }
 
   /**
-   * Nouvelle session de lecture. Une vraie lecture (pas un aperçu automatique) est comptée pour le
-   * Top 10 : une ligne par jour, film et spectateur, le spectateur n'étant connu que par une empreinte
-   * HMAC propre au jour (ADR-0014).
+   * Nouvelle session de lecture, sous les limites par identité (ADR-0015). Une vraie lecture (pas un
+   * aperçu) est comptée pour le Top 10 : une ligne par jour, film et spectateur, le spectateur
+   * n'étant connu que par une empreinte HMAC propre au jour (ADR-0014).
    */
   async createSession(
     videoId: string,
-    viewer: { ip: string | undefined; userAgent: string | undefined; userId: string | null },
+    viewer: PlaybackViewer,
     preview = false,
   ): Promise<PlaybackSession> {
     const video = await this.playable(videoId);
-    await this.enforce(
-      'sessions-ip',
-      hashIp(viewer.ip, this.env.IP_HASH_SALT) ?? 'inconnu',
-      QUOTAS.sessionsPerIp,
-    );
+    await this.limits.sessionOpen(viewer.identity, preview);
     if (!preview) await this.recordView(video.filmId, viewer);
     const sessionId = randomToken(12);
-    const { token, expiresAt } = await this.tokens.sign({ videoId, sessionId, preview });
+    const { token, expiresAt } = await this.tokens.sign({
+      videoId,
+      sessionId,
+      preview,
+      identityKey: viewer.identity.key,
+    });
     return {
       sessionId,
       token,
@@ -79,8 +83,13 @@ export class PlaybackService {
     const claims = await this.tokens.verify(previousToken, videoId, REFRESH_GRACE_SEC);
     if (!claims) throw ProblemException.unauthorized('Session de lecture expirée.');
     await this.playable(videoId);
-    await this.enforce('refresh', claims.sessionId, QUOTAS.refreshPerSession);
+    await this.limits.sessionQuota('refresh', claims.sessionId);
     const { token, expiresAt } = await this.tokens.sign(claims);
+    // Le renouvellement sert de signal de présence (sessions simultanées) : une session ouverte
+    // puis abandonnée (zapping, rechargement) ne compte jamais ; une lecture de plus de ~4 min, si.
+    if (!claims.preview && claims.identityKey) {
+      await this.limits.trackSession(claims.identityKey, claims.sessionId, expiresAt);
+    }
     return { token, expiresAt: expiresAt.toISOString() };
   }
 
@@ -122,7 +131,7 @@ export class PlaybackService {
     const claims = await this.authorize(videoId, token);
     const video = await this.playable(videoId);
     if (video.keyId !== keyId) throw ProblemException.forbidden();
-    await this.enforce('keys', claims.sessionId, QUOTAS.keysPerSession);
+    await this.limits.sessionQuota('keys', claims.sessionId, claims.identityKey);
     const key = await this.prisma.contentKey.findFirst({ where: { id: keyId, revokedAt: null } });
     if (!key) throw ProblemException.forbidden();
     return openSecret(key.keyEnc, this.env.MEDIA_KEY_SECRET);
@@ -138,7 +147,7 @@ export class PlaybackService {
     const claims = await this.authorize(videoId, token);
     this.assertRendition(claims, rendition);
     const video = await this.playable(videoId);
-    await this.enforce('segments', claims.sessionId, QUOTAS.segmentsPerSession);
+    await this.limits.sessionQuota('segments', claims.sessionId);
     const base = resolve(this.hlsRoot, video.hlsBasePath);
     const full = resolve(base, rendition, segment);
     if (!full.startsWith(base)) throw ProblemException.forbidden();
@@ -159,14 +168,14 @@ export class PlaybackService {
   }
 
   /** Lecture du jour pour le Top 10 ; jamais bloquante pour la lecture elle-même. */
-  private async recordView(
-    filmId: string,
-    viewer: { ip: string | undefined; userAgent: string | undefined; userId: string | null },
-  ): Promise<void> {
+  private async recordView(filmId: string, viewer: PlaybackViewer): Promise<void> {
     const day = kinshasaDay(new Date());
+    // Membre, sinon appareil (ADR-0015) ; sans appareil, IP et agent (sous-compte derrière un CGNAT).
     const who = viewer.userId
       ? `u:${viewer.userId}`
-      : `v:${viewer.ip ?? ''}|${viewer.userAgent ?? ''}`;
+      : viewer.deviceId
+        ? `d:${viewer.deviceId}`
+        : `v:${viewer.ip ?? ''}|${viewer.userAgent ?? ''}`;
     const viewerHash = hmacHex(this.env.IP_HASH_SALT, `top10:${day}:${who}`);
     try {
       await this.prisma.playbackView.createMany({
@@ -213,27 +222,6 @@ export class PlaybackService {
       return await readFile(full, 'utf8');
     } catch {
       throw ProblemException.notFound();
-    }
-  }
-
-  private async enforce(
-    name: string,
-    subject: string,
-    quota: { limit: number; ttlMs: number },
-  ): Promise<void> {
-    const record = await this.quotas.increment(
-      subject,
-      quota.ttlMs,
-      quota.limit,
-      quota.ttlMs,
-      `play-${name}`,
-    );
-    if (record.isBlocked) {
-      this.logger.warn(
-        { quota: name, subject: subject.slice(0, 6) },
-        'Quota de lecture dépassé (aspiration possible)',
-      );
-      throw ProblemException.tooManyRequests('Trop de requêtes de lecture.');
     }
   }
 }

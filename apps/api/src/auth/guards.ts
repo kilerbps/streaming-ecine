@@ -3,7 +3,6 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { hasRole, type Role } from '@ecine/contracts';
 import { ENV, type Env } from '../config/env.js';
-import { safeEqual } from '../common/crypto.js';
 import { PROBLEM_TYPES, ProblemException } from '../common/problem.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { readAccessToken } from './cookies.js';
@@ -56,8 +55,7 @@ export class AuthGuard implements CanActivate {
     const targets = [context.getHandler(), context.getClass()];
 
     if (this.reflector.getAllAndOverride<boolean>(SERVICE_ONLY, targets)) {
-      const key = req.headers['x-service-key'];
-      if (typeof key === 'string' && safeEqual(key, this.env.SERVICE_API_KEY)) return true;
+      if (req.fromService) return true;
       throw ProblemException.forbidden();
     }
 

@@ -2,8 +2,11 @@ import 'server-only';
 import { cookies, headers } from 'next/headers';
 import type { Problem } from '@ecine/contracts';
 import type { z } from 'zod';
+import { formatDevice } from '@ecine/contracts';
 import { serverConfig } from './config';
 import { authCookieNames } from './cookie-names';
+import { deviceCookieName, openDevice } from './device';
+import { relayHeaders, visitorIp } from './relay';
 import { parseSetCookie } from './set-cookie';
 
 /**
@@ -42,6 +45,9 @@ async function toProblem(res: Response): Promise<Problem> {
       status: res.status,
       detail: body.detail,
       errors: body.errors,
+      // 429 : motif et attente (ADR-0015), pour réessayer ou vérifier l'appareil sans impasse.
+      reason: body.reason,
+      retryAfter: body.retryAfter ?? (Number(res.headers.get('retry-after')) || undefined),
     };
   } catch {
     return { type: 'about:blank', title: 'Erreur', status: res.status };
@@ -58,8 +64,13 @@ export async function publicGet<T extends z.ZodType>(
     revalidate?: number;
   } = {},
 ): Promise<z.infer<T>> {
-  const res = await fetch(url(path, options.query), {
-    headers: { accept: 'application/json', 'x-service-key': serverConfig().SERVICE_API_KEY },
+  const target = url(path, options.query);
+  const res = await fetch(target, {
+    // Lecture interne (relais signé sans visiteur) : jamais limitée par l'API.
+    headers: {
+      accept: 'application/json',
+      ...relayHeaders(serverConfig().SERVICE_API_KEY, 'GET', target),
+    },
     next: { revalidate: options.revalidate ?? 300, tags: options.tags ?? [] },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
@@ -67,18 +78,26 @@ export async function publicGet<T extends z.ZodType>(
   return schema.parse(await res.json());
 }
 
-/** En-têtes du visiteur : IP et agent réels (limites par IP côté API), cookies d'authentification. */
-async function visitorHeaders(): Promise<Record<string, string>> {
+/**
+ * En-têtes du visiteur : relais signé de son IP, de son agent et de son appareil (limites par
+ * identité côté API, ADR-0015), cookies d'authentification.
+ */
+async function visitorHeaders(method: string, target: string): Promise<Record<string, string>> {
   const [h, jar] = await Promise.all([headers(), cookies()]);
-  const names = authCookieNames(serverConfig().COOKIE_SECURE);
+  const config = serverConfig();
+  const names = authCookieNames(config.COOKIE_SECURE);
+  const device = openDevice(
+    config.DEVICE_COOKIE_SECRET,
+    jar.get(deviceCookieName(config.COOKIE_SECURE))?.value,
+  );
   const out: Record<string, string> = {
     accept: 'application/json',
-    'x-service-key': serverConfig().SERVICE_API_KEY,
+    ...relayHeaders(config.SERVICE_API_KEY, method, target, {
+      ip: visitorIp(h),
+      userAgent: h.get('user-agent'),
+      device: device ? formatDevice(device) : null,
+    }),
   };
-  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || h.get('x-real-ip');
-  if (ip) out['x-client-ip'] = ip;
-  const ua = h.get('user-agent');
-  if (ua) out['x-client-user-agent'] = ua.slice(0, 255);
   const lang = h.get('x-next-intl-locale');
   if (lang) out['accept-language'] = lang;
   const auth = [names.access, names.refresh]
@@ -107,9 +126,11 @@ export async function privateRequest<T extends z.ZodType | null>(
   path: string,
   options: PrivateRequestOptions = {},
 ): Promise<T extends z.ZodType ? z.infer<T> : null> {
+  const method = options.method ?? 'GET';
+  const target = url(path, options.query);
   const init: RequestInit = {
-    method: options.method ?? 'GET',
-    headers: await visitorHeaders(),
+    method,
+    headers: await visitorHeaders(method, target),
     cache: 'no-store',
     signal: AbortSignal.timeout(options.rawBody ? 60_000 : TIMEOUT_MS),
   };
@@ -122,7 +143,7 @@ export async function privateRequest<T extends z.ZodType | null>(
     h['content-type'] = 'application/json';
     init.body = JSON.stringify(options.body);
   }
-  const res = await fetch(url(path, options.query), init);
+  const res = await fetch(target, init);
   if (options.relayCookies) await relaySetCookies(res);
   if (!res.ok) throw new ApiError(await toProblem(res));
   if (schema === null || res.status === 204) return null as T extends z.ZodType ? z.infer<T> : null;

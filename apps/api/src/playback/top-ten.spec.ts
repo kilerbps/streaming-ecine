@@ -48,7 +48,10 @@ function playbackWith() {
     },
   };
   const cache = { wrap: (_ns: string, _key: string, _ttl: number, fn: () => unknown) => fn() };
-  const quotas = { increment: vi.fn().mockResolvedValue({ totalHits: 1 }) };
+  const limits = {
+    sessionOpen: vi.fn().mockResolvedValue(undefined),
+    trackSession: vi.fn().mockResolvedValue(undefined),
+  };
   const tokens = { sign: vi.fn().mockResolvedValue({ token: 't', expiresAt: new Date() }) };
   const env = {
     IP_HASH_SALT: 'sel-de-test-suffisamment-long-pour-le-hmac',
@@ -58,15 +61,25 @@ function playbackWith() {
   const service = new PlaybackService(
     prisma as never,
     cache as never,
-    quotas as never,
+    limits as never,
     tokens as never,
     env as never,
   );
-  return { prisma, tokens, service };
+  return { prisma, tokens, limits, service };
 }
 
 describe('lectures comptées pour le Top 10', () => {
-  const viewer = { ip: '41.243.0.1', userAgent: 'Android', userId: null };
+  const identity = {
+    kind: 'unverified',
+    key: 'i:x',
+    hasDevice: false,
+    deviceAgeSec: null,
+    ipKey: 'x',
+    block48Key: null,
+    ipClass: 'rdc',
+    asn: 37020,
+  } as const;
+  const viewer = { identity, ip: '41.243.0.1', userAgent: 'Android', userId: null, deviceId: null };
 
   it('compte une lecture avec une empreinte de 64 caractères, jamais l’adresse IP', async () => {
     const { prisma, service } = playbackWith();
@@ -75,6 +88,23 @@ describe('lectures comptées pour le Top 10', () => {
     expect(data?.filmId).toBe('f1');
     expect(data?.viewerHash).toMatch(/^[0-9a-f]{64}$/);
     expect(JSON.stringify(data)).not.toContain('41.243');
+  });
+
+  it('distingue deux appareils derrière la même IP et le même navigateur (CGNAT)', async () => {
+    const { prisma, service } = playbackWith();
+    await service.createSession('v1', { ...viewer, deviceId: 'AAAAAAAAAAAAAAAAAAAAAA' });
+    await service.createSession('v1', { ...viewer, deviceId: 'BBBBBBBBBBBBBBBBBBBBBB' });
+    const [a, b] = prisma.playbackView.createMany.mock.calls.map((c) => c[0].data[0]?.viewerHash);
+    expect(a).not.toBe(b);
+  });
+
+  it('applique les limites par identité, sans compter une ouverture comme lecture en cours', async () => {
+    const { limits, tokens, service } = playbackWith();
+    await service.createSession('v1', viewer);
+    expect(limits.sessionOpen).toHaveBeenCalledWith(identity, false);
+    expect(tokens.sign).toHaveBeenCalledWith(expect.objectContaining({ identityKey: 'i:x' }));
+    // Seul un renouvellement du jeton (~4 min de lecture) rend la session « présente ».
+    expect(limits.trackSession).not.toHaveBeenCalled();
   });
 
   it('ne compte pas un aperçu automatique et marque son jeton', async () => {

@@ -57,6 +57,12 @@ export const envSchema = z
     VAPID_SUBJECT: z.string().startsWith('mailto:').or(z.url()).optional(),
 
     TURNSTILE_SECRET: z.string().optional(),
+    /**
+     * Limites de débit par identité (ADR-0015) : `observe` journalise « aurait bloqué » sans bloquer
+     * (deux semaines au lancement) ; seuls les plafonds anti-inondation et la vérification des
+     * hébergeurs bloquent alors. `enforce` applique toutes les limites.
+     */
+    RATE_LIMIT_MODE: z.enum(['observe', 'enforce']).default('observe'),
     /** 2FA obligatoire pour ADMIN/SUPER_ADMIN. Désactivable uniquement en développement local. */
     ADMIN_MFA_REQUIRED: bool.default(true),
     SWAGGER_ENABLED: bool.optional(),

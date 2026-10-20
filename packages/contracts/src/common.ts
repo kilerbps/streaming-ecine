@@ -35,6 +35,25 @@ export interface Page<T> {
 }
 
 /** Erreur au format RFC 9457 (application/problem+json). */
+/**
+ * Motif d'un refus 429 (ADR-0015), lu par le site pour réagir sans impasse :
+ * - `identity` : limite du compte ou de l'appareil, attendre `retryAfter` ;
+ * - `pot_ip` : réserve des appareils neufs de l'IP épuisée, vérifier l'appareil (Turnstile) ;
+ * - `verify` : IP d'hébergeur, vérification de l'appareil exigée ;
+ * - `ip` : plafond de l'adresse IP, attendre ;
+ * - `concurrent` : trop de lectures en même temps sur ce compte ou cet appareil ;
+ * - `session` : quota d'une session de lecture (renouvellements, clés).
+ */
+export const RATE_LIMIT_REASONS = [
+  'identity',
+  'pot_ip',
+  'verify',
+  'ip',
+  'concurrent',
+  'session',
+] as const;
+export type RateLimitReason = (typeof RATE_LIMIT_REASONS)[number];
+
 export const problemSchema = z.object({
   type: z.string(),
   title: z.string(),
@@ -42,6 +61,9 @@ export const problemSchema = z.object({
   detail: z.string().optional(),
   instance: z.string().optional(),
   errors: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
+  /** 429 : motif du refus et attente conseillée, en secondes (aussi dans `Retry-After`). */
+  reason: z.enum(RATE_LIMIT_REASONS).optional(),
+  retryAfter: z.number().int().nonnegative().optional(),
 });
 export type Problem = z.infer<typeof problemSchema>;
 

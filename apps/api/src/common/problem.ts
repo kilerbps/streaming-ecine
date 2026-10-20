@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import type { Problem } from '@ecine/contracts';
+import type { Problem, RateLimitReason } from '@ecine/contracts';
 
 /** Types de problèmes propres à E-Ciné (RFC 9457 §3.1.1). */
 export const PROBLEM_TYPES = {
@@ -66,11 +66,30 @@ export class ProblemException extends HttpException {
     });
   }
 
-  static tooManyRequests(detail = 'Trop de requêtes. Réessayez dans un instant.') {
+  /** 429 avec motif et attente (ADR-0015) : le site réessaie ou vérifie l'appareil, jamais d'impasse. */
+  static tooManyRequests(
+    detail = 'Trop de requêtes. Réessayez dans un instant.',
+    limit?: { reason: RateLimitReason; retryAfter: number },
+  ) {
     return new ProblemException({
       type: PROBLEM_TYPES.rateLimit,
       title: 'Trop de requêtes',
       status: HttpStatus.TOO_MANY_REQUESTS,
+      detail,
+      ...(limit
+        ? { reason: limit.reason, retryAfter: Math.max(1, Math.ceil(limit.retryAfter)) }
+        : {}),
+    });
+  }
+
+  /** 503 : service indisponible (ex. inscription refusée pendant une panne de Redis, ADR-0015). */
+  static serviceUnavailable(
+    detail = 'Service momentanément indisponible. Réessayez dans un instant.',
+  ) {
+    return new ProblemException({
+      type: 'about:blank',
+      title: 'Service indisponible',
+      status: HttpStatus.SERVICE_UNAVAILABLE,
       detail,
     });
   }

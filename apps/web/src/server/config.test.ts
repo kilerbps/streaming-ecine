@@ -8,6 +8,7 @@ const base = {
   API_PUBLIC_URL: 'https://api.e-cine.cd',
   MEDIA_PUBLIC_URL: 'https://media.e-cine.cd',
   SERVICE_API_KEY: 'k'.repeat(40),
+  DEVICE_COOKIE_SECRET: 'd'.repeat(40),
   REVALIDATE_SECRET: 'r'.repeat(40),
 };
 

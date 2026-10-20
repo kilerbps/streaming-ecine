@@ -194,7 +194,12 @@
     "switchToAuto": "Passer en qualité automatique",
     "offline": "Pas de connexion. La lecture reprendra toute seule au retour du réseau.",
     "previewPause": "Mettre l'aperçu en pause",
-    "previewPlay": "Relancer l'aperçu"
+    "previewPlay": "Relancer l'aperçu",
+    "busyWait": "Beaucoup de lectures démarrent en ce moment sur votre réseau. Un nouvel essai part tout seul.",
+    "busyWaitDevice": "Vous avez lancé beaucoup de lectures en peu de temps. Un nouvel essai part tout seul.",
+    "busyCountdown": "(dans {seconds} s)",
+    "busyVerify": "Vérification rapide de votre appareil : la lecture démarre juste après.",
+    "busyConcurrent": "Trop de lectures en même temps sur ce compte ou cet appareil. Arrêtez-en une, puis réessayez."
   },
   "actions": {
     "like": "J'aime",

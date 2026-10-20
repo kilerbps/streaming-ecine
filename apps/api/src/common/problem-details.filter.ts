@@ -60,7 +60,9 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       );
     }
     if (res.headersSent) return;
-    if (problem.status === 429 && !res.getHeader('Retry-After')) res.setHeader('Retry-After', '60');
+    if (problem.status === 429 && !res.getHeader('Retry-After')) {
+      res.setHeader('Retry-After', String(problem.retryAfter ?? 60));
+    }
     res.status(problem.status).type('application/problem+json').json(problem);
   }
 

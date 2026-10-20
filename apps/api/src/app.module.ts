@@ -6,9 +6,8 @@ import { AdminModule } from './admin/admin.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AuthGuard, OriginGuard, RolesGuard } from './auth/guards.js';
-import { ClientIpMiddleware } from './common/client-ip.middleware.js';
+import { RelayMiddleware } from './common/relay.middleware.js';
 import { ReturnsInterceptor } from './common/contract.decorators.js';
-import { ClientThrottlerGuard } from './common/request.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
 import { ConfigModule } from './config/config.module.js';
 import { ENV, type Env } from './config/env.js';
@@ -21,6 +20,9 @@ import { MediaModule } from './media/media.module.js';
 import { PlaybackModule } from './playback/playback.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { QueueModule } from './queue/queue.module.js';
+import { FloodGuard, IdentityThrottlerGuard } from './rate-limit/guards.js';
+import { GENERAL, MINUTE } from './rate-limit/policies.js';
+import { RateLimitModule } from './rate-limit/rate-limit.module.js';
 import { RedisModule } from './redis/redis.module.js';
 import { RedisThrottlerStorage } from './redis/throttler-storage.js';
 import { ContentEventsModule } from './revalidate/content-events.service.js';
@@ -34,10 +36,12 @@ import { ContentEventsModule } from './revalidate/content-events.service.js';
     ThrottlerModule.forRootAsync({
       inject: [RedisThrottlerStorage],
       useFactory: (storage: RedisThrottlerStorage) => ({
-        throttlers: [{ name: 'default', ttl: 60_000, limit: 120 }],
+        // Limite générale par identité (ADR-0015) ; les routes précisent la leur avec @Throttle.
+        throttlers: [{ name: 'default', ttl: MINUTE, limit: GENERAL.identity }],
         storage,
       }),
     }),
+    RateLimitModule,
     MailModule,
     PushModule,
     AuditModule,
@@ -51,10 +55,12 @@ import { ContentEventsModule } from './revalidate/content-events.service.js';
   ],
   controllers: [HealthController],
   providers: [
-    // Ordre : origine → débit → authentification (refus par défaut) → rôle.
+    // Ordre : origine → plafond anti-inondation par IP → authentification (refus par défaut) →
+    // limites par identité (le compte n'est connu qu'après l'authentification) → rôle.
     { provide: APP_GUARD, useClass: OriginGuard },
-    { provide: APP_GUARD, useClass: ClientThrottlerGuard },
+    { provide: APP_GUARD, useClass: FloodGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: IdentityThrottlerGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_INTERCEPTOR, useClass: ReturnsInterceptor },
     { provide: APP_FILTER, useClass: ProblemDetailsFilter },
@@ -62,6 +68,6 @@ import { ContentEventsModule } from './revalidate/content-events.service.js';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(ClientIpMiddleware).forRoutes('*');
+    consumer.apply(RelayMiddleware).forRoutes('*');
   }
 }

@@ -19,6 +19,7 @@ import type { z } from 'zod';
 import { ENV, type Env } from '../config/env.js';
 import { BodySchema, Returns } from '../common/contract.decorators.js';
 import { ZodPipe } from '../common/zod.pipe.js';
+import { SensitiveLimit } from '../rate-limit/sensitive.decorator.js';
 import type { AuthUser } from '../auth/auth.types.js';
 import { AuthService } from '../auth/auth.service.js';
 import { clearAuthCookies } from '../auth/cookies.js';
@@ -53,7 +54,7 @@ export class MeController {
 
   @Post('password')
   @HttpCode(204)
-  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  @SensitiveLimit({ limit: 5, ttlMs: 15 * 60_000 })
   @BodySchema(changePasswordInputSchema)
   async changePassword(
     @CurrentUser() user: AuthUser,
@@ -66,7 +67,7 @@ export class MeController {
 
   @Post('resend-verification')
   @HttpCode(202)
-  @Throttle({ default: { limit: 3, ttl: 60 * 60_000 } })
+  @SensitiveLimit({ limit: 3, ttlMs: 60 * 60_000 })
   async resendVerification(@CurrentUser() user: AuthUser): Promise<void> {
     await this.auth.resendVerification(user.id);
   }
@@ -84,7 +85,7 @@ export class MeController {
 
   @Delete()
   @HttpCode(204)
-  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  @SensitiveLimit({ limit: 5, ttlMs: 15 * 60_000 })
   @BodySchema(deleteMeInputSchema)
   async delete(
     @CurrentUser() user: AuthUser,
@@ -108,7 +109,7 @@ export class MeController {
   /** Activation : renvoie les codes de secours, une seule fois, puis exige une reconnexion. */
   @Post('2fa/enable')
   @HttpCode(200)
-  @Throttle({ default: { limit: 10, ttl: 15 * 60_000 } })
+  @SensitiveLimit({ limit: 10, ttlMs: 15 * 60_000 })
   @BodySchema(twoFactorEnableInputSchema)
   @Returns(recoveryCodesSchema)
   async enableTwoFactor(
@@ -125,7 +126,7 @@ export class MeController {
 
   @Post('2fa/recovery-codes')
   @HttpCode(200)
-  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  @SensitiveLimit({ limit: 5, ttlMs: 15 * 60_000 })
   @BodySchema(twoFactorDisableInputSchema)
   @Returns(recoveryCodesSchema)
   regenerateRecoveryCodes(
@@ -140,7 +141,7 @@ export class MeController {
 
   @Post('2fa/disable')
   @HttpCode(204)
-  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  @SensitiveLimit({ limit: 5, ttlMs: 15 * 60_000 })
   @BodySchema(twoFactorDisableInputSchema)
   async disableTwoFactor(
     @CurrentUser() user: AuthUser,

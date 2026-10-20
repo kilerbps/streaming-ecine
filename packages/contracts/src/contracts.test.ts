@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatDevice,
+  parseDevice,
+  relayCanonical,
   isPushServiceUrl,
   analyticsEventInputSchema,
   contactInputSchema,
@@ -152,5 +155,22 @@ describe('isPushServiceUrl', () => {
     ]) {
       expect(isPushServiceUrl(url)).toBe(false);
     }
+  });
+});
+
+describe('relais signé et appareil', () => {
+  it('signe une ligne par champ, méthode en majuscules, champs absents vides', () => {
+    expect(
+      relayCanonical({ timestamp: '1', method: 'post', path: '/v1/x?a=1', ip: '1.2.3.4' }),
+    ).toBe('ecine-relay-v1\n1\nPOST\n/v1/x?a=1\n1.2.3.4\n\n');
+  });
+
+  it('relit un appareil bien formé et refuse le reste', () => {
+    const device = { id: 'AAAAAAAAAAAAAAAAAAAAAA', issuedAt: 1_800_000_000, verifiedUntil: 0 };
+    expect(parseDevice(formatDevice(device))).toEqual(device);
+    expect(parseDevice('court.1.0')).toBeNull();
+    expect(parseDevice(`${device.id}.1.0.extra`)).toBeNull();
+    expect(parseDevice(`${device.id}.-5.0`)).toBeNull();
+    expect(parseDevice(undefined)).toBeNull();
   });
 });

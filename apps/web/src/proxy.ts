@@ -1,11 +1,21 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { DEFAULT_LOCALE, LOCALES } from '@ecine/contracts';
+import { DEFAULT_LOCALE, formatDevice, LOCALES, type DeviceClaims } from '@ecine/contracts';
 import { authCookieNames, cookieSecure, PREF_COOKIES } from './server/cookie-names';
+import {
+  DEVICE_COOKIE_MAX_AGE,
+  deviceCookieName,
+  newDevice,
+  openDevice,
+  renewDevice,
+  sealDevice,
+} from './server/device';
+import { relayHeaders, visitorIp } from './server/relay';
 import { parseSetCookie } from './server/set-cookie';
 
 /**
  * proxy.ts (ex-middleware, Next.js 16, runtime Node.js) — responsabilités (docs/skills/ecine-nextjs-frontend.md) :
- * hôte canonique, langue, CSP avec nonce, renouvellement transparent des jetons, garde légère de /admin.
+ * hôte canonique, langue, CSP avec nonce, renouvellement transparent des jetons, garde légère de /admin,
+ * cookie d'appareil (limites de débit par appareil, ADR-0015).
  * La vraie autorisation reste dans l'API.
  */
 
@@ -14,6 +24,7 @@ const env = {
   apiPublic: process.env.API_PUBLIC_URL ?? 'http://localhost:4000',
   mediaPublic: process.env.MEDIA_PUBLIC_URL ?? 'http://localhost:4000/media',
   serviceKey: process.env.SERVICE_API_KEY ?? '',
+  deviceSecret: process.env.DEVICE_COOKIE_SECRET ?? '',
   canonicalHost: process.env.CANONICAL_HOST ?? '',
   secure: cookieSecure(process.env.COOKIE_SECURE, process.env.NODE_ENV),
   dev: process.env.NODE_ENV !== 'production',
@@ -75,6 +86,8 @@ interface CookieChange {
   name: string;
   value: string | null;
   header?: string;
+  /** Durée en secondes ; 6 h par défaut. */
+  maxAge?: number;
 }
 
 /** Échange le refresh token contre une nouvelle paire (rotation côté API). */
@@ -82,15 +95,19 @@ async function refreshSession(
   request: NextRequest,
   refreshName: string,
   refreshValue: string,
+  device: DeviceClaims | null,
 ): Promise<CookieChange[] | null> {
+  const target = `${env.apiInternal}/v1/auth/refresh`;
   try {
-    const res = await fetch(`${env.apiInternal}/v1/auth/refresh`, {
+    const res = await fetch(target, {
       method: 'POST',
       headers: {
         cookie: `${refreshName}=${encodeURIComponent(refreshValue)}`,
-        'x-service-key': env.serviceKey,
-        'x-client-ip': request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '',
-        'x-client-user-agent': request.headers.get('user-agent')?.slice(0, 255) ?? '',
+        ...relayHeaders(env.serviceKey, 'POST', target, {
+          ip: visitorIp(request.headers),
+          userAgent: request.headers.get('user-agent'),
+          device: device ? formatDevice(device) : null,
+        }),
       },
       cache: 'no-store',
       signal: AbortSignal.timeout(5000),
@@ -151,10 +168,28 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(login, 307);
   }
 
-  // Renouvellement transparent de la session.
   const changes: CookieChange[] = [];
+
+  // Appareil (ADR-0015) : émis à la première visite ; la vérification Turnstile d'un appareil est
+  // prolongée pendant une visite active. Sans secret configuré, pas de cookie (limites par IP).
+  const nowSec = Math.floor(Date.now() / 1000);
+  const deviceName = deviceCookieName(env.secure);
+  let device = openDevice(env.deviceSecret, request.cookies.get(deviceName)?.value);
+  if (env.deviceSecret) {
+    const next = device ? renewDevice(device, nowSec) : newDevice(nowSec);
+    if (next) {
+      device = next;
+      changes.push({
+        name: deviceName,
+        value: sealDevice(env.deviceSecret, next),
+        maxAge: DEVICE_COOKIE_MAX_AGE,
+      });
+    }
+  }
+
+  // Renouvellement transparent de la session.
   if (refresh && accessExpiresSoon(access)) {
-    const refreshed = await refreshSession(request, names.refresh, refresh);
+    const refreshed = await refreshSession(request, names.refresh, refresh, device);
     if (refreshed && refreshed.length === 0) {
       changes.push({ name: names.access, value: null }, { name: names.refresh, value: null });
     } else if (refreshed) {
@@ -199,7 +234,7 @@ export async function proxy(request: NextRequest) {
         httpOnly: true,
         sameSite: 'lax',
         secure: env.secure,
-        maxAge: 60 * 60 * 6,
+        maxAge: change.maxAge ?? 60 * 60 * 6,
       });
   }
   if (isAdmin) response.headers.set('X-Robots-Tag', 'noindex, nofollow');

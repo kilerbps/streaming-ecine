@@ -15,6 +15,7 @@ import { hashIp } from '../common/crypto.js';
 import { ProblemException } from '../common/problem.js';
 import { deviceCategory } from '../common/request.js';
 import { ZodPipe } from '../common/zod.pipe.js';
+import { SensitiveLimit } from '../rate-limit/sensitive.decorator.js';
 import { Public } from '../auth/decorators.js';
 import { MailService } from '../mail/mail.service.js';
 import { mailTemplates } from '../mail/mail.templates.js';
@@ -37,7 +38,13 @@ export class FormsController {
   /** Contact (FR-070/072) : pot de miel (schéma), délai minimal, Turnstile, limite de débit, accusé de réception. */
   @Post('contact')
   @HttpCode(202)
-  @Throttle({ default: { limit: 5, ttl: 60 * 60_000 } })
+  // ADR-0015 : 3 par heure et par appareil ; par IP 20 (RDC) / 10 / 3 (hébergeurs) ; refusé sans Redis.
+  @SensitiveLimit({
+    limit: 3,
+    ttlMs: 60 * 60_000,
+    ip: { rdc: 20, other: 10, hosting: 3 },
+    failClosed: true,
+  })
   @BodySchema(contactInputSchema)
   async contact(
     @Body(new ZodPipe(contactInputSchema)) input: z.infer<typeof contactInputSchema>,

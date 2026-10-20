@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type Hls from 'hls.js';
-import { PLAYBACK_TOKEN_PARAM } from '@ecine/contracts';
+import { PLAYBACK_TOKEN_PARAM, type RateLimitReason } from '@ecine/contracts';
 import { refreshPlaybackAction, startPlaybackAction } from '@/server/actions/interactions';
 import {
   ABR_FACTORS,
@@ -30,7 +30,14 @@ export interface QualityLevel {
   bitrate: number;
 }
 
-export type PlaybackError = 'unavailable' | 'network' | 'generic';
+/** `busy` : ouverture refusée par les limites de débit (motif et attente dans `busy`, ADR-0015). */
+export type PlaybackError = 'unavailable' | 'network' | 'generic' | 'busy';
+
+export interface PlaybackBusy {
+  reason: RateLimitReason;
+  /** Instant (ms) à partir duquel un nouvel essai a des chances de passer. */
+  retryAt: number;
+}
 
 export function withToken(url: string, token: string): string {
   const target = new URL(url);
@@ -87,6 +94,7 @@ export function useHlsPlayback(
   const [playingHeight, setPlayingHeight] = useState<number | null>(null);
   const [subtitleTracks, setSubtitleTracks] = useState<Array<{ index: number; label: string }>>([]);
   const [error, setError] = useState<PlaybackError | null>(null);
+  const [busy, setBusy] = useState<PlaybackBusy | null>(null);
 
   const scheduleRefresh = useCallback(
     (expiresAt: string) => {
@@ -204,15 +212,16 @@ export function useHlsPlayback(
         return false;
       }
       if (!session.ok) {
-        setError(
-          session.code === 'not_found'
-            ? 'unavailable'
-            : session.code === 'rate'
-              ? 'network'
-              : 'generic',
-        );
+        if (session.code === 'rate') {
+          const rate = session.rate ?? { reason: 'identity', retryAfter: 30 };
+          setBusy({ reason: rate.reason, retryAt: Date.now() + rate.retryAfter * 1000 });
+          setError('busy');
+          return false;
+        }
+        setError(session.code === 'not_found' ? 'unavailable' : 'generic');
         return false;
       }
+      setBusy(null);
       tokenRef.current = session.data.token;
       manifestRef.current = session.data.manifestUrl;
       scheduleRefresh(session.data.expiresAt);
@@ -367,5 +376,6 @@ export function useHlsPlayback(
     subtitleTracks,
     setSubtitle,
     error,
+    busy,
   };
 }

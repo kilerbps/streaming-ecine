@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { CreditRole, FilmDetail, Locale } from '@ecine/contracts';
+import { DeviceCheck } from '@/components/features/auth/device-check';
 import { FilmStage } from '@/components/features/content/film-stage';
 import { FilmTile } from '@/components/features/content/film-tile';
 import { BookmarkButton } from '@/components/features/interactions/bookmark-button';
@@ -20,7 +21,8 @@ import { Tag } from '@/components/ui/tag';
 import { Portrait } from '@/components/ui/tiles';
 import { formatDate, formatRuntime } from '@/lib/format';
 import { routes } from '@/lib/routes';
-import { getFilm, getFilms, getFilmViewerState } from '@/server/data';
+import { getFilm, getFilms, getFilmViewerState, getViewer } from '@/server/data';
+import { deviceVerified } from '@/server/device-state';
 import { loadOrNotFound } from '@/server/not-found';
 import { absoluteUrl, ogImage, pageMetadata } from '@/server/seo';
 
@@ -91,7 +93,7 @@ export default async function FilmPage({ params, searchParams }: Props) {
   const locale = rawLocale as Locale;
   const resume = (await searchParams).reprendre === '1';
   const film = await loadOrNotFound(() => getFilm(slug), `/${locale}/films/${slug}`);
-  const [t, tr, tl, tt, state, related] = await Promise.all([
+  const [t, tr, tl, tt, state, related, viewer, verified] = await Promise.all([
     getTranslations('film'),
     getTranslations('roles'),
     getTranslations('languages'),
@@ -100,6 +102,8 @@ export default async function FilmPage({ params, searchParams }: Props) {
     film.categories[0]
       ? getFilms({ category: film.categories[0].slug, limit: RELATED_COUNT + 1 }).catch(() => null)
       : Promise.resolve(null),
+    getViewer(),
+    deviceVerified(),
   ]);
   const cast = film.credits.filter((c) => CAST.includes(c.role));
   const crew = crewByRole(film.credits.filter((c) => !CAST.includes(c.role)));
@@ -190,6 +194,14 @@ export default async function FilmPage({ params, searchParams }: Props) {
           {film.ageRating ? <Tag>{film.ageRating}</Tag> : null}
         </div>
       </FilmStage>
+
+      {/* Visiteur : vérification invisible de l'appareil (limites par appareil, ADR-0015). Le widget
+          n'apparaît ici que si Cloudflare demande une interaction. */}
+      {film.videoId && !upcoming && !viewer ? (
+        <div className="container-page empty:hidden">
+          <DeviceCheck needed={!verified} />
+        </div>
+      ) : null}
 
       {/* Mobile : une colonne (actions, synopsis, Avec, Vous aimerez aussi, Détails). PC : les détails
           passent à droite du synopsis, les rangées gardent toute la largeur. */}
