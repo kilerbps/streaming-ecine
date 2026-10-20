@@ -4,6 +4,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import {
   idSchema,
+  PLAYBACK_BARE_PARAM,
   PLAYBACK_TOKEN_PARAM,
   playbackRefreshSchema,
   playbackSessionQuerySchema,
@@ -22,6 +23,8 @@ import { PlaybackService } from './playback.service.js';
 const tokenQuery = z.object({
   [PLAYBACK_TOKEN_PARAM]: z.string().max(1024).optional(),
   v: idSchema.optional(),
+  /** Listes sans jeton pour hls.js (adresses stables, ADR-0015). */
+  [PLAYBACK_BARE_PARAM]: z.literal('1').optional(),
 });
 const refreshBody = z.strictObject({ token: z.string().min(10).max(1024) });
 const renditionParam = z.string().regex(RENDITION_RE);
@@ -99,7 +102,11 @@ export class PlaybackController {
     @Query(new ZodPipe(tokenQuery)) q: z.infer<typeof tokenQuery>,
     @Res() res: Response,
   ): Promise<void> {
-    const playlist = await this.playback.master(videoId, q[PLAYBACK_TOKEN_PARAM]);
+    const playlist = await this.playback.master(
+      videoId,
+      q[PLAYBACK_TOKEN_PARAM],
+      q[PLAYBACK_BARE_PARAM] === '1',
+    );
     noStore(res);
     res.type(HLS_TYPE).send(playlist);
   }
@@ -112,7 +119,12 @@ export class PlaybackController {
     @Query(new ZodPipe(tokenQuery)) q: z.infer<typeof tokenQuery>,
     @Res() res: Response,
   ): Promise<void> {
-    const playlist = await this.playback.variant(videoId, rendition, q[PLAYBACK_TOKEN_PARAM]);
+    const playlist = await this.playback.variant(
+      videoId,
+      rendition,
+      q[PLAYBACK_TOKEN_PARAM],
+      q[PLAYBACK_BARE_PARAM] === '1',
+    );
     noStore(res);
     res.type(HLS_TYPE).send(playlist);
   }

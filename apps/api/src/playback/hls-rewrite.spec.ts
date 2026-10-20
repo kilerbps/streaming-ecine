@@ -1,4 +1,4 @@
-import { rewriteMaster, rewriteVariant } from './hls-rewrite.js';
+import { mediaHrefs, rewriteMaster, rewriteVariant } from './hls-rewrite.js';
 
 describe('réécriture HLS', () => {
   it('ajoute le jeton aux variantes du master', () => {
@@ -38,5 +38,36 @@ describe('réécriture HLS', () => {
       () => 'Y',
     );
     expect(out).toBe('../../etc/passwd\n#EXTINF:6.0,');
+  });
+});
+
+describe('listes sans jeton pour hls.js (ADR-0015)', () => {
+  const hrefs = (token: string, bare: boolean) =>
+    mediaHrefs({
+      api: 'https://api.test',
+      media: 'https://media.test',
+      videoId: 'v1',
+      token,
+      bare,
+    });
+
+  it('garde la même adresse de clé d’un jeton à l’autre : la clé n’est chargée qu’une fois', () => {
+    expect(hrefs('jeton-1', true).key('k1')).toBe('https://api.test/v1/playback/keys/k1?v=v1');
+    expect(hrefs('jeton-2', true).key('k1')).toBe(hrefs('jeton-1', true).key('k1'));
+    expect(hrefs('jeton-1', true).segment('240p', 'abc_00001.ts')).toBe(
+      'https://media.test/hls/v1/240p/abc_00001.ts',
+    );
+    expect(hrefs('jeton-1', true).variant('240p')).toBe(
+      'https://api.test/v1/playback/v1/240p/index.m3u8?bare=1',
+    );
+  });
+
+  it('porte le jeton dans chaque adresse pour le HLS natif', () => {
+    const native = hrefs('a b', false);
+    expect(native.key('k1')).toBe('https://api.test/v1/playback/keys/k1?t=a%20b&v=v1');
+    expect(native.segment('240p', 'abc_00001.ts')).toBe(
+      'https://media.test/hls/v1/240p/abc_00001.ts?t=a%20b',
+    );
+    expect(native.variant('240p')).toBe('https://api.test/v1/playback/v1/240p/index.m3u8?t=a%20b');
   });
 });

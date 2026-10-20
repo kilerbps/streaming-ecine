@@ -22,3 +22,10 @@ export type PlaybackRefresh = z.infer<typeof playbackRefreshSchema>;
 
 /** Nom du paramètre de requête qui porte le jeton sur les URLs média (jamais dans l'URL de page). */
 export const PLAYBACK_TOKEN_PARAM = 't';
+
+/**
+ * Listes de lecture « sans jeton » (`?bare=1`, ADR-0015) : le lecteur hls.js ajoute le jeton à
+ * chaque requête, les adresses réécrites restent donc stables d'un renouvellement à l'autre (la
+ * clé n'est chargée qu'une fois). Le HLS natif (anciens iPhone) garde les adresses avec jeton.
+ */
+export const PLAYBACK_BARE_PARAM = 'bare';

@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type Hls from 'hls.js';
-import { PLAYBACK_TOKEN_PARAM, type RateLimitReason } from '@ecine/contracts';
+import {
+  PLAYBACK_BARE_PARAM,
+  PLAYBACK_TOKEN_PARAM,
+  type RateLimitReason,
+} from '@ecine/contracts';
 import { refreshPlaybackAction, startPlaybackAction } from '@/server/actions/interactions';
 import {
   ABR_FACTORS,
@@ -42,6 +46,16 @@ export interface PlaybackBusy {
 export function withToken(url: string, token: string): string {
   const target = new URL(url);
   target.searchParams.set(PLAYBACK_TOKEN_PARAM, token);
+  return target.toString();
+}
+
+/**
+ * Liste principale « sans jeton » pour hls.js (ADR-0015) : les adresses réécrites restent stables
+ * (la clé n'est chargée qu'une fois) ; `xhrSetup` ajoute le jeton courant à chaque requête.
+ */
+export function bareManifest(url: string): string {
+  const target = new URL(url);
+  target.searchParams.set(PLAYBACK_BARE_PARAM, '1');
   return target.toString();
 }
 
@@ -307,7 +321,7 @@ export function useHlsPlayback(
             setError('generic');
           }
         });
-        hls.loadSource(withToken(session.data.manifestUrl, session.data.token));
+        hls.loadSource(withToken(bareManifest(session.data.manifestUrl), session.data.token));
         hls.attachMedia(video);
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         // Safari iOS ancien : HLS natif, le jeton est porté par les URLs réécrites par l'API.

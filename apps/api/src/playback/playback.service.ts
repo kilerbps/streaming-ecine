@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { PLAYBACK_TOKEN_PARAM, type PlaybackRefresh, type PlaybackSession } from '@ecine/contracts';
+import type { PlaybackRefresh, PlaybackSession } from '@ecine/contracts';
 import { ENV, type Env } from '../config/env.js';
 import { hmacHex, openSecret, randomToken } from '../common/crypto.js';
 import { kinshasaDay } from '../common/kinshasa.js';
@@ -10,7 +10,13 @@ import { playableWhere } from '../content/content.helpers.js';
 import { storagePaths } from '../media/static.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CacheService } from '../redis/cache.service.js';
-import { capMaster, renditionHeight, rewriteMaster, rewriteVariant } from './hls-rewrite.js';
+import {
+  capMaster,
+  mediaHrefs,
+  renditionHeight,
+  rewriteMaster,
+  rewriteVariant,
+} from './hls-rewrite.js';
 import { RateLimitService, type Identity } from '../rate-limit/rate-limit.service.js';
 import { PlaybackTokenService, type PlaybackClaims } from './playback-token.service.js';
 
@@ -93,32 +99,37 @@ export class PlaybackService {
     return { token, expiresAt: expiresAt.toISOString() };
   }
 
-  async master(videoId: string, token: string | undefined): Promise<string> {
+  private hrefs(videoId: string, token: string, bare: boolean) {
+    return mediaHrefs({
+      api: this.env.API_PUBLIC_URL,
+      media: this.env.MEDIA_PUBLIC_URL,
+      videoId,
+      token,
+      bare,
+    });
+  }
+
+  /** `bare` : adresses sans jeton (hls.js l'ajoute à chaque requête, la clé garde son adresse). */
+  async master(videoId: string, token: string | undefined, bare = false): Promise<string> {
     const claims = await this.authorize(videoId, token);
     const video = await this.playable(videoId);
     const full = await this.readPlaylist(video, 'master.m3u8');
     const playlist = claims.preview ? capMaster(full, PREVIEW_MAX_HEIGHT) : full;
-    const t = encodeURIComponent(token!);
-    return rewriteMaster(
-      playlist,
-      (r) =>
-        `${this.env.API_PUBLIC_URL}/v1/playback/${videoId}/${r}/index.m3u8?${PLAYBACK_TOKEN_PARAM}=${t}`,
-    );
+    return rewriteMaster(playlist, this.hrefs(videoId, token!, bare).variant);
   }
 
-  async variant(videoId: string, rendition: string, token: string | undefined): Promise<string> {
+  async variant(
+    videoId: string,
+    rendition: string,
+    token: string | undefined,
+    bare = false,
+  ): Promise<string> {
     const claims = await this.authorize(videoId, token);
     this.assertRendition(claims, rendition);
     const video = await this.playable(videoId);
     const playlist = await this.readPlaylist(video, join(rendition, 'index.m3u8'));
-    const t = encodeURIComponent(token!);
-    return rewriteVariant(
-      playlist,
-      (segment) =>
-        `${this.env.MEDIA_PUBLIC_URL}/hls/${videoId}/${rendition}/${segment}?${PLAYBACK_TOKEN_PARAM}=${t}`,
-      (keyId) =>
-        `${this.env.API_PUBLIC_URL}/v1/playback/keys/${keyId}?${PLAYBACK_TOKEN_PARAM}=${t}&v=${videoId}`,
-    );
+    const hrefs = this.hrefs(videoId, token!, bare);
+    return rewriteVariant(playlist, (segment) => hrefs.segment(rendition, segment), hrefs.key);
   }
 
   /** Clé AES-128 : jeton obligatoire, vidéo correspondante, quota strict. */

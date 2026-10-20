@@ -1,5 +1,8 @@
+import { PLAYBACK_BARE_PARAM, PLAYBACK_TOKEN_PARAM } from '@ecine/contracts';
+
 /**
- * Réécriture des playlists HLS : chaque URI (variante, segment, clé) reçoit le jeton de lecture.
+ * Réécriture des playlists HLS : chaque URI (variante, segment, clé) reçoit le jeton de lecture,
+ * sauf en mode `bare` où le lecteur hls.js l'ajoute lui-même à chaque requête.
  * Les chemins internes de stockage ne sortent jamais tels quels.
  */
 export const RENDITION_RE = /^\d{3,4}p$/;
@@ -27,6 +30,25 @@ export function capMaster(playlist: string, maxHeight: number): string {
   const keep = (v: { height: number }) => v.height <= Math.max(maxHeight, lowest);
   const dropped = new Set(variants.filter((v) => !keep(v)).flatMap((v) => [v.info, v.uri]));
   return lines.filter((_, index) => !dropped.has(index)).join('\n');
+}
+
+/** Adresses réécrites d'une liste : avec le jeton (HLS natif), ou sans (`bare`, hls.js). */
+export function mediaHrefs(options: {
+  api: string;
+  media: string;
+  videoId: string;
+  token: string;
+  bare: boolean;
+}) {
+  const { api, media, videoId, bare } = options;
+  const t = `${PLAYBACK_TOKEN_PARAM}=${encodeURIComponent(options.token)}`;
+  return {
+    variant: (rendition: string) =>
+      `${api}/v1/playback/${videoId}/${rendition}/index.m3u8?${bare ? `${PLAYBACK_BARE_PARAM}=1` : t}`,
+    segment: (rendition: string, segment: string) =>
+      `${media}/hls/${videoId}/${rendition}/${segment}${bare ? '' : `?${t}`}`,
+    key: (keyId: string) => `${api}/v1/playback/keys/${keyId}?${bare ? '' : `${t}&`}v=${videoId}`,
+  };
 }
 
 export function rewriteMaster(playlist: string, variantUrl: (rendition: string) => string): string {
