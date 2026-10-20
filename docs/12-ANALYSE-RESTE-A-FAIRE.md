@@ -262,7 +262,7 @@ Le PRD compte 58 exigences fonctionnelles (FR). Les 6 qui portent sur la vidéo 
 | Garde-fous de production : refuser `MAIL_DRIVER=log` (il écrit les liens de réinitialisation dans les journaux), exiger `REVALIDATE_URL` et un vrai `MAIL_FROM`, imposer `COOKIE_SECURE` côté site | Jetons dans les journaux, cookies non sécurisés | S | P1 |
 | Rotation des secrets outillée (format scellé sans identifiant de clé : pas de double clé possible) ; clé distincte pour la 2FA | Rotation impossible sans coupure | M | P1 |
 | Codes de secours 2FA, au moins deux SUPER_ADMIN, procédure « bris de glace » | Blocage total si l'unique administrateur perd son téléphone | M | P1 |
-| **Limites par IP face au CGNAT** : en RDC, beaucoup d'abonnés mobiles partagent la même IP (inscription 5/h, contact 5/h, 30 sessions de lecture/10 min) | Des utilisateurs légitimes bloqués en masse | S–M | P1 |
+| **Limites par IP face au CGNAT** : en RDC, beaucoup d'abonnés mobiles partagent la même IP (inscription 5/h, contact 5/h, 30 sessions de lecture/10 min). Décidé : ADR-0015 (20 octobre 2026), en cours de réalisation | Des utilisateurs légitimes bloqués en masse | S–M | P1 |
 | ZAP authentifié (membre puis admin) et scan de l'API sur staging ; protection de la branche `main` | Exigé par `06` §7 | M | P1 |
 | Rôle Postgres applicatif distinct du superutilisateur ; images Docker à tags fixes ; Trivy/osv-scanner | Défense en profondeur | S–M | P2 |
 

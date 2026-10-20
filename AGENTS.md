@@ -47,7 +47,7 @@ Ne pose pas de question dont la réponse est dans `docs/`. Ne bloque pas non plu
 - Dupliquer une donnée métier ou créer une seconde source de vérité.
 - Utiliser un **dégradé** (CSS, SVG, image, skeleton shimmer).
 - Mettre **deux boutons principaux** dans la même vue (hors bannière cookies : voir `07` §C4).
-- Exposer un fichier vidéo en accès direct, un secret, une clé, un jeton dans le navigateur ou dans le dépôt.
+- Exposer un fichier vidéo en accès direct, un secret, une clé, un jeton dans le navigateur ou dans le dépôt. **Seule exception** (ADR-0015, décision du propriétaire du 20 octobre 2026) : les aperçus promotionnels de 20 s au plus, en 240p, sans son et filigranés, au passage choisi en administration.
 - Stocker un jeton d'authentification dans `localStorage`/`sessionStorage`.
 - Désactiver une règle de sécurité, un test ou un linter pour « faire passer ».
 - Installer un paquet inconnu sans validation ; exécuter des scripts d'installation douteux.
