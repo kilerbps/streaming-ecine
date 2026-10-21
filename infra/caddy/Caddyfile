@@ -63,11 +63,21 @@
 	request_body {
 		max_size 6MB
 	}
-	reverse_proxy web:3000 {
-		import ip_client
-		health_uri /api/health
-		health_interval 15s
-		health_timeout 3s
+	# Images publiques (WebP immuables, nom versionné) sur l'adresse du site : sur mobile, aucune
+	# connexion de plus à ouvrir (environ 0,75 s gagnées depuis Kinshasa), et cache Cloudflare une
+	# fois le proxy actif. media.ecine.art les sert toujours (anciens liens).
+	handle_path /images/* {
+		root * /data/storage/images
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+	handle {
+		reverse_proxy web:3000 {
+			import ip_client
+			health_uri /api/health
+			health_interval 15s
+			health_timeout 3s
+		}
 	}
 }
 

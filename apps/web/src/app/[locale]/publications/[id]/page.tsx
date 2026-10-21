@@ -5,8 +5,9 @@ import type { Locale } from '@ecine/contracts';
 import { LikeButton } from '@/components/features/interactions/like-button';
 import { ShareButton } from '@/components/features/interactions/share-button';
 import { formatDate, truncate } from '@/lib/format';
+import { capImageDensity } from '@/lib/image-sizes';
 import { routes } from '@/lib/routes';
-import { getLikedIds, getPost } from '@/server/data';
+import { getLikedIds, getPost, getPreferences } from '@/server/data';
 import { loadOrNotFound } from '@/server/not-found';
 import { pageMetadata } from '@/server/seo';
 
@@ -27,7 +28,12 @@ export default async function PostPage({ params }: Props) {
   const { locale: raw, id } = await params;
   const locale = raw as Locale;
   const post = await loadOrNotFound(() => getPost(id), `/${locale}/publications/${id}`);
-  const [tk, liked] = await Promise.all([getTranslations('kinds'), getLikedIds('POST', [post.id])]);
+  const [tk, liked, prefs] = await Promise.all([
+    getTranslations('kinds'),
+    getLikedIds('POST', [post.id]),
+    getPreferences(),
+  ]);
+  const lightImages = prefs.saveData || prefs.lite;
   return (
     <article className="container-page max-w-3xl pt-8 md:pt-12">
       <p className="eyebrow text-muted">
@@ -42,7 +48,7 @@ export default async function PostPage({ params }: Props) {
               alt={image.alt}
               width={image.width}
               height={image.height}
-              sizes="(min-width: 768px) 720px, 100vw"
+              sizes={capImageDensity('(min-width: 768px) 720px, 100vw', { saveData: lightImages })}
               className="h-auto w-full"
               preload={index === 0}
             />

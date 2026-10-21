@@ -65,7 +65,7 @@ export class MediaUrls {
     if (!media || !media.width || !media.height) return null;
     const crops = imageCropsSchema.safeParse(media.crops);
     return {
-      src: `${this.env.MEDIA_PUBLIC_URL}/images/${media.id}`,
+      src: `${this.env.IMAGES_PUBLIC_URL ?? `${this.env.MEDIA_PUBLIC_URL}/images`}/${media.id}`,
       alt: media.decorative ? '' : (media.alt ?? ''),
       width: media.width,
       height: media.height,

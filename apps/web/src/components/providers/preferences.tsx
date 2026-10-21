@@ -186,3 +186,14 @@ export function usePreferences(): PreferencesContextValue {
   if (!ctx) throw new Error('usePreferences doit être utilisé dans PreferencesProvider');
   return ctx;
 }
+
+/**
+ * Images allégées : économie de données ou mode allégé (réseau lent, appareil modeste). `false` hors
+ * du fournisseur (administration). Valeur figée au montage : changer `sizes` après coup ferait
+ * télécharger une seconde image.
+ */
+export function useLightImages(): boolean {
+  const ctx = useContext(PreferencesContext);
+  const [light] = useState(Boolean(ctx && (ctx.saveData || ctx.lite)));
+  return light;
+}

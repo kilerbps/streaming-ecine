@@ -1,7 +1,11 @@
+'use client';
+
 import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import type { Image as ImageData, ImageRatio } from '@ecine/contracts';
+import { useLightImages } from '@/components/providers/preferences';
 import { cropKey, objectPosition } from '@/lib/image-framing';
+import { capImageDensity } from '@/lib/image-sizes';
 import { Illustration } from './illustration';
 
 export type MediaRatio = '2/3' | '4/5' | '16/9' | '1/1' | '3/2' | '9/16';
@@ -13,7 +17,8 @@ export type MediaCrop = ImageRatio | { base: ImageRatio; lg: ImageRatio };
  * Image de contenu dans un cadre de proportions fixes (aucun saut de mise en page). Ordre d'apparition :
  * couleur dominante → aperçu flou → image (charte, Skeletons), tous deux calculés à l'envoi. Le cadrage
  * suit le recadrage du ratio affiché, sinon le point focal posé en administration : les visages ne
- * sont pas coupés. Sans image : illustration du logo, jamais d'image générique.
+ * sont pas coupés. Sans image : illustration du logo, jamais d'image générique. Densité plafonnée sur
+ * les écrans très denses, environ 1× en économie de données (`capImageDensity`).
  */
 export function MediaImage({
   image,
@@ -34,6 +39,7 @@ export function MediaImage({
   className?: string;
   imageClassName?: string;
 }) {
+  const light = useLightImages();
   const base = typeof crop === 'object' ? crop.base : (crop ?? cropKey(ratio));
   const lg = typeof crop === 'object' ? crop.lg : base;
   const position = image
@@ -70,7 +76,7 @@ export function MediaImage({
             src={image.src}
             alt={image.alt}
             fill
-            sizes={sizes}
+            sizes={capImageDensity(sizes, { saveData: light })}
             preload={preload}
             loading={preload ? 'eager' : undefined}
             className={`object-cover ${framing} ${imageClassName}`}

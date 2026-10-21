@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import { IMAGE_WIDTHS } from '@ecine/contracts';
 
 /** Racine du monorepo : le site embarque @ecine/contracts dans sa sortie autonome (Docker). */
 const workspaceRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -36,6 +37,10 @@ const nextConfig: NextConfig = {
     // Images déjà compressées par l'API (sharp) en largeurs fixes : pas de réoptimisation par Vercel.
     loader: 'custom',
     loaderFile: './src/lib/image-loader.ts',
+    // Les largeurs proposées dans `srcset` sont exactement celles des fichiers (IMAGE_WIDTHS) : le
+    // navigateur sait ce qu'il télécharge et prend le plus petit fichier suffisant.
+    imageSizes: IMAGE_WIDTHS.filter((w) => w < 640),
+    deviceSizes: IMAGE_WIDTHS.filter((w) => w >= 640),
   },
   experimental: {
     serverActions: {

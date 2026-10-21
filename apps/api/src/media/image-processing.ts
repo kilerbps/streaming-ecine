@@ -5,7 +5,12 @@ import { BLUR_DATA_URL_PREFIX, IMAGE_WIDTHS } from '@ecine/contracts';
 
 /** Au-delà, l'image est refusée avant décodage (protection contre les « bombes » de décompression). */
 const MAX_INPUT_PIXELS = 50_000_000;
-const WEBP_QUALITY = 75;
+/**
+ * WebP qualité 70, effort maximal, sous-échantillonnage des couleurs soigné : environ 8 % de moins
+ * que la qualité 75 par défaut sur les affiches réelles, sans différence visible (mesuré le
+ * 21 octobre 2026 ; l'AVIF ferait −35 % mais coûte 3 à 6 s par taille sur le VPS).
+ */
+export const WEBP_OPTIONS = { quality: 70, effort: 6, smartSubsample: true } as const;
 
 /** Format refusé : seuls JPEG, PNG, WebP et AVIF sont acceptés (jamais SVG, GIF, TIFF…). */
 export class UnsupportedImageError extends Error {
@@ -107,7 +112,7 @@ export async function processImage(buffer: Buffer, outDir: string): Promise<Proc
       const info = await sharp(buffer, options)
         .rotate()
         .resize({ width: target, withoutEnlargement: true })
-        .webp({ quality: WEBP_QUALITY })
+        .webp(WEBP_OPTIONS)
         .toFile(join(outDir, `w${target}.webp`));
       bytes = Math.max(bytes, info.size);
     }

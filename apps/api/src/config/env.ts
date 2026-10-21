@@ -31,6 +31,12 @@ export const envSchema = z
     API_PUBLIC_URL: z.url(),
     /** URL publique des médias (images compressées, segments HLS). */
     MEDIA_PUBLIC_URL: z.url(),
+    /**
+     * Base publique des images (`{base}/{id}/w{largeur}.webp`) ; par défaut `{MEDIA_PUBLIC_URL}/images`.
+     * En production : l'adresse du site (`https://ecine.art/images`, ADR-0016) — aucune connexion de
+     * plus à ouvrir sur mobile, et cache Cloudflare une fois le proxy actif.
+     */
+    IMAGES_PUBLIC_URL: z.url().optional(),
     CORS_ORIGINS: z.string().default(''),
 
     JWT_ACCESS_SECRET: secret('JWT_ACCESS_SECRET'),
@@ -130,6 +136,7 @@ export const envSchema = z
       'APP_URL',
       'API_PUBLIC_URL',
       'MEDIA_PUBLIC_URL',
+      'IMAGES_PUBLIC_URL',
       'REVALIDATE_URL',
     ] as const) {
       const value = env[key];

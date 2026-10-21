@@ -95,9 +95,12 @@ export type PublishState = z.infer<typeof publishStateSchema>;
 
 /**
  * Image publique déjà compressée. `src` est une base : le chargeur d'images ajoute `/w{largeur}.webp`.
- * Largeurs disponibles : IMAGE_WIDTHS.
+ * Largeurs disponibles : IMAGE_WIDTHS. Des paliers serrés dans les petites tailles (vignettes,
+ * affiches des rangées) : le navigateur télécharge le plus petit fichier suffisant, ce qui compte
+ * sur les réseaux mobiles lents (RDC). Ce sont aussi les seules largeurs proposées par next/image
+ * (`deviceSizes` et `imageSizes` de apps/web/next.config.ts).
  */
-export const IMAGE_WIDTHS = [320, 640, 960, 1280, 1920] as const;
+export const IMAGE_WIDTHS = [160, 320, 480, 640, 960, 1280, 1920] as const;
 /**
  * Formats d'image de la refonte (docs/design/05-admin.md, Images et vidéos) : affiche 2:3, fiche mobile
  * et portrait 4:5, couverture et PC 16:9, crédits 1:1, Découvrir 9:16.
