@@ -60,7 +60,7 @@ export function storagePaths(env: Pick<Env, 'STORAGE_DIR'>) {
 
 /**
  * Images publiques (déjà ré-encodées par sharp) servies sous /media/images, sans listage de répertoire.
- * En production, Caddy sert ce même répertoire directement (infra/Caddyfile).
+ * En production, Caddy sert ce même répertoire directement (infra/caddy/Caddyfile).
  */
 export function configureStatic(app: NestExpressApplication, env: Env): void {
   const paths = storagePaths(env);

@@ -59,6 +59,19 @@ describe('configuration de production', () => {
     expect(message).toContain('MEDIA_PUBLIC_URL: HTTPS obligatoire');
   });
 
+  it('accepte le webhook vers le site sur le réseau Docker interne, et lui seul (ADR-0016)', () => {
+    expect(problems(production({ REVALIDATE_URL: 'http://web:3000/api/revalidate' }))).toBe('');
+    expect(problems(production({ REVALIDATE_URL: 'http://e-cine.cd/api/revalidate' }))).toContain(
+      'REVALIDATE_URL: HTTPS obligatoire',
+    );
+    expect(problems(production({ REVALIDATE_URL: 'http://10.0.0.5/api/revalidate' }))).toContain(
+      'REVALIDATE_URL: HTTPS obligatoire',
+    );
+    expect(problems(production({ APP_URL: 'http://web:3000' }))).toContain(
+      'APP_URL: HTTPS obligatoire',
+    );
+  });
+
   it('garde les règles existantes (Turnstile, 2FA admin, cookies sécurisés)', () => {
     const message = problems(
       production({

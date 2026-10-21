@@ -50,6 +50,7 @@ jobs:
       IP_HASH_SALT: ci-ip-salt-ci-ip-salt-ci-ip-salt-ci-ip-salt
       SERVICE_API_KEY: ci-service-key-ci-service-key-ci-service-key
       REVALIDATE_SECRET: ci-revalidate-secret-ci-revalidate-secret
+      DEVICE_COOKIE_SECRET: ci-device-secret-ci-device-secret-ci-dev
       API_INTERNAL_URL: http://localhost:4000
       SITE_URL: http://localhost:3000
       COOKIE_SECURE: 'false'

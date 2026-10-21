@@ -1,5 +1,9 @@
+import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+
+/** Racine du monorepo : le site embarque @ecine/contracts dans sa sortie autonome (Docker). */
+const workspaceRoot = fileURLToPath(new URL('../../', import.meta.url));
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
@@ -17,6 +21,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Image Docker du VPS (ADR-0016) : serveur Node autonome, sans node_modules complet.
+  output: 'standalone',
+  outputFileTracingRoot: workspaceRoot,
+  turbopack: { root: workspaceRoot },
   reactStrictMode: true,
   poweredByHeader: false,
   logging: {

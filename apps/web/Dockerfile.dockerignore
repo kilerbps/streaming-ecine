@@ -1,0 +1,24 @@
+# Contexte de l'image du site (remplace .dockerignore pour apps/web/Dockerfile) : jamais de secrets,
+# de médias ni d'artefacts locaux ; de l'API, seul le manifeste sert (lockfile pnpm).
+.git
+.github
+.turbo
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/*.tsbuildinfo
+**/*.log
+
+**/.env
+**/.env.*
+!**/.env.example
+
+storage
+**/storage
+
+docs
+docs-constrution
+apps/api/*
+!apps/api/package.json

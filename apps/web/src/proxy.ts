@@ -28,6 +28,7 @@ const env = {
   canonicalHost: process.env.CANONICAL_HOST ?? '',
   secure: cookieSecure(process.env.COOKIE_SECURE, process.env.NODE_ENV),
   dev: process.env.NODE_ENV !== 'production',
+  indexable: process.env.SITE_INDEXABLE === 'true',
 };
 
 /** Renouvelle le jeton d'accès s'il expire dans moins de 60 s. */
@@ -237,7 +238,8 @@ export async function proxy(request: NextRequest) {
         maxAge: change.maxAge ?? 60 * 60 * 6,
       });
   }
-  if (isAdmin) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  // Administration, et tout le site pendant la phase de test (SITE_INDEXABLE, ADR-0016).
+  if (isAdmin || !env.indexable) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   return response;
 }
 

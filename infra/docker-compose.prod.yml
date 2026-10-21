@@ -1,9 +1,11 @@
-# Production / staging sur le VPS (docs/02-ARCHITECTURE.md §9).
-# Seul Caddy est exposé (80/443). PostgreSQL et Redis restent sur le réseau interne, sans port public.
-# Secrets : /etc/ecine/*.env (droits 600, propriétaire root), jamais dans le dépôt.
+# Production sur le VPS ecine.art (ADR-0016, docs/deploiement-vps.md) : site, API (deux instances),
+# worker, PostgreSQL, Redis, derrière Caddy. Seul Caddy est exposé (80, 443 TCP et UDP).
+# Secrets : /etc/ecine/*.env et /etc/ecine/secrets/ (dossier réservé à root, infra/secrets.sh),
+# jamais dans le dépôt.
+# Répartition calée sur 2 vCPU et 7,7 Go (+ 4 Go de swap) : le site et l'API d'abord, le
+# transcodage ensuite.
 #
-#   docker compose -f infra/docker-compose.prod.yml --env-file /etc/ecine/compose.env up -d
-#   docker compose -f infra/docker-compose.prod.yml run --rm migrate      # avant chaque nouvelle version
+#   sudo infra/deploy.sh     # construit, migre, remplace les instances une à une, vérifie
 name: ecine
 
 x-hardening: &hardening
@@ -15,6 +17,10 @@ x-hardening: &hardening
     driver: json-file
     options: { max-size: '10m', max-file: '5' }
 
+x-api-build: &api-build
+  context: ..
+  dockerfile: apps/api/Dockerfile
+
 services:
   caddy:
     <<: *hardening
@@ -23,31 +29,84 @@ services:
     ports:
       - '80:80'
       - '443:443'
+      - '443:443/udp'
     environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
       API_DOMAIN: ${API_DOMAIN}
       MEDIA_DOMAIN: ${MEDIA_DOMAIN}
       ACME_EMAIL: ${ACME_EMAIL}
+      # Accès au site et à l'API : « ouverte », ou « cloudflare » une fois le proxy actif.
+      CADDY_ORIGIN: ${CADDY_ORIGIN:-ouverte}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Dossier entier (pas un fichier) : une mise à jour du dépôt est vue par `caddy reload`.
+      - ./caddy:/etc/caddy:ro
       - storage:/data/storage:ro
       - caddy-data:/data
       - caddy-config:/config
     networks: [edge, app]
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 256M }
     depends_on:
       api:
         condition: service_healthy
+      web:
+        condition: service_healthy
+
+  web:
+    <<: *hardening
+    image: ecine-web:${TAG:-latest}
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Clé de site Turnstile (publique) : figée dans le JavaScript du navigateur.
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+        NEXT_PUBLIC_VIEW_TRANSITIONS: ${VIEW_TRANSITIONS:-0}
+    env_file: /etc/ecine/web.env
+    environment:
+      NODE_OPTIONS: --max-old-space-size=768
+    read_only: true
+    tmpfs: ['/tmp']
+    volumes:
+      - next-cache:/app/apps/web/.next/cache
+    networks: [app]
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 1G }
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1']
+      interval: 15s
+      timeout: 3s
+      start_period: 20s
+      retries: 5
 
   api:
     <<: *hardening
-    image: ${REGISTRY:-ghcr.io/e-cine}/ecine-api:${TAG:-latest}
+    image: ecine-api:${TAG:-latest}
+    build:
+      <<: *api-build
+      target: api
     env_file: /etc/ecine/api.env
     environment:
       STORAGE_DIR: /data/storage
+      NODE_OPTIONS: --max-old-space-size=384
     read_only: true
     tmpfs: ['/tmp']
     volumes:
       - storage:/data/storage
     networks: [app, data]
+    deploy:
+      # Deux instances : mises à jour sans coupure, une instance qui tombe n'arrête pas le site.
+      replicas: 2
+      resources:
+        limits: { cpus: '0.75', memory: 512M }
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:4000/health >/dev/null || exit 1']
+      interval: 10s
+      timeout: 3s
+      start_period: 20s
+      retries: 5
     depends_on:
       postgres:
         condition: service_healthy
@@ -56,7 +115,10 @@ services:
 
   worker:
     <<: *hardening
-    image: ${REGISTRY:-ghcr.io/e-cine}/ecine-worker:${TAG:-latest}
+    image: ecine-worker:${TAG:-latest}
+    build:
+      <<: *api-build
+      target: worker
     env_file: /etc/ecine/api.env
     environment:
       STORAGE_DIR: /data/storage
@@ -65,6 +127,13 @@ services:
     volumes:
       - storage:/data/storage
     networks: [app, data]
+    # Priorité basse : sous charge, le site et l'API passent avant le transcodage.
+    cpu_shares: 256
+    # Laisse le transcodage en cours se ranger (la tâche est reprise au redémarrage).
+    stop_grace_period: 30s
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 2G }
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,7 +141,10 @@ services:
         condition: service_healthy
 
   migrate:
-    image: ${REGISTRY:-ghcr.io/e-cine}/ecine-migrate:${TAG:-latest}
+    image: ecine-migrate:${TAG:-latest}
+    build:
+      <<: *api-build
+      target: migrate
     env_file: /etc/ecine/api.env
     networks: [data]
     profiles: [tools]
@@ -85,10 +157,31 @@ services:
       POSTGRES_USER: ecine
       POSTGRES_DB: ecine
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    # Réglages pour 2 Go de plafond (SSD, peu de connexions : 2 API + worker, pools de 10).
+    command:
+      - postgres
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=3GB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - max_connections=40
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - wal_compression=on
     secrets: [postgres_password]
     volumes:
       - pgdata:/var/lib/postgresql
     networks: [data]
+    shm_size: 256m
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 2G }
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ecine -d ecine']
       interval: 10s
@@ -98,7 +191,9 @@ services:
   redis:
     <<: *hardening
     image: redis:8-alpine
-    cap_add: [SETGID, SETUID]
+    # Utilisateur de l'image (propriétaire de /data) : le fichier secret est lisible par tous dans le
+    # conteneur, mais son dossier sur l'hôte (/etc/ecine/secrets) est réservé à root.
+    user: redis
     # Mot de passe lu depuis un fichier secret ; noeviction : les files BullMQ ne doivent pas être évincées.
     command:
       [
@@ -110,6 +205,9 @@ services:
     volumes:
       - redisdata:/data
     networks: [data]
+    deploy:
+      resources:
+        limits: { cpus: '0.25', memory: 384M }
     healthcheck:
       test:
         [
@@ -130,12 +228,16 @@ volumes:
   pgdata:
   redisdata:
   storage:
+  next-cache:
   caddy-data:
   caddy-config:
 
 networks:
-  # edge : Internet ↔ Caddy. app : Caddy ↔ API/worker (sortie autorisée : e-mails, Turnstile, revalidation).
+  # edge : Internet ↔ Caddy, en IPv4 et IPv6. L'IPv6 du réseau garde l'adresse réelle des visiteurs
+  # IPv6 (sans elle, Docker les relaie et Caddy ne voit que la passerelle). app : Caddy ↔ site et
+  # API, site ↔ API (sortie autorisée : e-mails, Turnstile, Web Push, bases DB-IP).
   edge:
+    enable_ipv6: true
   app:
   # data : base et Redis, sans aucun accès extérieur.
   data:

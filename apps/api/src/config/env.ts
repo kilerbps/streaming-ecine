@@ -5,6 +5,16 @@ const bool = z.enum(['true', 'false', '1', '0']).transform((v) => v === 'true' |
 const secret = (name: string) =>
   z.string().min(32, `${name} doit contenir au moins 32 caractères (openssl rand -base64 48)`);
 
+/** Adresse HTTP d'un service du réseau Docker interne : nom sans point (ex. `web`), jamais d'IP. */
+function isInternalHttp(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' && /^[a-z][a-z0-9-]*$/.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** Configuration validée au démarrage : le serveur refuse de démarrer si une variable manque. */
 export const envSchema = z
   .object({
@@ -123,7 +133,10 @@ export const envSchema = z
       'REVALIDATE_URL',
     ] as const) {
       const value = env[key];
-      if (value && !value.startsWith('https://')) {
+      // Seule exception : le webhook de revalidation vers le site sur le même hôte Docker
+      // (`http://web:3000/…`, ADR-0016) ; il ne quitte jamais le réseau interne.
+      const internal = key === 'REVALIDATE_URL' && value !== undefined && isInternalHttp(value);
+      if (value && !value.startsWith('https://') && !internal) {
         ctx.addIssue({ code: 'custom', path: [key], message: 'HTTPS obligatoire en production' });
       }
     }

@@ -4,18 +4,21 @@
 # - copie hors du VPS vers un stockage objet compatible S3 (rclone, remote « ecine-backup »),
 # - rétention 30 jours, échec bruyant (code ≠ 0) pour déclencher une alerte.
 #
-# Cron (root) : 15 2 * * * /opt/ecine/infra/backup/backup.sh >> /var/log/ecine-backup.log 2>&1
-# Prérequis : docker, age, rclone ; /etc/ecine/backup.env (AGE_RECIPIENT, RCLONE_REMOTE).
+# Cron (root, /etc/cron.d/ecine) : 15 2 * * * root /srv/ecine/src/infra/backup/backup.sh >> /var/log/ecine-backup.log 2>&1
+# Prérequis : docker, age, rclone ; /etc/ecine/backup.env (AGE_RECIPIENT, RCLONE_REMOTE et remote
+# rclone « r2 » décrit par l'environnement), rempli par infra/secrets.sh age et r2.
 # pipefail : un échec de pg_dump fait échouer la sauvegarde (sinon age chiffre un flux vide sans erreur).
 set -euo pipefail
 
+set -a
 . /etc/ecine/backup.env
+set +a
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
 echo "[$STAMP] Sauvegarde de la base…"
-docker compose -f /opt/ecine/infra/docker-compose.prod.yml exec -T postgres \
+docker compose --env-file /etc/ecine/compose.env -f /srv/ecine/src/infra/docker-compose.prod.yml exec -T postgres \
   pg_dump -U ecine -d ecine --format=custom --no-owner \
   | age -r "$AGE_RECIPIENT" > "$WORK/ecine-db-$STAMP.dump.age"
 

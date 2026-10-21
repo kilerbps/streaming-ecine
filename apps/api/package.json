@@ -21,6 +21,7 @@
     "db:seed:video": "node --enable-source-maps dist/seed/demo-video.js",
     "images:backfill": "node --enable-source-maps dist/maintenance/backfill-image-previews.js",
     "geo:update": "node --enable-source-maps dist/maintenance/update-geo.js",
+    "admin:create": "node --enable-source-maps dist/maintenance/create-admin.js",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

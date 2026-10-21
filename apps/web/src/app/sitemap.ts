@@ -3,6 +3,9 @@ import { LOCALES } from '@ecine/contracts';
 import { getSitemapData } from '@/server/data';
 import { absoluteUrl } from '@/server/seo';
 
+/** Rendu à la demande : jamais figé à la construction (sans API, avec une adresse provisoire). */
+export const dynamic = 'force-dynamic';
+
 /** Sitemap dynamique (films, personnes, actualités, pages, catégories) avec hreflang. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const data = await getSitemapData().catch(() => null);

@@ -1,0 +1,2 @@
+# Accès au site et à l'API ouvert à toutes les adresses : avant l'activation du proxy Cloudflare
+# (ADR-0016). Choisi par CADDY_ORIGIN=ouverte dans /etc/ecine/compose.env (importé par le Caddyfile).

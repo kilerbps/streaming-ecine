@@ -1,0 +1,132 @@
+# Caddy sur le VPS (ADR-0016, docs/deploiement-vps.md) : HTTPS automatique (Let's Encrypt), HTTP/3,
+# compression, IP réelle derrière Cloudflare, répartition entre les instances de l'API, fichiers
+# statiques. Le site (Next.js), l'API et les médias sont servis ici ; seul Caddy est exposé.
+{
+	email {$ACME_EMAIL}
+	servers {
+		# Limite les en-têtes et les délais pour résister aux connexions lentes.
+		timeouts {
+			read_header 10s
+			idle 2m
+		}
+		# IP réelle : seulement depuis les plages de Cloudflare (www.cloudflare.com/ips, relevées le
+		# 21 octobre 2026 ; à revoir deux fois par an). Ailleurs (media.ecine.art, hors proxy), l'IP
+		# de connexion fait foi.
+		trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+		client_ip_headers CF-Connecting-IP
+		trusted_proxies_strict
+	}
+}
+
+(securite) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+# En-têtes du visiteur vers le site et l'API : une seule IP, celle établie ci-dessus. Écrase ce que le
+# client aurait mis lui-même dans X-Forwarded-For (le site en lit la première valeur).
+(ip_client) {
+	header_up X-Forwarded-For {client_ip}
+	header_up X-Real-IP {client_ip}
+}
+
+# Instances de l'API (deux, ADR-0016), lues dans le DNS de Docker toutes les 10 s : la moins chargée
+# d'abord. Les contrôles actifs (health_uri) ne s'appliquent pas aux instances dynamiques : une
+# instance qui échoue est écartée 30 s (contrôle passif) et la requête repart vers l'autre.
+(instances_api) {
+	dynamic a {
+		name api
+		port 4000
+		refresh 10s
+		versions ipv4
+	}
+	lb_policy least_conn
+	lb_try_duration 5s
+	fail_duration 30s
+	unhealthy_status 502 503
+	transport http {
+		dial_timeout 2s
+	}
+}
+
+# Site (Next.js, une instance : son cache de données est local).
+{$SITE_DOMAIN} {
+	import securite
+	# Ouvert à tous, ou réservé à Cloudflare une fois le proxy actif (CADDY_ORIGIN, origine-*.caddy).
+	import origine-{$CADDY_ORIGIN:ouverte}.caddy
+	encode zstd gzip
+	# Actions serveur : 4 Mo au plus (envoi des vidéos par morceaux de 3 Mio).
+	request_body {
+		max_size 6MB
+	}
+	reverse_proxy web:3000 {
+		import ip_client
+		health_uri /api/health
+		health_interval 15s
+		health_timeout 3s
+	}
+}
+
+www.{$SITE_DOMAIN} {
+	import securite
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+# API publique (appels directs du navigateur : lecture, clés).
+{$API_DOMAIN} {
+	import securite
+	import origine-{$CADDY_ORIGIN:ouverte}.caddy
+	encode zstd gzip
+	request_body {
+		max_size 5MB
+	}
+	reverse_proxy {
+		import instances_api
+		import ip_client
+	}
+}
+
+# Médias, hors proxy Cloudflare (vidéo) : images et aperçus servis directement (publics, immuables,
+# nom versionné) ; segments HLS chiffrés uniquement via l'API (jeton vérifié). Jamais de listage.
+{$MEDIA_DOMAIN} {
+	import securite
+
+	handle_path /images/* {
+		root * /data/storage/images
+		header Cache-Control "public, max-age=31536000, immutable"
+		header Cross-Origin-Resource-Policy "cross-origin"
+		file_server
+	}
+
+	# Aperçus promotionnels (ADR-0015) : MP4 240p muets et filigranés.
+	handle_path /previews/* {
+		root * /data/storage/previews
+		header Cache-Control "public, max-age=31536000, immutable"
+		header Cross-Origin-Resource-Policy "cross-origin"
+		file_server
+	}
+
+	handle /hls/* {
+		rewrite * /media{uri}
+		reverse_proxy {
+			import instances_api
+			import ip_client
+		}
+	}
+
+	handle {
+		respond "Introuvable" 404
+	}
+}
+
+# Interne (réseau Docker, port non publié) : rendu serveur du site → API, réparti entre les
+# instances. Le site transmet le visiteur par son relais signé (ADR-0015), pas par X-Forwarded-For.
+:8080 {
+	reverse_proxy {
+		import instances_api
+	}
+}

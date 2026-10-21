@@ -7,7 +7,9 @@
 set -euo pipefail
 
 # Sur le poste d’administration : BACKUP_ENV=./backup.env (RCLONE_REMOTE) ; sur le VPS : /etc/ecine/backup.env.
+set -a
 . "${BACKUP_ENV:-/etc/ecine/backup.env}"
+set +a
 WORK=$(mktemp -d)
 trap 'docker rm -f ecine-restore-test >/dev/null 2>&1 || true; rm -rf "$WORK"' EXIT
 
