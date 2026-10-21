@@ -24,7 +24,8 @@ import { routes } from '@/lib/routes';
 import { getFilm, getFilms, getFilmViewerState, getViewer } from '@/server/data';
 import { deviceVerified } from '@/server/device-state';
 import { loadOrNotFound } from '@/server/not-found';
-import { absoluteUrl, ogImage, pageMetadata } from '@/server/seo';
+import { pageMetadata } from '@/server/seo';
+import { movieJsonLd } from '@/server/structured-data';
 
 type Props = PageProps<'/[locale]/films/[slug]'>;
 
@@ -36,43 +37,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/films/${film.slug}`,
     title: film.seo.title ?? film.title,
     description: film.seo.description ?? film.synopsis,
-    image: film.poster,
     noIndex: film.seo.noIndex,
     type: 'video.movie',
+    shareImage: 'page',
   });
 }
 
 const CAST: CreditRole[] = ['ACTOR'];
 /** « Vous aimerez aussi » : 10 titres de la même catégorie. */
 const RELATED_COUNT = 10;
-
-function movieJsonLd(film: FilmDetail, locale: Locale) {
-  const people = (role: CreditRole) =>
-    film.credits
-      .filter((c) => c.role === role)
-      .map((c) => ({
-        '@type': 'Person',
-        name: c.person.name,
-        url: absoluteUrl(routes.person(locale, c.person.slug)),
-      }));
-  // Jamais l'URL du flux protégé (contentUrl) : seule la fiche publique est décrite.
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Movie',
-    name: film.title,
-    description: film.synopsis,
-    url: absoluteUrl(routes.film(locale, film.slug)),
-    image: ogImage(film.poster),
-    datePublished: film.publishedAt ?? undefined,
-    dateCreated: film.year ? String(film.year) : undefined,
-    duration: film.runtimeSec ? `PT${Math.round(film.runtimeSec / 60)}M` : undefined,
-    genre: film.categories.map((c) => c.name),
-    director: people('DIRECTOR'),
-    actor: people('ACTOR'),
-    producer: people('PRODUCER'),
-    inLanguage: film.audioLanguages[0] ?? 'fr',
-  };
-}
 
 /** Équipe regroupée par rôle, dans l'ordre du générique. */
 function crewByRole(credits: FilmDetail['credits']) {
@@ -209,6 +182,7 @@ export default async function FilmPage({ params, searchParams }: Props) {
         <div className="flex flex-col gap-6 lg:col-start-1 lg:row-start-1">
           <div className="hidden lg:block [&_nav]:mb-0">
             <Breadcrumbs
+              locale={locale}
               items={[
                 {
                   label: film.kind === 'SHORT' ? t('shortsTitle') : t('listTitle'),

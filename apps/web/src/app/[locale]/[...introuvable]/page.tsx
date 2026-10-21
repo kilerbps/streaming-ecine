@@ -1,14 +1,35 @@
-import { notFound, permanentRedirect, redirect } from 'next/navigation';
-import { resolveRedirect } from '@/server/data';
+import type { Metadata } from 'next';
+import type { Locale } from '@ecine/contracts';
+import { StaticPageView, staticPageMetadata } from '@/components/features/content/static-page';
+import { getStaticPage } from '@/server/data';
+import { isMissing, redirectOrNotFound } from '@/server/not-found';
 
-/** Toute URL inconnue : redirection enregistrée (ancien lien) sinon 404 localisée. */
-export default async function CatchAll({ params }: PageProps<'/[locale]/[...introuvable]'>) {
-  const { locale, introuvable } = await params;
-  const path = `/${locale}/${introuvable.map(encodeURIComponent).join('/')}`;
-  const target = await resolveRedirect(path).catch(() => null);
-  if (target) {
-    if (target.status === 302) redirect(target.toPath);
-    permanentRedirect(target.toPath);
+type Props = PageProps<'/[locale]/[...introuvable]'>;
+
+/** Page éditoriale publiée à ce slug (un seul segment), ou `null`. */
+async function findStaticPage(segments: string[]) {
+  if (segments.length !== 1 || !segments[0]) return null;
+  try {
+    return await getStaticPage(segments[0]);
+  } catch (error) {
+    if (isMissing(error)) return null;
+    throw error;
   }
-  notFound();
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale, introuvable } = await params;
+  const page = await findStaticPage(introuvable);
+  return page ? staticPageMetadata(locale as Locale, page.slug) : {};
+}
+
+/**
+ * Toute URL sans route dédiée : page créée en administration (FR-102, `/fr/{slug}`), sinon
+ * redirection enregistrée (ancien lien), sinon 404 localisée.
+ */
+export default async function CatchAll({ params }: Props) {
+  const { locale, introuvable } = await params;
+  const page = await findStaticPage(introuvable);
+  if (page) return <StaticPageView locale={locale as Locale} slug={page.slug} />;
+  return redirectOrNotFound(`/${locale}/${introuvable.map(encodeURIComponent).join('/')}`);
 }

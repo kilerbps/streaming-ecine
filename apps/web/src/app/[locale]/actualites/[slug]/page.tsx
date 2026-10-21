@@ -12,7 +12,8 @@ import { Markdown } from '@/lib/markdown';
 import { routes } from '@/lib/routes';
 import { getArticle } from '@/server/data';
 import { loadOrNotFound } from '@/server/not-found';
-import { absoluteUrl, ogImage, pageMetadata } from '@/server/seo';
+import { pageMetadata } from '@/server/seo';
+import { articleJsonLd } from '@/server/structured-data';
 
 type Props = PageProps<'/[locale]/actualites/[slug]'>;
 
@@ -24,8 +25,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/actualites/${article.slug}`,
     title: article.seo.title ?? article.title,
     description: article.seo.description ?? article.excerpt,
-    image: article.cover,
     type: 'article',
+    shareImage: 'page',
   });
 }
 
@@ -38,6 +39,7 @@ export default async function ArticlePage({ params }: Props) {
   return (
     <article className="container-page pt-8 md:pt-12">
       <Breadcrumbs
+        locale={locale}
         items={[
           { label: t('listTitle'), href: routes.news(locale) },
           { label: article.title, href: routes.article(locale, article.slug) },
@@ -105,30 +107,7 @@ export default async function ArticlePage({ params }: Props) {
           </aside>
         ) : null}
       </div>
-      <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': article.kind === 'EVENT' ? 'Event' : 'NewsArticle',
-          ...(article.kind === 'EVENT'
-            ? {
-                name: article.title,
-                startDate: article.eventStart ?? undefined,
-                location: article.eventPlace
-                  ? { '@type': 'Place', name: article.eventPlace }
-                  : undefined,
-                description: article.excerpt,
-              }
-            : {
-                headline: article.title,
-                datePublished: article.publishedAt,
-                dateModified: article.updatedAt,
-                author: { '@type': 'Person', name: article.author.name },
-                publisher: { '@type': 'Organization', name: 'E-Ciné' },
-              }),
-          image: ogImage(article.cover),
-          url: absoluteUrl(routes.article(locale, article.slug)),
-        }}
-      />
+      <JsonLd data={articleJsonLd(article, locale)} />
     </article>
   );
 }

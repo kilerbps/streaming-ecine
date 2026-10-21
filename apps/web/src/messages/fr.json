@@ -3,10 +3,12 @@
     "siteName": "E-Ciné",
     "defaultTitle": "E-Ciné — le cinéma congolais, en streaming",
     "defaultDescription": "Films, courts-métrages et actualités du cinéma congolais. Regardez en streaming, découvrez les talents.",
-    "titleTemplate": "%s · E-Ciné"
+    "titleTemplate": "%s · E-Ciné",
+    "shareImageAlt": "E-Ciné, le cinéma congolais en streaming"
   },
   "nav": {
     "home": "Accueil",
+    "breadcrumb": "Fil d'Ariane",
     "discover": "Découvrir",
     "whatsNew": "Nouveautés",
     "newsDot": "(du nouveau)",
@@ -140,6 +142,8 @@
     "ageRating": "Public",
     "listTitle": "Films",
     "listIntro": "Longs-métrages, documentaires et fictions du cinéma congolais.",
+    "categoryTitle": "{name} : films congolais en streaming",
+    "categoryDescription": "{name} : {count, plural, =0 {les films} one {# film} other {# films}} du cinéma congolais à regarder en streaming sur E-Ciné, avec leur fiche et leur distribution.",
     "shortsTitle": "Courts-métrages",
     "shortsIntro": "Des histoires courtes, souvent des premiers films.",
     "allCategories": "Toutes",

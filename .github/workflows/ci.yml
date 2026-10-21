@@ -138,7 +138,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       # 5 pages de la refonte (lot 0), budgets R-PERF dans lighthouserc.json. Découvrir et
-      # l'administration s'ajoutent avec leurs écrans (lots 4 et 5).
+      # l'administration s'ajoutent avec leurs écrans (lots 4 et 5). SEO : audits un par un, sans
+      # « is-crawlable » (la recherche et toute préproduction non indexable sont en noindex exprès).
       - run: >-
           npx --yes @lhci/cli@0.15.x autorun --config=lighthouserc.json
           --collect.url=${{ vars.PREVIEW_URL }}/fr

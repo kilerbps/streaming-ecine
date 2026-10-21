@@ -13,7 +13,8 @@ import { PosterTile } from '@/components/ui/tiles';
 import { routes } from '@/lib/routes';
 import { getPerson } from '@/server/data';
 import { loadOrNotFound } from '@/server/not-found';
-import { absoluteUrl, ogImage, pageMetadata } from '@/server/seo';
+import { pageMetadata } from '@/server/seo';
+import { profileJsonLd } from '@/server/structured-data';
 
 type Props = PageProps<'/[locale]/personnes/[slug]'>;
 
@@ -37,8 +38,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/personnes/${person.slug}`,
     title: roles ? `${person.name} — ${roles}` : person.name,
     description: person.bio || `${person.name}, ${roles}. Filmographie sur E-Ciné.`,
-    image: person.photo,
     type: 'profile',
+    shareImage: 'page',
   });
 }
 
@@ -109,6 +110,7 @@ export default async function PersonPage({ params }: Props) {
         <div className="mt-5 flex flex-col gap-6 px-4 md:mt-0 md:px-0">
           <div className="hidden md:block [&_nav]:mb-0">
             <Breadcrumbs
+              locale={locale}
               items={[
                 { label: t('listTitle'), href: routes.people(locale) },
                 { label: person.name, href: routes.person(locale, person.slug) },
@@ -162,17 +164,11 @@ export default async function PersonPage({ params }: Props) {
         </div>
       ) : null}
       <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': 'Person',
-          name: person.name,
-          url: absoluteUrl(routes.person(locale, person.slug)),
-          image: ogImage(person.photo),
-          description: person.bio || undefined,
-          birthDate: person.birthYear ? String(person.birthYear) : undefined,
-          jobTitle: person.roles.map((r) => tr(r)),
-          sameAs: socials.map(([, url]) => url),
-        }}
+        data={profileJsonLd(
+          person,
+          locale,
+          person.roles.map((r) => tr(r)),
+        )}
       />
     </article>
   );

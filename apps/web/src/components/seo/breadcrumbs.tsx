@@ -1,16 +1,30 @@
 import Link from 'next/link';
-import { absoluteUrl } from '@/server/seo';
+import { getTranslations } from 'next-intl/server';
+import type { Locale } from '@ecine/contracts';
+import { routes } from '@/lib/routes';
+import { breadcrumbJsonLd } from '@/server/structured-data';
 import { JsonLd } from './json-ld';
 
-/** Fil d'Ariane visible + données structurées BreadcrumbList (pages profondes). */
-export function Breadcrumbs({ items }: { items: Array<{ label: string; href: string }> }) {
+/**
+ * Fil d'Ariane visible + données structurées BreadcrumbList (pages profondes). L'accueil ouvre
+ * toujours le fil ; `items` va de la rubrique à la page courante.
+ */
+export async function Breadcrumbs({
+  locale,
+  items,
+}: {
+  locale: Locale;
+  items: Array<{ label: string; href: string }>;
+}) {
+  const t = await getTranslations('nav');
+  const trail = [{ label: t('home'), href: routes.home(locale) }, ...items];
   return (
     <>
-      <nav aria-label="Fil d'Ariane" className="meta mb-6">
+      <nav aria-label={t('breadcrumb')} className="meta mb-6">
         <ol className="flex flex-wrap items-center gap-2">
-          {items.map((item, index) => (
+          {trail.map((item, index) => (
             <li key={item.href} className="flex items-center gap-2">
-              {index < items.length - 1 ? (
+              {index < trail.length - 1 ? (
                 <>
                   <Link
                     href={item.href}
@@ -29,18 +43,7 @@ export function Breadcrumbs({ items }: { items: Array<{ label: string; href: str
           ))}
         </ol>
       </nav>
-      <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': 'BreadcrumbList',
-          itemListElement: items.map((item, index) => ({
-            '@type': 'ListItem',
-            position: index + 1,
-            name: item.label,
-            item: absoluteUrl(item.href),
-          })),
-        }}
-      />
+      <JsonLd data={breadcrumbJsonLd(trail)} />
     </>
   );
 }

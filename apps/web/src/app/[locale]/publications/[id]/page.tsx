@@ -20,7 +20,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     path: `/publications/${post.id}`,
     title: truncate(post.caption, 55),
     description: post.caption,
-    image: post.images[0],
   });
 }
 

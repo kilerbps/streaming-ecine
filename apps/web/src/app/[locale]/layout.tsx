@@ -24,7 +24,7 @@ import {
   getViewer,
 } from '@/server/data';
 import { htmlPreferenceAttributes, LiteDetection, themeColorFor } from '@/server/html-preferences';
-import { absoluteUrl } from '@/server/seo';
+import { siteGraph } from '@/server/structured-data';
 import { archivo } from '../fonts';
 import { STARTUP_IMAGES } from '../startup-images.generated';
 import '../globals.css';
@@ -84,31 +84,6 @@ export default async function LocaleLayout({ children, modal, params }: LayoutPr
   const latestPublished = latestNews?.items[0]?.publishedAt;
   const whatsNewDot = Boolean(newsSeen && latestPublished && latestPublished > newsSeen);
 
-  const organization = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'Organization',
-        '@id': absoluteUrl('/#organisation'),
-        name: 'E-Ciné',
-        url: absoluteUrl(`/${locale}`),
-        logo: absoluteUrl('/icon.svg'),
-        sameAs: Object.values(settings?.socials ?? {}),
-      },
-      {
-        '@type': 'WebSite',
-        name: 'E-Ciné',
-        url: absoluteUrl(`/${locale}`),
-        inLanguage: locale,
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: `${absoluteUrl(`/${locale}/recherche`)}?q={search_term_string}`,
-          'query-input': 'required name=search_term_string',
-        },
-      },
-    ],
-  };
-
   return (
     <html
       lang={locale}
@@ -157,7 +132,7 @@ export default async function LocaleLayout({ children, modal, params }: LayoutPr
             <PageViewTracker enabled={Boolean(consent?.analytics)} />
           </AppProviders>
         </NextIntlClientProvider>
-        <JsonLd data={organization} />
+        <JsonLd data={siteGraph(locale, settings)} />
       </body>
     </html>
   );

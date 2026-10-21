@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@ecine/contracts';
 import { LargeTitle } from '@/components/layout/header-title';
+import { JsonLd } from '@/components/seo/json-ld';
 import { MediaImage } from '@/components/ui/media-image';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LinkButton } from '@/components/ui/link-button';
 import { routes } from '@/lib/routes';
 import { getPeople } from '@/server/data';
 import { pageMetadata } from '@/server/seo';
+import { itemListJsonLd } from '@/server/structured-data';
 
 type Props = PageProps<'/[locale]/personnes'>;
 
@@ -34,6 +36,10 @@ export default async function PeoplePage({ params, searchParams }: Props) {
     getTranslations('common'),
   ]);
   const page = await getPeople(typeof cursor === 'string' ? cursor : undefined);
+  const itemList = itemListJsonLd(
+    t('listTitle'),
+    page.items.map((person) => routes.person(locale, person.slug)),
+  );
   return (
     <div className="container-page pt-8 md:pt-12">
       <header className="mb-6 flex flex-col gap-2 md:mb-8">
@@ -83,6 +89,7 @@ export default async function PeoplePage({ params, searchParams }: Props) {
           </LinkButton>
         </div>
       ) : null}
+      {itemList ? <JsonLd data={itemList} /> : null}
     </div>
   );
 }

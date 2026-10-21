@@ -86,6 +86,9 @@ export function filmMeta(year: number | null, runtimeSec: number | null): string
 /** Texte brut tronqué proprement (descriptions SEO, extraits). */
 export function truncate(text: string, max: number): string {
   const clean = text
+    // Liens Markdown : leur texte seulement, jamais l'adresse ; liens automatiques retirés.
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<https?:\/\/[^>]*>/g, '')
     .replace(/[#*_>`[\]()]/g, '')
     .replace(/\s+/g, ' ')
     .trim();

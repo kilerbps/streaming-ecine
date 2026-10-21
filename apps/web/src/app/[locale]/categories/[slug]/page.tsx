@@ -14,7 +14,7 @@ async function findCategory(slug: string) {
   return { categories, category: categories.find((c) => c.slug === slug) };
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const { category } = await findCategory(slug);
   if (!category) return {};
@@ -22,8 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return pageMetadata({
     locale: locale as Locale,
     path: `/categories/${slug}`,
-    title: `${category.name} — ${t('listTitle')}`,
-    description: `${category.name} : ${t('listIntro')}`,
+    title: t('categoryTitle', { name: category.name }),
+    description: t('categoryDescription', { name: category.name, count: category.filmCount }),
+    noIndex: Boolean((await searchParams).apres),
   });
 }
 

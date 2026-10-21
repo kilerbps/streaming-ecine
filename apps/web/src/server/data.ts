@@ -163,13 +163,21 @@ export async function resolveRedirect(
 }
 
 export async function getSitemapData() {
-  const entry = z.object({ slug: z.string(), updatedAt: z.string() });
+  const entry = z.object({
+    slug: z.string(),
+    updatedAt: z.string(),
+    image: z.string().nullable().optional(),
+  });
   const schema = z.object({
     films: z.array(entry),
     people: z.array(entry),
     articles: z.array(entry),
     pages: z.array(entry),
     categories: z.array(entry),
+    // Absent d'une API plus ancienne que le site : aucune publication.
+    posts: z
+      .array(z.object({ id: z.string(), updatedAt: z.string(), image: z.string().nullable() }))
+      .default([]),
   });
   return publicGet(schema, '/sitemap-data', { tags: ['sitemap'], revalidate: 3600 });
 }

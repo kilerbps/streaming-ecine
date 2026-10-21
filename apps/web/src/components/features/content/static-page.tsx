@@ -7,6 +7,11 @@ import { getStaticPage } from '@/server/data';
 import { loadOrNotFound } from '@/server/not-found';
 import { pageMetadata } from '@/server/seo';
 
+/** Garde des pages fixes : la page existe et est publiée, sinon redirection enregistrée ou 404. */
+export async function guardStaticPage(locale: string, slug: string): Promise<void> {
+  await loadOrNotFound(() => getStaticPage(slug), `/${locale}/${slug}`);
+}
+
 /** Page éditoriale gérée en administration (À propos, pages légales), avec version et date. */
 export async function staticPageMetadata(locale: Locale, slug: string): Promise<Metadata> {
   const page = await loadOrNotFound(() => getStaticPage(slug), `/${locale}/${slug}`);

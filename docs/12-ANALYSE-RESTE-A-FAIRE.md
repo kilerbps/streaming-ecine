@@ -171,7 +171,7 @@ Le PRD compte 58 exigences fonctionnelles (FR). Les 6 qui portent sur la vidéo 
 | — | Initialisation de la production | Le seed refuse la production (à juste titre) et rien ne le remplace : ni premier SUPER_ADMIN, ni pages À propos et légales, ni paramètres du site. Les liens du pied de page renverraient 404 | `apps/api/src/seed/seed.ts:345` | S | **P0** |
 | FR-130 | Pages légales | Structure seulement, textes `[À COMPLÉTER — validation juridique]` | `seed/demo-data.ts:562-649` | S + juriste | **P0** |
 | FR-050 | À propos | Bienvenue, vision, histoire : `[À COMPLÉTER]` | `seed/demo-data.ts:567-573` | contenu | **P0** |
-| FR-102 | Pages statiques | Pas de route publique générique : une page créée en administration est introuvable ; renommer le slug d'une page légale casse son lien ; le sitemap liste ces pages quand même | `app/[locale]/[...introuvable]`, `app/sitemap.ts:30` | S | P1 |
+| ~~FR-102~~ (fait le 21/10/2026 : route `/fr/{slug}`, 301 au renommage, 404 réel) | Pages statiques | Pas de route publique générique : une page créée en administration est introuvable ; renommer le slug d'une page légale casse son lien ; le sitemap liste ces pages quand même | `app/[locale]/[...introuvable]`, `app/sitemap.ts:30` | S | P1 |
 | FR-103 | 2FA des administrateurs | Ni codes de secours ni réinitialisation par un SUPER_ADMIN (téléphone perdu = intervention en base). Le secret 2FA est scellé avec `MEDIA_KEY_SECRET`, la clé des vidéos | `users/me.service.ts:137` | S–M | P1 |
 | FR-091 | Signalement | Bouton seulement sur les films ; l'API accepte aussi publications, articles et talents | `films/[slug]/page.tsx:150` | S | P1 |
 | FR-132 | Page d'erreur | Pas de `global-error.tsx` : une erreur dans le layout racine n'est pas captée | `app/[locale]/error.tsx` seul | S | P1 |
@@ -275,7 +275,7 @@ Le PRD compte 58 exigences fonctionnelles (FR). Les 6 qui portent sur la vidéo 
 | Domaine d'envoi vérifié chez Resend avec SPF, DKIM et DMARC (sinon les e-mails de vérification finissent en spam) | S | **P0** |
 | Envoi d'e-mails par file avec nouvelles tentatives (aujourd'hui, échec silencieux) ; e-mails de sécurité (mot de passe changé, 2FA désactivée) | M | P1 |
 | Registre des traitements, décision sur le DPO, démarches auprès de l'autorité congolaise (à faire vérifier par un juriste) | M | P1 |
-| Search Console et Bing, sitemap robuste quand l'API ne répond pas | S | P1 |
+| Search Console et Bing (sitemap robuste : fait le 21/10/2026) | S | P1 |
 
 ### 3.5 Tests et performance
 

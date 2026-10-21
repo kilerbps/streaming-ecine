@@ -65,7 +65,7 @@ function tagsFor(entity: ContentEntity, slugs: string[]): string[] {
     case 'article':
       return ['articles', 'feed', 'whats-new', 'sitemap', ...slugs.map((s) => `article:${s}`)];
     case 'post':
-      return ['feed'];
+      return ['feed', 'sitemap'];
     case 'page':
       return ['pages', 'sitemap', ...slugs.map((s) => `page:${s}`)];
     case 'team':
@@ -73,11 +73,11 @@ function tagsFor(entity: ContentEntity, slugs: string[]): string[] {
     case 'settings':
       return ['settings'];
     case 'category':
-      return ['categories', 'films', 'home'];
+      return ['categories', 'films', 'home', 'sitemap'];
     case 'home':
       return ['home'];
     case 'redirect':
-      return [];
+      return ['redirects'];
   }
 }
 

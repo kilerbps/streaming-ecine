@@ -42,12 +42,12 @@ export async function generateMetadata({ params }: PageProps<'/[locale]'>): Prom
   const { locale } = await params;
   const t = await getTranslations('meta');
   return {
-    ...pageMetadata({
+    ...(await pageMetadata({
       locale: locale as Locale,
       path: '',
       title: t('defaultTitle'),
       description: t('defaultDescription'),
-    }),
+    })),
     title: { absolute: t('defaultTitle') },
   };
 }

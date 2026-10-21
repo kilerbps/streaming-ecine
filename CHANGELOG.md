@@ -1,5 +1,24 @@
 # Journal des modifications
 
+## [Non publié] — 2026-10-21 · Référencement
+
+### Ajouté
+
+- Image de partage commune 1200×630 (`/fr/opengraph-image`) pour l'accueil, les catalogues, les catégories et les pages fixes ; Twitter reprend l'image d'Open Graph.
+- Données structurées : `Movie` complet (durée ISO, classement, langues, sous-titres, équipe, date de mise à jour, gratuité), `ProfilePage` pour les talents, `Event` valide pour Google (sinon `NewsArticle` avec éditeur), `ItemList` sur les catalogues et les talents, logo PNG de l'organisation ; fil d'Ariane ouvert par l'accueil. Module `src/server/structured-data.ts`.
+- Pages créées en administration publiées à `/fr/{slug}` (FR-102).
+- Sitemap : Nouveautés, Découvrir, publications, images, `x-default`, date des catégories (film le plus récent).
+- Tests unitaires des métadonnées, des données structurées, du sitemap et du robots.txt (site et API).
+
+### Modifié
+
+- Titres de 60 caractères au plus, suffixe « · E-Ciné » compris (retiré s'il ne tient pas ou si le titre nomme déjà la marque) ; descriptions sans adresse de lien.
+- Pages suivantes des listes (`?apres`), catégories comprises : `noindex, follow` sans canonical.
+- `robots.txt` : les pages en `noindex` (compte, espace personnel) restent explorables ; la recherche interne reste interdite ; plus de `SearchAction` (abandonnée par Google).
+- Catégorie et page fixe renommées : redirection permanente vers la nouvelle adresse ; page fixe absente : vrai 404.
+- Sitemap : erreur 500 si l'API ne répond pas (au lieu d'un sitemap vidé), données en cache une heure, revalidé à chaque publication, catégorie et publication comprises.
+- Lighthouse CI : audits SEO un par un, sans « is-crawlable » (pages volontairement en noindex).
+
 ## [Non publié] — 2026-10-21 · Mise en service sur le VPS ecine.art (ADR-0016)
 
 ### Ajouté

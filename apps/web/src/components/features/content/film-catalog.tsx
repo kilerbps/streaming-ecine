@@ -1,9 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import type { Category, FilmSummary, Locale, Page } from '@ecine/contracts';
 import { LargeTitle } from '@/components/layout/header-title';
+import { JsonLd } from '@/components/seo/json-ld';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LinkButton } from '@/components/ui/link-button';
 import { PillLink } from '@/components/ui/pill';
+import { routes } from '@/lib/routes';
+import { itemListJsonLd } from '@/server/structured-data';
 import { FilmTile, TileGrid } from './film-tile';
 
 /**
@@ -30,6 +33,10 @@ export async function FilmCatalog({
   categoryHref: (slug: string) => string;
 }) {
   const [t, tc] = await Promise.all([getTranslations('film'), getTranslations('common')]);
+  const itemList = itemListJsonLd(
+    title,
+    page.items.map((film) => routes.film(locale, film.slug)),
+  );
   return (
     <div className="container-page pt-6 md:pt-10">
       <header className="mb-5 flex flex-col gap-2 md:mb-6">
@@ -76,6 +83,7 @@ export async function FilmCatalog({
           </LinkButton>
         </div>
       ) : null}
+      {itemList ? <JsonLd data={itemList} /> : null}
     </div>
   );
 }
