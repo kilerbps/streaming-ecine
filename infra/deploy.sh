@@ -96,6 +96,11 @@ else
 fi
 
 step "Vérifications"
+# Caddy vient parfois de (re)démarrer : quelques secondes avant d'écouter.
+for _ in $(seq 1 15); do
+  "${COMPOSE[@]}" exec -T caddy wget -qO- http://127.0.0.1:8080/health >/dev/null 2>&1 && break
+  sleep 2
+done
 "${COMPOSE[@]}" exec -T caddy wget -qO- http://127.0.0.1:8080/health >/dev/null && echo "API via Caddy : OK"
 "${COMPOSE[@]}" exec -T web wget -qO- http://127.0.0.1:3000/api/health >/dev/null && echo "Site : OK"
 
