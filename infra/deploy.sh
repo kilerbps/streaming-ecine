@@ -68,6 +68,7 @@ roll() {
 if [ "${1:-}" != --rollback ]; then
   step "Construction des images (révision $TAG)"
   "${COMPOSE[@]}" build api worker migrate web
+  "$INFRA/secrets.sh" vapid
 
   step "Base de données et Redis"
   "${COMPOSE[@]}" up -d --wait postgres redis
@@ -102,6 +103,7 @@ if [ "$TAG" != "$current" ]; then
   if [ "$current" != latest ]; then echo "$current" > "$DIR/deployed-tag.prev"; fi
   sed -i "s/^TAG=.*/TAG=$TAG/" "$DIR/compose.env"
 fi
+install -m 644 -o root -g root "$INFRA/cron.d/ecine" /etc/cron.d/ecine
 docker image prune -f >/dev/null
 echo
 echo "Révision $TAG en service."

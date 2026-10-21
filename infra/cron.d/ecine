@@ -1,0 +1,9 @@
+# Tâches planifiées d'E-Ciné (installé dans /etc/cron.d/ecine par infra/deploy.sh). Heure de Kinshasa.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Sauvegarde chiffrée vers R2 (base, configuration, médias), chaque nuit.
+15 2 * * * root /srv/ecine/src/infra/backup/backup.sh >> /var/log/ecine-backup.log 2>&1
+
+# Bases DB-IP Lite du mois (classes d'IP des limites, ADR-0015), puis relecture par l'API.
+0 4 3 * * root cd /srv/ecine/src/infra && docker compose --env-file /etc/ecine/compose.env -f docker-compose.prod.yml run --rm --no-deps api node dist/maintenance/update-geo.js >> /var/log/ecine-geo.log 2>&1 && docker compose --env-file /etc/ecine/compose.env -f docker-compose.prod.yml restart api >> /var/log/ecine-geo.log 2>&1

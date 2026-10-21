@@ -1,5 +1,22 @@
 # Journal des modifications
 
+## [Non publié] — 2026-10-21 · Mise en service sur le VPS ecine.art (ADR-0016)
+
+### Ajouté
+
+- Image Docker du site (Next.js autonome, non root, lecture seule) et route `/api/health`.
+- Composition de production : site, deux instances d'API, worker à priorité basse, limites de ressources, PostgreSQL réglé, Redis plafonné, IPv6 sur le réseau d'entrée.
+- Caddy : IP réelle depuis les plages de Cloudflare, accès direct refusé une fois le proxy actif (`CADDY_ORIGIN`), répartition entre les instances, écoute interne `:8080`.
+- Scripts `infra/upload.sh`, `infra/deploy.sh` (remplacement des instances sans coupure, `--rollback`) et `infra/secrets.sh` (secrets tirés sur le serveur, saisie masquée) ; modèles `infra/env/*.example` ; tâches planifiées `infra/cron.d/ecine`.
+- `pnpm --filter @ecine/api admin:create` : premier SUPER_ADMIN en production.
+- Phase de test non indexée (`SITE_INDEXABLE=false`).
+
+### Modifié
+
+- Sauvegardes : configuration `/etc/ecine` chiffrée en plus de la base et des médias ; remote R2 décrit par l'environnement.
+- Webhook de revalidation autorisé en HTTP sur le seul réseau Docker interne.
+- Caddyfile déplacé dans `infra/caddy/`.
+
 ## [Non publié] — 2026-10-15 · Refonte « Nuit de Kin », lot 3 (en cours)
 
 ### Ajouté

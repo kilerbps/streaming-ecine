@@ -13,6 +13,10 @@ set -euo pipefail
 set -a
 . /etc/ecine/backup.env
 set +a
+if [ -z "${AGE_RECIPIENT:-}" ] || [ -z "${RCLONE_CONFIG_R2_ACCESS_KEY_ID:-}" ]; then
+  echo "Sauvegarde non configurée : sudo infra/secrets.sh age, puis r2" >&2
+  exit 1
+fi
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
@@ -27,8 +31,15 @@ test -s "$WORK/ecine-db-$STAMP.dump.age" || { echo "Sauvegarde vide : échec" >&
 echo "Envoi hors site…"
 rclone copy "$WORK/ecine-db-$STAMP.dump.age" "$RCLONE_REMOTE/db/"
 
+# Réglages et secrets (/etc/ecine) : sans la clé maîtresse MEDIA_KEY_SECRET, les clés des vidéos
+# restaurées avec la base restent illisibles.
+echo "Configuration chiffrée…"
+tar -C /etc -cz ecine | age -r "$AGE_RECIPIENT" > "$WORK/ecine-config-$STAMP.tar.gz.age"
+rclone copy "$WORK/ecine-config-$STAMP.tar.gz.age" "$RCLONE_REMOTE/config/"
+
 echo "Rétention 30 jours…"
 rclone delete --min-age 30d "$RCLONE_REMOTE/db/"
+rclone delete --min-age 30d "$RCLONE_REMOTE/config/"
 
 # Médias : sources et HLS finaux synchronisés (les sources permettent de retranscoder).
 echo "Synchronisation des médias…"

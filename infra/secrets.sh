@@ -149,17 +149,22 @@ cmd_check() {
 
 cmd_vapid() {
   local api=$DIR/api.env image keys subject
-  if [ -n "$(get_kv "$api" VAPID_PRIVATE_KEY)" ]; then echo "Paire VAPID déjà présente."; return; fi
-  image="ecine-api:$(get_kv "$DIR/compose.env" TAG)"
-  keys=$(docker run --rm --network none --entrypoint node "$image" -e \
-    "import('web-push').then(({default: w}) => { const k = w.generateVAPIDKeys(); console.log(k.publicKey + ' ' + k.privateKey); })")
-  set_kv "$api" VAPID_PUBLIC_KEY "${keys%% *}"
-  set_kv "$api" VAPID_PRIVATE_KEY "${keys##* }"
+  if [ -n "$(get_kv "$api" VAPID_PRIVATE_KEY)" ]; then
+    echo "Paire VAPID déjà présente."
+  else
+    image="ecine-api:$(get_kv "$DIR/compose.env" TAG)"
+    keys=$(docker run --rm --network none --entrypoint node "$image" -e \
+      "import('web-push').then(({default: w}) => { const k = w.generateVAPIDKeys(); console.log(k.publicKey + ' ' + k.privateKey); })")
+    set_kv "$api" VAPID_PUBLIC_KEY "${keys%% *}"
+    set_kv "$api" VAPID_PRIVATE_KEY "${keys##* }"
+    echo "Paire VAPID tirée (Web Push)."
+  fi
+  # Contact exigé par les services de notification : l'adresse du compte Let's Encrypt.
   subject=$(get_kv "$DIR/compose.env" ACME_EMAIL)
   if [ -n "$subject" ] && [ -z "$(get_kv "$api" VAPID_SUBJECT)" ]; then
     set_kv "$api" VAPID_SUBJECT "mailto:$subject"
+    echo "VAPID_SUBJECT : mailto:$subject"
   fi
-  echo "Paire VAPID tirée (Web Push)."
 }
 
 cmd_admin() {
