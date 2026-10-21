@@ -27,3 +27,9 @@ docs
 docs-constrution
 apps/web/*
 !apps/web/package.json
+
+# Hors code (déploiement, documentation) : ne doit pas invalider le cache de construction.
+REVISION
+infra
+security
+*.md
