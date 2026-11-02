@@ -31,7 +31,21 @@ export function useAdminAction() {
   const run = useCallback(
     <T>(action: () => Promise<ActionResult<T>>, options: RunOptions<T> = {}) => {
       startTransition(async () => {
-        const result = await action();
+        let result: ActionResult<T>;
+        try {
+          result = await action();
+        } catch (error) {
+          // L'action n'a pas abouti : réseau coupé, ou page ouverte avant une mise à jour du site
+          // (identifiants d'action changés à chaque version).
+          feedback('error');
+          toast(
+            /server action|unexpected response/i.test(String(error))
+              ? 'Le site a été mis à jour pendant que cette page était ouverte : rechargez-la, puis recommencez.'
+              : 'La connexion a été interrompue. Vérifiez le réseau, puis réessayez.',
+            'error',
+          );
+          return;
+        }
         if (result.ok) {
           if (!options.quiet) feedback('success');
           if (options.success) toast(options.success, 'success');

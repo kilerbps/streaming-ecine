@@ -460,6 +460,8 @@ export function FilmEditor({
             label="Titre dessiné (facultatif)"
             value={titleImage}
             allowDecorative={false}
+            transparent
+            ratio="3/2"
             error={errors.titleImageId?.message}
             help="Le titre du film en image (PNG ou WebP transparent) : il remplace le titre écrit sur l’affiche à la une et la fiche. Texte alternatif : le titre."
             onChange={(image) => {

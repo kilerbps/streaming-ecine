@@ -8,11 +8,15 @@ export default async function VerifyEmailPage({
   searchParams,
 }: PageProps<'/[locale]/compte/verifier'>) {
   const t = await getTranslations('auth');
-  const token = (await searchParams).token;
+  const { token, confirme } = await searchParams;
   return (
     <>
       <h1 className="mb-8 font-serif text-4xl">{t('verifyTitle')}</h1>
-      {typeof token === 'string' ? (
+      {confirme === '1' ? (
+        <p role="status" className="border-l-2 border-success bg-surface-1 p-4">
+          {t('verifyDone')}
+        </p>
+      ) : typeof token === 'string' ? (
         <VerifyEmail token={token} />
       ) : (
         <p className="text-danger">{t('verifyFailed')}</p>

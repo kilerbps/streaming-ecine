@@ -159,7 +159,10 @@ export function VerifyEmail({ token }: { token: string }) {
     window.history.replaceState(null, '', window.location.pathname);
     void verifyEmailAction(token).then((result) => {
       setState(result.ok ? 'ok' : 'error');
-      if (result.ok) router.refresh();
+      if (!result.ok) return;
+      // Adresse « confirmée » avant de rafraîchir : sans jeton, la page afficherait un échec.
+      window.history.replaceState(null, '', `${window.location.pathname}?confirme=1`);
+      router.refresh();
     });
   }, [token, router]);
   if (state === 'pending') return <Loader />;

@@ -40,8 +40,10 @@ export function FilmStage({
   const runtime = player?.runtimeSec ?? null;
 
   if (player && open) {
+    // `data-playing` : sous le lecteur, le titre s'écrit en texte (le titre dessiné est fait pour
+    // l'image de la scène, pas pour un fond uni).
     return (
-      <div>
+      <div data-playing="" className="group/stage">
         <div className="bg-[var(--player-bg)]">
           <div className="mx-auto w-full lg:max-w-[calc(80dvh*16/9)]">
             <Player {...player} autoStart />

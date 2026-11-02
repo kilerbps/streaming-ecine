@@ -7,6 +7,7 @@ import { Poster } from '@/components/features/content/poster';
 import { Button } from '@/components/ui/button';
 import { Sheet } from '@/components/ui/sheet';
 import { updateImageAltAction, uploadImageAction } from '@/server/actions/admin/media';
+import { CONVERTIBLE_TYPES, prepareImageForUpload } from '@/lib/prepare-image';
 import { ADMIN_IMAGE_MAX_BYTES } from './config';
 import { ImageFramingEditor } from './image-framing-editor';
 import { CONTROL } from './fields';
@@ -16,7 +17,8 @@ import { useAdminAction } from './use-admin-action';
 export type AdminImage = ImageUploadResult;
 type Ratio = '2/3' | '4/5' | '16/9' | '1/1' | '3/2';
 
-const ACCEPT = IMAGE_UPLOAD_MIME_TYPES.join(',');
+// Photos d'iPhone (HEIC) acceptées : converties dans le navigateur quand il sait les lire.
+const ACCEPT = [...IMAGE_UPLOAD_MIME_TYPES, ...CONVERTIBLE_TYPES].join(',');
 
 /** Vérification immédiate dans le navigateur (le serveur revérifie le format réel). */
 function fileProblem(file: File): string | null {
@@ -26,6 +28,9 @@ function fileProblem(file: File): string | null {
     return `Image trop lourde (${formatBytes(file.size)}) : 4 Mo au plus. Réduisez-la avant l’envoi.`;
   return null;
 }
+
+/** Formats sans transparence : refusés pour un titre dessiné (c'est alors presque toujours une photo). */
+const OPAQUE_TYPES = ['image/jpeg', ...CONVERTIBLE_TYPES];
 
 /**
  * Envoi d'image réutilisable (affiches, photos, couvertures, publications, équipe) : aperçu local,
@@ -43,6 +48,7 @@ export function ImageUploadField({
   ratio = '2/3',
   removable = true,
   previewTitle,
+  transparent = false,
 }: {
   label: string;
   help?: ReactNode;
@@ -54,6 +60,8 @@ export function ImageUploadField({
   removable?: boolean;
   /** Titre montré sur l'aperçu « à la une » du cadrage (lisibilité sur le voile). */
   previewTitle?: string;
+  /** Image transparente attendue (titre dessiné) : JPEG et photos refusés. */
+  transparent?: boolean;
 }) {
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +72,7 @@ export function ImageUploadField({
   const [decorative, setDecorative] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const [framing, setFraming] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   // Texte alternatif de l'image déjà enregistrée (modifiable).
   const [current, setCurrent] = useState(value);
   const [editAlt, setEditAlt] = useState(value?.alt ?? '');
@@ -90,17 +99,27 @@ export function ImageUploadField({
     if (inputRef.current) inputRef.current.value = '';
   };
 
-  const choose = (selected: File | undefined) => {
+  const choose = async (selected: File | undefined) => {
     if (!selected) return;
-    const issue = fileProblem(selected);
+    if (transparent && OPAQUE_TYPES.includes(selected.type)) {
+      reset();
+      setProblem(
+        'Le titre dessiné doit être une image transparente (PNG ou WebP), pas une photo. L’affiche se met dans « Affiche du film ».',
+      );
+      return;
+    }
+    // Réduite et réencodée avant l'envoi : plus légère, plus rapide sur un réseau mobile lent.
+    setPreparing(true);
+    const prepared = await prepareImageForUpload(selected).finally(() => setPreparing(false));
+    const issue = fileProblem(prepared);
     if (issue) {
       reset();
       setProblem(issue);
       return;
     }
     setProblem(null);
-    setFile(selected);
-    setPreview(URL.createObjectURL(selected));
+    setFile(prepared);
+    setPreview(URL.createObjectURL(prepared));
   };
 
   const upload = () => {
@@ -258,14 +277,19 @@ export function ImageUploadField({
                   htmlFor={id}
                   className="inline-flex min-h-11 cursor-pointer items-center gap-2 border border-border-strong px-4 text-sm hover:bg-surface-2 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus"
                 >
-                  {value ? 'Remplacer l’image' : 'Choisir une image'}
+                  {preparing
+                    ? 'Préparation de l’image…'
+                    : value
+                      ? 'Remplacer l’image'
+                      : 'Choisir une image'}
                   <input
                     ref={inputRef}
                     id={id}
                     type="file"
                     accept={ACCEPT}
                     className="sr-only"
-                    onChange={(e) => choose(e.target.files?.[0])}
+                    disabled={preparing}
+                    onChange={(e) => void choose(e.target.files?.[0])}
                   />
                 </label>
                 {value ? (

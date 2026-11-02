@@ -142,12 +142,12 @@ export default async function FilmPage({ params, searchParams }: Props) {
         >
           {film.titleImage ? (
             <>
-              <span className="sr-only">{film.title}</span>
+              <span className="sr-only group-data-[playing]/stage:not-sr-only">{film.title}</span>
               <MediaImage
                 image={{ ...film.titleImage, alt: '' }}
                 ratio="3/2"
                 sizes="(min-width: 1056px) 30vw, 60vw"
-                className="max-w-[60%] bg-transparent lg:max-w-[70%]"
+                className="max-w-[60%] bg-transparent group-data-[playing]/stage:hidden lg:max-w-[70%]"
                 imageClassName="object-contain object-left-bottom"
               />
             </>
