@@ -280,7 +280,12 @@ export function Player({
       f: () => void toggleFullscreen(containerRef.current),
     };
     const action = keys[event.key];
-    if (action && !(event.target instanceof HTMLInputElement && event.key.startsWith('Arrow'))) {
+    // Flèches sur la piste de progression et Espace sur un bouton (menu des réglages) : comportement
+    // natif de l'élément.
+    const native =
+      (event.target instanceof HTMLInputElement && event.key.startsWith('Arrow')) ||
+      (event.target instanceof HTMLButtonElement && event.key === ' ');
+    if (action && !native) {
       event.preventDefault();
       action();
     }
@@ -430,6 +435,8 @@ export function Player({
         <PlayerControls
           videoRef={videoRef}
           containerRef={containerRef}
+          title={title}
+          buffering={buffering}
           levels={levels}
           currentLevel={currentLevel}
           playingHeight={playingHeight}

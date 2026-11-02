@@ -45,7 +45,8 @@ export function FilmStage({
     return (
       <div data-playing="" className="group/stage">
         <div className="bg-[var(--player-bg)]">
-          <div className="mx-auto w-full lg:max-w-[calc(80dvh*16/9)]">
+          {/* PC : le lecteur prend toute la hauteur sous la barre de navigation. */}
+          <div className="mx-auto w-full lg:max-w-[calc((100dvh-var(--topnav-h))*16/9)]">
             <Player {...player} autoStart />
           </div>
         </div>
