@@ -12,6 +12,12 @@ if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
 fi
 REV=$(git rev-parse --short=12 HEAD)
 
+# Jamais pendant un déploiement : la construction lit /srv/ecine/src (verrou de deploy.sh).
+if ! ssh "$HOST" 'exec 9</run/lock/ecine-deploy.lock 2>/dev/null || exit 0; flock -n 9'; then
+  echo "Un déploiement est en cours sur $HOST : réessayer après." >&2
+  exit 1
+fi
+
 # Extraction à part puis synchronisation : les dossiers gardent leur identité (Caddy monte infra/caddy).
 git archive --format=tar HEAD | ssh "$HOST" "set -e
   rm -rf /srv/ecine/incoming && mkdir -p /srv/ecine/incoming /srv/ecine/src

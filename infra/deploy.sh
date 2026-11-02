@@ -18,6 +18,12 @@ die() { echo "Erreur : $*" >&2; exit 1; }
 step() { echo; echo "▸ $*"; }
 [ "$(id -u)" = 0 ] || die "lancer avec sudo"
 
+# Un seul déploiement à la fois ; upload.sh refuse d'envoyer le code pendant ce temps (verrou partagé).
+LOCK=/run/lock/ecine-deploy.lock
+exec 9>"$LOCK"
+chmod 644 "$LOCK"
+flock -n 9 || die "un déploiement est déjà en cours"
+
 "$INFRA/secrets.sh" check >/dev/null || { "$INFRA/secrets.sh" check || true; die "secrets incomplets"; }
 
 current=$(sed -n 's/^TAG=//p' "$DIR/compose.env")
